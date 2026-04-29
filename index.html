@@ -353,6 +353,13 @@ const firstLast=fullName=>{
   if(!fullName)return'';
   const parts=normName(fullName).split(' ').filter(p=>p.length>0);
   if(parts.length<2)return parts.join(' ');
+  // Si tiene 4+ palabras: probablemente "Nombre Nombre Apellido Apellido"
+  // → tomar primer nombre + primer apellido (índice 0 + 2)
+  if(parts.length>=4)return parts[0]+' '+parts[2];
+  // Si tiene 3 palabras: ambiguo, probar varias interpretaciones
+  // "Juan Carlos Lopez" → puede ser "Juan Lopez" o "Juan Carlos"
+  // Default: tomar 0 + 2 (primer nombre + último apellido visible)
+  if(parts.length===3)return parts[0]+' '+parts[2];
   return parts[0]+' '+parts[1];
 };
 
@@ -626,24 +633,61 @@ async function fetchBackendHistory(){
   }
   setSync('Backend','sync','Backend…');
   STATE.loading.backend=true;
-  try{
-    const r=await fetch(CFG.BACKEND_URL+'?action=read&t='+Date.now());
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const j=await r.json();
-    if(j.ok&&Array.isArray(j.history)){
-      STATE.history=j.history;
-      // Reconstruir el "estado actual" del último día disponible
-      reconstructCurrentDay();
-    }
-    setSync('Backend','live',`Backend · ${STATE.history.length}`);
-    STATE.lastSync.backend=Date.now();
-    setLastUpdate();
-    renderActiveTab();
-  }catch(e){
-    console.error('Backend error',e);
-    setSync('Backend','err','Backend error');
-  }
-  STATE.loading.backend=false;
+  
+  // JSONP: usar <script> tag para evitar CORS con Apps Script de workspace
+  // Apps Script soporta callback automáticamente cuando se pasa ?callback=funcName
+  return new Promise((resolve)=>{
+    const callbackName='_backendCb_'+Date.now();
+    const script=document.createElement('script');
+    let resolved=false;
+    
+    const cleanup=()=>{
+      try{document.body.removeChild(script);}catch(e){}
+      try{delete window[callbackName];}catch(e){window[callbackName]=undefined;}
+    };
+    
+    window[callbackName]=function(j){
+      if(resolved)return;
+      resolved=true;
+      try{
+        if(j&&j.ok&&Array.isArray(j.history)){
+          STATE.history=j.history;
+          reconstructCurrentDay();
+        }
+        setSync('Backend','live','Backend · '+STATE.history.length);
+        STATE.lastSync.backend=Date.now();
+        setLastUpdate();
+        renderActiveTab();
+      }catch(e){console.error('Backend parse error',e);}
+      STATE.loading.backend=false;
+      cleanup();
+      resolve();
+    };
+    
+    script.onerror=()=>{
+      if(resolved)return;
+      resolved=true;
+      console.error('Backend script load error');
+      setSync('Backend','err','Backend error');
+      STATE.loading.backend=false;
+      cleanup();
+      resolve();
+    };
+    
+    // Timeout
+    setTimeout(()=>{
+      if(resolved)return;
+      resolved=true;
+      console.error('Backend timeout');
+      setSync('Backend','err','Backend timeout');
+      STATE.loading.backend=false;
+      cleanup();
+      resolve();
+    },20000);
+    
+    script.src=CFG.BACKEND_URL+'?action=read&callback='+callbackName+'&t='+Date.now();
+    document.body.appendChild(script);
+  });
 }
 
 async function pushBackend(payload){
