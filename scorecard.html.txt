@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scorecard Roomonitor 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#f0f2f7;--s1:#fff;--s2:#f7f8fc;--s3:#eef0f6;--s4:#e2e6f0;
+  --border:#dde1ec;--border2:#c8cede;--border3:#b0b8cf;
+  --accent:#0f7a56;--adim:rgba(15,122,86,.08);--accent-light:#e6f5ef;
+  --blue:#2563eb;--bdim:rgba(37,99,235,.08);--blue-light:#eef4ff;
+  --purple:#7c3aed;--pdim:rgba(124,58,237,.08);
+  --warn:#b45309;--wdim:rgba(180,83,9,.08);--warn-light:#fef7e6;
+  --danger:#dc2626;--ddim:rgba(220,38,38,.08);--danger-light:#fdecec;
+  --teal:#0f766e;--tdim:rgba(15,118,110,.08);
+  --text:#1a2035;--muted:#8892a4;--muted2:#6b7a96;--muted3:#4b5878;
+  --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
+  --radius:8px;--radius2:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background-image:radial-gradient(circle,rgba(107,122,150,.18) 1px,transparent 1px);
+  background-size:24px 24px;opacity:.5;pointer-events:none}
+.wrap{position:relative;z-index:1;max-width:1760px;margin:0 auto;padding:0 24px}
+
+header{background:rgba(255,255,255,.97);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200;
+  box-shadow:0 1px 0 var(--border)}
+.hdr{display:flex;align-items:center;gap:16px;height:60px;
+  max-width:1760px;margin:0 auto;padding:0 24px}
+.logo{font-size:14px;font-weight:800;display:flex;align-items:center;gap:10px;letter-spacing:-.2px}
+.lmark{width:32px;height:32px;border-radius:8px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(15,122,86,.3);color:#fff;font-weight:800;font-size:14px}
+.lsub{color:var(--muted2);font-size:10px;font-weight:500;letter-spacing:.3px;margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+.sync-pill{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted2);
+  background:var(--s2);border:1px solid var(--border);padding:5px 10px;border-radius:6px;font-family:var(--mono)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--border2)}
+.dot.live{background:#16a34a;animation:blink 2s ease-in-out infinite;box-shadow:0 0 0 3px rgba(22,163,74,.15)}
+.dot.sync{background:var(--warn);animation:blink .7s ease-in-out infinite}
+.dot.err{background:var(--danger)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.tabs{display:flex;gap:4px;margin-top:18px;flex-wrap:wrap;
+  background:var(--s1);padding:6px;border:1px solid var(--border);border-radius:10px}
+.tab{padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--muted2);
+  background:transparent;border:none;border-radius:6px;cursor:pointer;
+  font-family:var(--sans);letter-spacing:.2px;transition:all .15s}
+.tab:hover{color:var(--text);background:var(--s2)}
+.tab.active{color:var(--accent);background:var(--accent-light)}
+
+.content{margin-top:18px;padding-bottom:60px}
+.section-title{font-size:15px;font-weight:700;margin-bottom:14px;letter-spacing:-.1px}
+.section-sub{font-size:11.5px;color:var(--muted2);margin-bottom:14px;font-family:var(--mono)}
+
+.card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.card+.card{margin-top:14px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.kpi-label{font-size:10.5px;color:var(--muted2);font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.kpi-value{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-top:4px;font-family:var(--mono)}
+.kpi-meta{font-size:11px;color:var(--muted);margin-top:3px}
+
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+table thead th{position:sticky;top:0;background:var(--s2);text-align:left;
+  padding:10px 12px;font-weight:700;color:var(--muted3);font-size:10.5px;
+  letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border);z-index:10;white-space:nowrap}
+table tbody td{padding:9px 12px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;white-space:nowrap}
+table tbody tr:hover{background:var(--s2);cursor:pointer}
+.col-name{font-family:var(--sans)!important;font-weight:600;color:var(--text)}
+.col-num{text-align:right;font-variant-numeric:tabular-nums}
+
+.b{display:inline-block;padding:3px 8px;border-radius:5px;font-size:10.5px;font-weight:700;font-family:var(--mono);letter-spacing:.3px}
+.b.ok{background:var(--accent-light);color:var(--accent)}
+.b.warn{background:var(--warn-light);color:var(--warn)}
+.b.bad{background:var(--danger-light);color:var(--danger)}
+.b.neutral{background:var(--s3);color:var(--muted3)}
+.b.info{background:var(--blue-light);color:var(--blue)}
+
+.cell-ok{color:var(--accent);font-weight:600}
+.cell-warn{color:var(--warn);font-weight:600}
+.cell-bad{color:var(--danger);font-weight:600}
+
+.upload-zone{border:2px dashed var(--border2);border-radius:10px;padding:28px 20px;
+  text-align:center;background:var(--s2);cursor:pointer;transition:all .15s}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-light)}
+.upload-zone.has-file{border-color:var(--accent);background:var(--accent-light)}
+.upload-zone.processing{border-color:var(--warn);background:var(--warn-light)}
+.upload-icon{font-size:28px;margin-bottom:6px;color:var(--muted2)}
+.upload-text{font-size:13px;font-weight:600;color:var(--text)}
+.upload-sub{font-size:11px;color:var(--muted2);margin-top:4px;font-family:var(--mono)}
+
+input[type="text"],input[type="number"],input[type="url"],input[type="password"],input[type="date"],select,textarea{
+  width:100%;padding:8px 12px;font-size:13px;font-family:var(--mono);
+  border:1px solid var(--border);border-radius:6px;background:var(--s1);color:var(--text)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--adim)}
+label{display:block;font-size:11.5px;font-weight:600;color:var(--muted3);margin-bottom:5px;letter-spacing:.3px}
+.field+.field{margin-top:12px}
+
+button.btn{padding:8px 14px;font-size:12.5px;font-weight:600;font-family:var(--sans);
+  border:1px solid var(--border);border-radius:6px;background:var(--s1);color:var(--text);
+  cursor:pointer;transition:all .15s;letter-spacing:.2px}
+button.btn:hover{background:var(--s2);border-color:var(--border2)}
+button.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.btn.primary:hover{background:#0c6347}
+button.btn.danger{background:var(--s1);color:var(--danger);border-color:var(--danger)}
+button.btn.danger:hover{background:var(--danger-light)}
+button.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>*{flex:1;min-width:0}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+
+.filter-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+.filter-row .field{flex:1;min-width:140px;margin:0}
+.filter-row .field label{margin-bottom:4px}
+
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.metric-tile{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px}
+.metric-tile-label{font-size:10px;color:var(--muted2);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.metric-tile-value{font-size:18px;font-weight:800;font-family:var(--mono);margin-top:3px}
+.metric-tile-meta{font-size:10.5px;color:var(--muted);margin-top:3px}
+
+.empty{text-align:center;padding:50px 20px;color:var(--muted2)}
+.empty-icon{font-size:34px;margin-bottom:8px;opacity:.4}
+.empty-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.empty-text{font-size:12px}
+
+.banner{padding:12px 16px;border-radius:8px;font-size:12.5px;margin-bottom:14px;line-height:1.5}
+.banner.info{background:var(--blue-light);color:var(--blue);border:1px solid rgba(37,99,235,.2)}
+.banner.warn{background:var(--warn-light);color:var(--warn);border:1px solid rgba(180,83,9,.2)}
+.banner.success{background:var(--accent-light);color:var(--accent);border:1px solid rgba(15,122,86,.2)}
+.banner.error{background:var(--danger-light);color:var(--danger);border:1px solid rgba(220,38,38,.2)}
+
+.tier-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;font-family:var(--mono)}
+.tier-0{background:var(--s3);color:var(--muted3)}
+.tier-1{background:#dbeafe;color:#1e40af}
+.tier-2{background:#fef3c7;color:#92400e}
+.tier-3{background:#fce7f3;color:#9f1239}
+
+.muted{color:var(--muted2)}
+.mono{font-family:var(--mono)}
+.center{text-align:center}
+.right{text-align:right}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hidden{display:none!important}
+small{font-size:11px;color:var(--muted2)}
+hr{border:none;border-top:1px solid var(--border);margin:14px 0}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:12px;padding:24px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+.modal h3{font-size:16px;margin-bottom:6px}
+.modal p{font-size:12.5px;color:var(--muted2);margin-bottom:16px;line-height:1.5}
+.modal-actions{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+
+.chart-wrap{position:relative;width:100%;height:280px;margin-top:14px}
+
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--mono);letter-spacing:.3px;text-transform:uppercase}
+.tag-c1{background:#fee2e2;color:#991b1b}
+.tag-c2{background:#fef3c7;color:#854d0e}
+.tag-c3{background:#dcfce7;color:#166534}
+.tag-al{background:#e0e7ff;color:#3730a3}
+.tag-other{background:var(--s3);color:var(--muted3)}
+
+.bono-row{display:grid;grid-template-columns:1fr 80px 90px 70px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:12.5px}
+.bono-row:last-child{border-bottom:none}
+.bono-row .lbl{font-weight:600}
+.bono-row .val{font-family:var(--mono);text-align:right}
+.bono-row .target{font-family:var(--mono);color:var(--muted2);text-align:right;font-size:11px}
+
+.tend-row{display:grid;grid-template-columns:120px 1fr 60px;gap:10px;align-items:center;padding:8px 0}
+.tend-bar{height:6px;background:var(--s3);border-radius:3px;overflow:hidden;position:relative}
+.tend-bar-fill{height:100%;background:var(--accent);transition:width .3s}
+.tend-bar-fill.warn{background:var(--warn)}
+.tend-bar-fill.bad{background:var(--danger)}
+
+@media print{header,.tabs{display:none}.card{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <div class="logo">
+      <div class="lmark">R</div>
+      <div>
+        <div>SCORECARD · ROOMONITOR 2026</div>
+        <div class="lsub">DESEMPEÑO DE AGENTES</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="sync-pill" id="syncDistro" title="Distribución"><div class="dot"></div><span>Distro</span></div>
+      <div class="sync-pill" id="syncQA" title="QA en tiempo real"><div class="dot"></div><span>QA</span></div>
+      <div class="sync-pill" id="syncQuejas" title="Quejas en tiempo real"><div class="dot"></div><span>Quejas</span></div>
+      <div class="sync-pill" id="syncBackend" title="Histórico (backend)"><div class="dot"></div><span>Backend</span></div>
+      <div class="sync-pill" id="lastUpdate"><span class="muted">—</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="scorecard">Scorecard</button>
+    <button class="tab" data-tab="agente">Por agente</button>
+    <button class="tab" data-tab="coordinador">Coordinador</button>
+    <button class="tab" data-tab="senior">Senior</button>
+    <button class="tab" data-tab="top">Top performers</button>
+    <button class="tab" data-tab="bono">Bonificaciones</button>
+    <button class="tab" data-tab="distro">Distribución</button>
+    <button class="tab" data-tab="cargar">Cargar datos</button>
+    <button class="tab" data-tab="config">Configuración</button>
+  </div>
+
+  <div class="content">
+    <div id="view-scorecard"></div>
+    <div id="view-agente" class="hidden"></div>
+    <div id="view-coordinador" class="hidden"></div>
+    <div id="view-senior" class="hidden"></div>
+    <div id="view-top" class="hidden"></div>
+    <div id="view-bono" class="hidden"></div>
+    <div id="view-distro" class="hidden"></div>
+    <div id="view-cargar" class="hidden"></div>
+    <div id="view-config" class="hidden"></div>
+  </div>
+</div>
+
+<div id="modalContainer"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN
+// ═══════════════════════════════════════════════════════════════════════════
+const CFG = {
+  // Tiempo real - URLs
+  QA_URL:'https://script.google.com/macros/s/AKfycbwLHOdODleS0_-ur9qx5DjB1t0pdtlaI3BcSd2EaOyO4DxlL2C3Qdv6TbVW8RIrjQYd/exec',
+  DISTRO_SHEET:'1c752kRpIb3oIBAGkSS-GJ0lpkDg6ICQK7HIOlO5cfaU',
+  DISTRO_TAB:'Schedules',
+  QUEJAS_SHEET:'1Ll3FhAGF6KeH_I0SYn77mwIDm-MdKARcMGPdC5jYHIU',
+  QUEJAS_TAB:'',
+
+  // Backend (Apps Script para histórico) - el usuario pegará la URL aquí
+  BACKEND_URL: https://script.google.com/a/macros/roomonitor.com/s/AKfycbxz4LcvNZFeU_J34SAvpY4lQyZRmiyU6q-bRNwRCQib26M-jGSNs3K4AjvdlG9GSjS3iw/exec'',
+
+  // PIN para subir archivos (cambiarlo en producción)
+  UPLOAD_PIN:'Roomonitor2026*1,
+
+  REFRESH_MS:60000,
+
+  // Metas scorecard
+  META_RR:75, META_CSAT:85,
+  META_SDR:90, META_SRR:65,
+  META_AHT_SEC:510,    // 8:30 = 510 seg
+  META_ACW_MIN:2,      // 2:00
+  META_HOLD_MIN:2,
+  META_BREAK_MIN:30,
+  META_BANO_MIN:10,
+  META_QA:85,
+
+  // Bonificaciones (todo o nada)
+  BONO:{
+    quality:{target:85,points:1200,dir:'gte',label:'Quality %'},
+    released:{target:6,points:500,dir:'lte',label:'Released Calls %'},
+    csat:{target:85,points:400,dir:'gte',label:'Surveys - Satisfaction %'},
+    outbound:{target:30,points:300,dir:'gte',label:'Outbound Calls %'},
+    rr_bono:{target:90,points:250,dir:'gte',label:'Surveys - Return Rate %'},
+    sdr_bono:{target:45,points:200,dir:'gte',label:'Surveys - Delivery Rate %'},
+    absent:{target:1,points:150,dir:'lte',label:'Absenteeism %'}
+  },
+  PEN:{procedural:600,serious:1300,absences:500},
+  TIER:[
+    {min:2800,bonus:300,n:3,label:'Tier 3'},
+    {min:2400,bonus:150,n:2,label:'Tier 2'},
+    {min:2100,bonus:75,n:1,label:'Tier 1'},
+    {min:0,bonus:0,n:0,label:'Tier 0'}
+  ],
+  BASE_SALARY:900
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+const STATE = {
+  distro:[],            // [{agent,coord,senior,cluster,type,extension,nameKey}]
+  qa:{},                // {nameKey: {fullName,score,evals}}
+  quejas:[],            // [{agent,fecha,tarjeta,nameKey}]
+  encuestas:{},         // por agente {nameKey: {fullName,sent,answered,rrSum,rrN,csatSum,csatN}}
+  llamadas:{},          // {nameKey: {atendidasIn,atendidasOut,ahtSum,ahtN,released,totalEntrantes}}
+  auxiliares:{},        // {nameKey: {acwSum,acwN,holdSum,holdN,breakAvg,banoAvg,breakMaxDay,banoMaxDay}}
+  servicios:{},         // {nameKey: {total,completed,canceled}}
+  manualPenalties:{},   // {nameKey: {procedural,serious,absences,redemption,absenteeism,flatAttitud,productivity}}
+  history:[],           // [{date,nameKey,...metrics}]
+  
+  selectedAgent:null,
+  selectedCoord:null,
+  selectedSenior:null,
+  
+  // Filtros de fecha
+  dateFilter:{mode:'day',day:null,start:null,end:null,month:null,week:null},
+  
+  loading:{qa:false,quejas:false,distro:false,backend:false},
+  lastSync:{qa:null,quejas:null,distro:null,backend:null},
+  
+  // Auth
+  authenticated:false,
+  
+  // Cargas pendientes
+  pendingUploads:{encuestas:null,llamadas:null,auxiliares:null,servicios:null},
+  uploadDate:new Date().toISOString().slice(0,10)
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILIDADES
+// ═══════════════════════════════════════════════════════════════════════════
+const $=id=>document.getElementById(id);
+const fmt={
+  pct:(v,d=1)=>v==null||isNaN(v)?'—':(+v).toFixed(d)+'%',
+  num:(v,d=0)=>v==null||isNaN(v)?'—':(+v).toLocaleString('es-ES',{maximumFractionDigits:d}),
+  mins:(min)=>{
+    if(min==null||isNaN(min))return'—';
+    const m=Math.floor(min);const s=Math.round((min-m)*60);
+    return`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  },
+  secs:(s)=>{
+    if(s==null||isNaN(s))return'—';
+    const m=Math.floor(s/60);const sec=Math.round(s%60);
+    return`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  },
+  date:(d)=>{
+    if(!d)return'';
+    const dt=new Date(d);
+    return dt.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
+  },
+  money:(v)=>v==null?'—':'$'+(+v).toFixed(0)
+};
+
+const normName=s=>!s?'':s.toString()
+  .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .toLowerCase().replace(/\s+/g,' ').trim();
+
+const firstLast=fullName=>{
+  if(!fullName)return'';
+  const parts=normName(fullName).split(' ').filter(p=>p.length>0);
+  if(parts.length<2)return parts.join(' ');
+  return parts[0]+' '+parts[1];
+};
+
+const extractAgent=str=>{
+  if(!str)return null;
+  const s=str.toString();
+  const m=s.match(/(?:[A-Z]{1,3}\s+)?IP:\s*\d+\s+(.+?)(?:\s*\(|$)/);
+  return m?m[1].trim():null;
+};
+
+const cleanAssigner=s=>{
+  if(!s)return null;
+  let n=s.toString().trim();
+  n=n.replace(/^Ex\s+/i,'');
+  n=n.replace(/\s+(d1ex|d1|d2|c1|c2|c3|w1|w2|al|old|ex|new)$/i,'');
+  return n.trim();
+};
+
+const parseMin=s=>{
+  if(s==null||s==='')return 0;
+  const v=parseFloat(s.toString().replace(',','.'));
+  return isNaN(v)?0:v;
+};
+
+function setSync(which,status,label){
+  const el=$('sync'+which);
+  if(!el)return;
+  const dot=el.querySelector('.dot');
+  dot.className='dot '+(status==='live'?'live':status==='sync'?'sync':status==='err'?'err':'');
+  if(label)el.querySelector('span').textContent=label;
+}
+
+function setLastUpdate(){
+  const t=new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  $('lastUpdate').innerHTML='<span class="mono muted">↻ '+t+'</span>';
+}
+
+function clusterTag(cluster){
+  if(!cluster)return'<span class="tag tag-other">—</span>';
+  const c=cluster.toLowerCase();
+  if(c.includes('1'))return'<span class="tag tag-c1">CL1</span>';
+  if(c.includes('2'))return'<span class="tag tag-c2">CL2</span>';
+  if(c.includes('3'))return'<span class="tag tag-c3">CL3</span>';
+  if(c.includes('alarm'))return'<span class="tag tag-al">AL</span>';
+  return'<span class="tag tag-other">'+cluster.slice(0,4).toUpperCase()+'</span>';
+}
+
+function statusFor(val,target,dir){
+  if(val==null||isNaN(val))return'neutral';
+  if(dir==='gte'){
+    if(val>=target)return'ok';
+    if(val>=target*0.9)return'warn';
+    return'bad';
+  }else{
+    if(val<=target)return'ok';
+    if(val<=target*1.15)return'warn';
+    return'bad';
+  }
+}
+
+function statusCell(val,target,dir,formatter){
+  const s=statusFor(val,target,dir);
+  const txt=val==null||isNaN(val)?'—':formatter(val);
+  const cls=s==='ok'?'cell-ok':s==='warn'?'cell-warn':s==='bad'?'cell-bad':'';
+  return`<span class="${cls}">${txt}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CSV PARSER (con detección de delimitador)
+// ═══════════════════════════════════════════════════════════════════════════
+function parseCSV(text,delim){
+  if(!delim){
+    const fl=text.split('\n')[0]||'';
+    delim=fl.split(';').length>fl.split(',').length?';':',';
+  }
+  const rows=[];let cur=[];let field='';let inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],n=text[i+1];
+    if(inQ){
+      if(c==='"'&&n==='"'){field+='"';i++;}
+      else if(c==='"')inQ=false;
+      else field+=c;
+    }else{
+      if(c==='"')inQ=true;
+      else if(c===delim){cur.push(field);field='';}
+      else if(c==='\n'){cur.push(field);rows.push(cur);cur=[];field='';}
+      else if(c==='\r'){}
+      else field+=c;
+    }
+  }
+  if(field.length||cur.length){cur.push(field);rows.push(cur);}
+  return rows;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FETCHERS — TIEMPO REAL
+// ═══════════════════════════════════════════════════════════════════════════
+async function fetchSheetCSV(id,sheetName){
+  const url=`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&t=${Date.now()}`+(sheetName?`&sheet=${encodeURIComponent(sheetName)}`:'');
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const text=await r.text();
+  return parseCSV(text,',');
+}
+
+async function fetchQA(){
+  setSync('QA','sync','QA…');
+  STATE.loading.qa=true;
+  try{
+    const r=await fetch(CFG.QA_URL+'?t='+Date.now());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    if(!j.ok)throw new Error(j.error||'Error');
+
+    const SECTIONS=[
+      {id:'s2',weight:20,criteria:[
+        {col:'Did the agent confirm the building name and the room/apartment',pts:3},
+        {col:'Did the agent ask for any additional information',pts:3},
+        {col:'Did the agent identify the issue properly',pts:4},
+        {col:'Did the agent take ownership',pts:10}
+      ]},
+      {id:'s3',weight:50,criteria:[
+        {col:'Did the agent provide accurate information',pts:15},
+        {col:'Did the agent follow the proper procedure',pts:10},
+        {col:'Did the agent escalate when necessary',pts:10},
+        {col:'Did the agent resolve the issue',pts:15}
+      ]},
+      {id:'s4',weight:30,criteria:[
+        {col:'Did the agent demonstrate empathy',pts:5},
+        {col:'Did the agent communicate clearly',pts:10},
+        {col:'Did the agent maintain a professional tone',pts:10},
+        {col:'Did the agent close the call appropriately',pts:5}
+      ]}
+    ];
+
+    const gCol=(rw,p)=>{
+      const k=Object.keys(rw).find(k=>k.toLowerCase().includes(p.toLowerCase()));
+      return k?(rw[k]||'').toString():'';
+    };
+    const aName=rw=>rw["Agent's name"]||gCol(rw,"Agent name")||'';
+
+    function score(rw){
+      const af=(gCol(rw,'commit any errors that could potentially impact')||gCol(rw,'business impact')||'').toLowerCase().trim();
+      if(af==='yes'||af==='failed'||af==='fail')return 0;
+      let total=0;
+      for(const sec of SECTIONS){
+        let s=sec.weight;
+        for(const c of sec.criteria){
+          const v=gCol(rw,c.col).toLowerCase().trim();
+          const na=(v===''||v==='n/a'||v==='na'||v==='not applicable');
+          const yes=(v==='yes');
+          if(!na&&!yes)s-=c.pts;
+        }
+        total+=s;
+      }
+      return total;
+    }
+
+    const byAgent={};
+    for(const row of j.rows){
+      const name=aName(row);
+      if(!name)continue;
+      const key=firstLast(name);
+      if(!byAgent[key])byAgent[key]={fullName:name,scores:[]};
+      byAgent[key].scores.push(score(row));
+    }
+    STATE.qa={};
+    for(const [k,v] of Object.entries(byAgent)){
+      STATE.qa[k]={
+        fullName:v.fullName,
+        score:v.scores.length?v.scores.reduce((a,b)=>a+b,0)/v.scores.length:null,
+        evals:v.scores.length
+      };
+    }
+
+    setSync('QA','live',`QA · ${Object.keys(STATE.qa).length}`);
+    STATE.lastSync.qa=Date.now();
+    setLastUpdate();
+    renderActiveTab();
+  }catch(e){
+    console.error('QA error',e);
+    setSync('QA','err','QA error');
+  }
+  STATE.loading.qa=false;
+}
+
+async function fetchDistro(){
+  setSync('Distro','sync','Distro…');
+  STATE.loading.distro=true;
+  try{
+    const csv=await fetchSheetCSV(CFG.DISTRO_SHEET,CFG.DISTRO_TAB);
+    let agents=[];
+    // El header está en la fila 2 (índice 1) según vimos
+    // Cols (índice 0): A=blank, B=Senior, C=Coord, D=Agent, E=Type, F=Hours, G=blank, H=Ext, I=Nivel
+    for(let i=2;i<csv.length;i++){
+      const r=csv[i];if(!r)continue;
+      const senior=(r[1]||'').trim();
+      const coord=(r[2]||'').trim();
+      const agent=(r[3]||'').trim();
+      const type=(r[4]||'').trim();
+      const ext=(r[7]||'').trim();
+      const nivel=(r[8]||'').trim();
+      if(!agent||!coord||!type)continue;
+      if(type.toLowerCase()!=='prod agent')continue;
+      agents.push({
+        agent,coord,senior,type,
+        extension:ext,
+        cluster:nivel||'—',
+        nameKey:firstLast(agent)
+      });
+    }
+    STATE.distro=agents;
+    setSync('Distro','live',`Distro · ${agents.length}`);
+    STATE.lastSync.distro=Date.now();
+    setLastUpdate();
+    renderActiveTab();
+  }catch(e){
+    console.error('Distro error',e);
+    setSync('Distro','err','Distro error');
+  }
+  STATE.loading.distro=false;
+}
+
+async function fetchQuejas(){
+  setSync('Quejas','sync','Quejas…');
+  STATE.loading.quejas=true;
+  try{
+    const csv=await fetchSheetCSV(CFG.QUEJAS_SHEET,CFG.QUEJAS_TAB);
+    if(!csv.length){STATE.quejas=[];return;}
+    const header=csv[0].map(h=>(h||'').trim());
+    const idx=name=>header.findIndex(h=>h.toLowerCase().includes(name.toLowerCase()));
+    const iAgente=idx('Agente');
+    const iTarjeta=idx('Tarjeta a aplicar');
+    const iFecha=idx('Fecha de la queja');
+    const iCoord=idx('Coordinador');
+
+    const rows=[];
+    for(let i=1;i<csv.length;i++){
+      const r=csv[i];if(!r||r.every(c=>!c||!c.trim()))continue;
+      const agente=(r[iAgente]||'').trim();
+      const tarjeta=(r[iTarjeta]||'').trim();
+      const fecha=(r[iFecha]||'').trim();
+      const coord=iCoord>=0?(r[iCoord]||'').trim():'';
+      if(!agente||!tarjeta)continue;
+      const t=tarjeta.toLowerCase().replace(/\s/g,'');
+      if(t==='noaplica'||t==='n/a'||t==='no'||t==='na')continue;
+      const agentes=agente.split(/\s+y\s+|,/).map(s=>s.trim()).filter(s=>s);
+      for(const a of agentes){
+        rows.push({agent:a,fecha,tarjeta,coord,nameKey:firstLast(a)});
+      }
+    }
+    STATE.quejas=rows;
+    setSync('Quejas','live',`Quejas · ${rows.length}`);
+    STATE.lastSync.quejas=Date.now();
+    setLastUpdate();
+    renderActiveTab();
+  }catch(e){
+    console.error('Quejas error',e);
+    setSync('Quejas','err','Quejas error');
+  }
+  STATE.loading.quejas=false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BACKEND: Google Sheets via Apps Script
+// ═══════════════════════════════════════════════════════════════════════════
+async function fetchBackendHistory(){
+  if(!CFG.BACKEND_URL){
+    setSync('Backend','err','Sin backend');
+    return;
+  }
+  setSync('Backend','sync','Backend…');
+  STATE.loading.backend=true;
+  try{
+    const r=await fetch(CFG.BACKEND_URL+'?action=read&t='+Date.now());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    if(j.ok&&Array.isArray(j.history)){
+      STATE.history=j.history;
+      // Reconstruir el "estado actual" del último día disponible
+      reconstructCurrentDay();
+    }
+    setSync('Backend','live',`Backend · ${STATE.history.length}`);
+    STATE.lastSync.backend=Date.now();
+    setLastUpdate();
+    renderActiveTab();
+  }catch(e){
+    console.error('Backend error',e);
+    setSync('Backend','err','Backend error');
+  }
+  STATE.loading.backend=false;
+}
+
+async function pushBackend(payload){
+  if(!CFG.BACKEND_URL)throw new Error('No hay BACKEND_URL configurada');
+  const fd=new FormData();
+  fd.append('action','write');
+  fd.append('payload',JSON.stringify(payload));
+  fd.append('pin',CFG.UPLOAD_PIN);
+  const r=await fetch(CFG.BACKEND_URL,{method:'POST',body:fd});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  if(!j.ok)throw new Error(j.error||'Error backend');
+  return j;
+}
+
+// Aplica el filtro de fecha al historial y reconstruye el estado actual
+function reconstructCurrentDay(){
+  // Tomar el último día disponible si no hay filtro específico
+  const dates=[...new Set(STATE.history.map(h=>h.date))].sort();
+  if(!dates.length)return;
+  const targetDate=STATE.dateFilter.day||dates[dates.length-1];
+  STATE.dateFilter.day=STATE.dateFilter.day||targetDate;
+
+  // Filtrar registros según filtro
+  const filtered=filterHistoryByDate(STATE.history);
+
+  // Agrupar por agente y promediar
+  const byAgent={};
+  for(const h of filtered){
+    if(!byAgent[h.nameKey])byAgent[h.nameKey]={n:0,...emptyAccumulator()};
+    accumulate(byAgent[h.nameKey],h);
+    byAgent[h.nameKey].n++;
+  }
+  // Reconstruir state.encuestas, llamadas, auxiliares, servicios
+  STATE.encuestas={};STATE.llamadas={};STATE.auxiliares={};STATE.servicios={};
+  for(const [k,v] of Object.entries(byAgent)){
+    if(v.surveysSent||v.surveysAnswered){
+      STATE.encuestas[k]={fullName:v.fullName,sent:v.surveysSent,answered:v.surveysAnswered,
+        rrSum:v.rrPctSum,rrN:v.rrN,csatSum:v.csatPctSum,csatN:v.csatN};
+    }
+    if(v.callsAt){
+      STATE.llamadas[k]={fullName:v.fullName,
+        atendidasIn:v.callsIn,atendidasOut:v.callsOut,
+        ahtSum:v.ahtSecSum,ahtN:v.ahtN,
+        released:v.released,totalEntrantes:v.totalEntrantes};
+    }
+    if(v.acwN||v.holdN||v.breakSum||v.banoSum){
+      STATE.auxiliares[k]={fullName:v.fullName,
+        acwSum:v.acwMinSum,acwN:v.acwN,
+        holdSum:v.holdMinSum,holdN:v.holdN,
+        breakAvg:v.breakDays?v.breakSum/v.breakDays:null,
+        banoAvg:v.banoDays?v.banoSum/v.banoDays:null,
+        breakMaxDay:v.breakMaxDay,banoMaxDay:v.banoMaxDay};
+    }
+    if(v.servTotal){
+      STATE.servicios[k]={fullName:v.fullName,total:v.servTotal,completed:v.servComp,canceled:v.servCanc};
+    }
+  }
+}
+
+function emptyAccumulator(){
+  return{fullName:'',
+    surveysSent:0,surveysAnswered:0,rrPctSum:0,rrN:0,csatPctSum:0,csatN:0,
+    callsAt:0,callsIn:0,callsOut:0,ahtSecSum:0,ahtN:0,released:0,totalEntrantes:0,
+    acwMinSum:0,acwN:0,holdMinSum:0,holdN:0,
+    breakSum:0,breakDays:0,breakMaxDay:0,banoSum:0,banoDays:0,banoMaxDay:0,
+    servTotal:0,servComp:0,servCanc:0};
+}
+function accumulate(acc,h){
+  if(h.fullName)acc.fullName=h.fullName;
+  acc.surveysSent+=(+h.surveysSent||0);
+  acc.surveysAnswered+=(+h.surveysAnswered||0);
+  acc.rrPctSum+=(+h.rrPctSum||0);acc.rrN+=(+h.rrN||0);
+  acc.csatPctSum+=(+h.csatPctSum||0);acc.csatN+=(+h.csatN||0);
+  acc.callsAt+=(+h.callsAt||0);
+  acc.callsIn+=(+h.callsIn||0);
+  acc.callsOut+=(+h.callsOut||0);
+  acc.ahtSecSum+=(+h.ahtSecSum||0);acc.ahtN+=(+h.ahtN||0);
+  acc.released+=(+h.released||0);
+  acc.totalEntrantes+=(+h.totalEntrantes||0);
+  acc.acwMinSum+=(+h.acwMinSum||0);acc.acwN+=(+h.acwN||0);
+  acc.holdMinSum+=(+h.holdMinSum||0);acc.holdN+=(+h.holdN||0);
+  if(+h.breakSum>0){acc.breakSum+=(+h.breakSum);acc.breakDays++;}
+  if(+h.banoSum>0){acc.banoSum+=(+h.banoSum);acc.banoDays++;}
+  acc.breakMaxDay=Math.max(acc.breakMaxDay,+h.breakSum||0);
+  acc.banoMaxDay=Math.max(acc.banoMaxDay,+h.banoSum||0);
+  acc.servTotal+=(+h.servTotal||0);
+  acc.servComp+=(+h.servComp||0);
+  acc.servCanc+=(+h.servCanc||0);
+}
+
+function filterHistoryByDate(history){
+  const f=STATE.dateFilter;
+  if(f.mode==='all')return history;
+  if(f.mode==='day'&&f.day)return history.filter(h=>h.date===f.day);
+  if(f.mode==='range'&&f.start&&f.end){
+    return history.filter(h=>h.date>=f.start&&h.date<=f.end);
+  }
+  if(f.mode==='week'&&f.week){
+    // week format YYYY-Www
+    const [yr,w]=f.week.split('-W');
+    return history.filter(h=>weekKey(h.date)===f.week);
+  }
+  if(f.mode==='month'&&f.month){
+    return history.filter(h=>h.date.startsWith(f.month));
+  }
+  return history;
+}
+
+function weekKey(dateStr){
+  const d=new Date(dateStr);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate()+4-(d.getDay()||7));
+  const yearStart=new Date(d.getFullYear(),0,1);
+  const wk=Math.ceil(((d-yearStart)/86400000+1)/7);
+  return`${d.getFullYear()}-W${String(wk).padStart(2,'0')}`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PARSERS DE ARCHIVOS DIARIOS
+// ═══════════════════════════════════════════════════════════════════════════
+async function parseEncuestas(file){
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true});
+  const header=rows[0]||[];
+  const iLlamante=header.findIndex(h=>(h||'').toString().toLowerCase().trim()==='llamante');
+  const iDest=header.findIndex(h=>(h||'').toString().toLowerCase().includes('nombre destino'));
+  const iPuls=header.findIndex(h=>(h||'').toString().toLowerCase().includes('pulsacion'));
+
+  const acc={};
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];if(!r||!r.length)continue;
+    let agName=null;
+    const dest=r[iDest];
+    if(dest){agName=extractAgent(dest);}
+    if(!agName&&iLlamante>=0){
+      const ll=(r[iLlamante]||'').toString();
+      if(/[a-zA-Z]/.test(ll)&&!/^\+?\d[\d\s]*$/.test(ll)){
+        agName=extractAgent(ll)||ll.trim();
+      }
+    }
+    if(!agName)continue;
+    const key=firstLast(agName);
+    if(!acc[key])acc[key]={fullName:agName,sent:0,answered:0,rrSum:0,rrN:0,csatSum:0,csatN:0};
+    acc[key].sent++;
+
+    const p=r[iPuls];
+    if(p==null||p==='')continue;
+    const s=p.toString().trim();
+    if(!s)continue;
+    acc[key].answered++;
+
+    // Extraer dígitos en orden
+    const digits=s.split(/[;,\s\-_/]+/).filter(x=>/^\d+$/.test(x)).map(x=>parseInt(x));
+    if(!digits.length)continue;
+
+    const rr=digits[0];
+    let rrPct=null;
+    if(rr===1)rrPct=100;
+    else if(rr===2||rr===3)rrPct=0;
+    if(rrPct!=null){acc[key].rrSum+=rrPct;acc[key].rrN++;}
+
+    if(digits.length>=2){
+      const csat=digits[digits.length-1];
+      let csatPct=null;
+      if(csat>=8)csatPct=100;
+      else if(csat>=6)csatPct=50;
+      else if(csat>=1)csatPct=0;
+      if(csatPct!=null){acc[key].csatSum+=csatPct;acc[key].csatN++;}
+    }
+  }
+  return acc;
+}
+
+async function parseLlamadas(file){
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true});
+  const h=rows[0]||[];
+  const findCol=(...names)=>{
+    for(const n of names){
+      const i=h.findIndex(c=>(c||'').toString().toLowerCase().includes(n.toLowerCase()));
+      if(i>=0)return i;
+    }
+    return-1;
+  };
+  const iTipo=findCol('tipo');
+  const iLlamante=findCol('llamante');
+  const iUltDest=findCol('último destino','ultimo destino');
+  const iDur=findCol('duración','duracion');
+  const iColgo=findCol('colgó','colgo');
+  const iRes=findCol('resultado');
+
+  const acc={};
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];if(!r||!r.length)continue;
+    const tipo=(r[iTipo]||'').toString();
+    const res=(r[iRes]||'').toString();
+    const colgo=(r[iColgo]||'').toString();
+    const dur=parseInt(r[iDur])||0;
+
+    let agName=null;
+    if(tipo==='Entrante')agName=extractAgent(r[iUltDest]);
+    else if(tipo==='Saliente')agName=extractAgent(r[iLlamante]);
+    if(!agName)continue;
+    const key=firstLast(agName);
+    if(!acc[key])acc[key]={fullName:agName,
+      atendidasIn:0,atendidasOut:0,ahtSum:0,ahtN:0,released:0,totalEntrantes:0};
+
+    if(tipo==='Entrante')acc[key].totalEntrantes++;
+    if(res==='Atendida'){
+      if(tipo==='Entrante'){
+        acc[key].atendidasIn++;
+        acc[key].ahtSum+=dur;acc[key].ahtN++;
+        if(colgo==='Destino'&&dur<10)acc[key].released++;
+      }else if(tipo==='Saliente'){
+        acc[key].atendidasOut++;
+        acc[key].ahtSum+=dur;acc[key].ahtN++;
+      }
+    }
+  }
+  return acc;
+}
+
+async function parseAuxiliares(file){
+  const text=await file.text();
+  const cleaned=text.replace(/^\uFEFF/,'');
+  const csv=parseCSV(cleaned,';');
+  const header=csv[0]||[];
+  const findCol=(...names)=>{
+    for(const n of names){
+      const i=header.findIndex(c=>(c||'').toLowerCase().trim()===n.toLowerCase());
+      if(i>=0)return i;
+    }
+    return-1;
+  };
+  const iAg=findCol('agente');
+  const iDia=findCol('día','dia');
+  const iCausa=findCol('causa');
+  const iDur=header.findIndex(c=>(c||'').toLowerCase().includes('duración')||(c||'').toLowerCase().includes('duracion'));
+
+  const ACW_CAUSAS=['acw','wrap-up','wrap_up','wrap_contacto'];
+  const acc={};
+
+  for(let i=1;i<csv.length;i++){
+    const r=csv[i];if(!r||!r.length)continue;
+    const agName=extractAgent(r[iAg]);
+    if(!agName)continue;
+    const key=firstLast(agName);
+    const causa=(r[iCausa]||'').trim();
+    const dia=(r[iDia]||'').trim();
+    const dur=parseMin(r[iDur]);
+
+    if(!acc[key])acc[key]={fullName:agName,acwSum:0,acwN:0,holdSum:0,holdN:0,
+      breakDays:{},banoDays:{}};
+
+    const ck=causa.toLowerCase().replace(/\s+/g,'');
+    if(ACW_CAUSAS.includes(ck)){
+      acc[key].acwSum+=dur;acc[key].acwN++;
+    }else if(causa==='Hold Time'){
+      acc[key].holdSum+=dur;acc[key].holdN++;
+    }else if(causa==='Break'){
+      if(!acc[key].breakDays[dia])acc[key].breakDays[dia]=0;
+      acc[key].breakDays[dia]+=dur;
+    }else if(causa==='Baño'){
+      if(!acc[key].banoDays[dia])acc[key].banoDays[dia]=0;
+      acc[key].banoDays[dia]+=dur;
+    }
+  }
+  for(const k of Object.keys(acc)){
+    const a=acc[k];
+    const bd=Object.values(a.breakDays);
+    const nd=Object.values(a.banoDays);
+    a.breakAvg=bd.length?bd.reduce((x,y)=>x+y,0)/bd.length:null;
+    a.banoAvg=nd.length?nd.reduce((x,y)=>x+y,0)/nd.length:null;
+    a.breakMaxDay=bd.length?Math.max(...bd):null;
+    a.banoMaxDay=nd.length?Math.max(...nd):null;
+    a.breakSum=bd.length?bd.reduce((x,y)=>x+y,0):0;
+    a.banoSum=nd.length?nd.reduce((x,y)=>x+y,0):0;
+    delete a.breakDays;delete a.banoDays;
+  }
+  return acc;
+}
+
+async function parseServicios(file){
+  const text=await file.text();
+  const csv=parseCSV(text,',');
+  if(csv.length<2)return{};
+  const header=csv[0].map(h=>(h||'').toString().replace(/^"|"$/g,'').trim());
+  const iAssigner=header.findIndex(h=>h.toLowerCase()==='assigner name');
+  const iStatus=header.findIndex(h=>h.toLowerCase()==='status');
+  if(iAssigner<0)return{};
+
+  const acc={};
+  for(let i=1;i<csv.length;i++){
+    const r=csv[i];if(!r||!r.length)continue;
+    const ass=(r[iAssigner]||'').toString().replace(/^"|"$/g,'').trim();
+    if(!ass)continue;
+    const cleaned=cleanAssigner(ass);
+    const key=firstLast(cleaned);
+    if(!acc[key])acc[key]={fullName:cleaned,total:0,completed:0,canceled:0};
+    acc[key].total++;
+    const st=((r[iStatus]||'').toString().replace(/^"|"$/g,'').trim()).toLowerCase();
+    if(st.includes('complet'))acc[key].completed++;
+    else if(st.includes('cancel'))acc[key].canceled++;
+  }
+  return acc;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CÁLCULO DE MÉTRICAS POR AGENTE
+// ═══════════════════════════════════════════════════════════════════════════
+function buildScorecard(){
+  const out=[];
+  for(const ag of STATE.distro){
+    const k=ag.nameKey;
+    const enc=STATE.encuestas[k];
+    const llam=STATE.llamadas[k];
+    const aux=STATE.auxiliares[k];
+    const qa=STATE.qa[k];
+    const serv=STATE.servicios[k];
+    const quejasAg=STATE.quejas.filter(q=>q.nameKey===k);
+
+    const rr=enc&&enc.rrN?enc.rrSum/enc.rrN:null;
+    const csat=enc&&enc.csatN?enc.csatSum/enc.csatN:null;
+    const srr=enc&&enc.sent?(enc.answered/enc.sent)*100:null;
+    const aht=llam&&llam.ahtN?llam.ahtSum/llam.ahtN:null;
+    const callsAt=llam?llam.atendidasIn+llam.atendidasOut:0;
+    const outboundPct=callsAt?(llam.atendidasOut/callsAt)*100:null;
+    const releasedPct=llam&&llam.atendidasIn?(llam.released/llam.atendidasIn)*100:null;
+    const sdr=enc&&llam&&llam.atendidasIn?(enc.sent/llam.atendidasIn)*100:null;
+    const acwMin=aux&&aux.acwN?aux.acwSum/aux.acwN:null;
+    const holdMin=aux&&aux.holdN?aux.holdSum/aux.holdN:null;
+    const breakMin=aux?aux.breakAvg:null;
+    const banoMin=aux?aux.banoAvg:null;
+    const qaScore=qa?qa.score:null;
+    const quejasYellow=quejasAg.filter(q=>q.tarjeta.toLowerCase().includes('amarill')).length;
+    const quejasRed=quejasAg.filter(q=>q.tarjeta.toLowerCase().includes('roj')).length;
+
+    out.push({
+      ...ag,
+      rr,csat,srr,sdr,aht,acwMin,holdMin,breakMin,banoMin,
+      callsAt,callsIn:llam?llam.atendidasIn:0,callsOut:llam?llam.atendidasOut:0,
+      outboundPct,releasedPct,
+      qaScore,qaEvals:qa?qa.evals:0,
+      quejasYellow,quejasRed,quejasTotal:quejasAg.length,
+      servTotal:serv?serv.total:0,
+      servComp:serv?serv.completed:0,
+      servCanc:serv?serv.canceled:0,
+      surveysSent:enc?enc.sent:0,
+      surveysAnswered:enc?enc.answered:0
+    });
+  }
+  return out;
+}
+
+function calcBono(row){
+  const checks={};
+  checks.quality={val:row.qaScore,target:CFG.BONO.quality.target,met:row.qaScore!=null&&row.qaScore>=CFG.BONO.quality.target,points:CFG.BONO.quality.points,label:CFG.BONO.quality.label,dir:'gte'};
+  checks.released={val:row.releasedPct,target:CFG.BONO.released.target,met:row.releasedPct!=null&&row.releasedPct<=CFG.BONO.released.target,points:CFG.BONO.released.points,label:CFG.BONO.released.label,dir:'lte'};
+  checks.csat={val:row.csat,target:CFG.BONO.csat.target,met:row.csat!=null&&row.csat>=CFG.BONO.csat.target,points:CFG.BONO.csat.points,label:CFG.BONO.csat.label,dir:'gte'};
+  checks.outbound={val:row.outboundPct,target:CFG.BONO.outbound.target,met:row.outboundPct!=null&&row.outboundPct>=CFG.BONO.outbound.target,points:CFG.BONO.outbound.points,label:CFG.BONO.outbound.label,dir:'gte'};
+  checks.rr_bono={val:row.rr,target:CFG.BONO.rr_bono.target,met:row.rr!=null&&row.rr>=CFG.BONO.rr_bono.target,points:CFG.BONO.rr_bono.points,label:CFG.BONO.rr_bono.label,dir:'gte'};
+  checks.sdr_bono={val:row.sdr,target:CFG.BONO.sdr_bono.target,met:row.sdr!=null&&row.sdr>=CFG.BONO.sdr_bono.target,points:CFG.BONO.sdr_bono.points,label:CFG.BONO.sdr_bono.label,dir:'gte'};
+  
+  const pen=STATE.manualPenalties[row.nameKey]||{};
+  const absVal=pen.absenteeism!=null?+pen.absenteeism:null;
+  checks.absent={val:absVal,target:CFG.BONO.absent.target,met:absVal!=null&&absVal<=CFG.BONO.absent.target,points:CFG.BONO.absent.points,label:CFG.BONO.absent.label,dir:'lte'};
+
+  let earnedPoints=0;
+  for(const c of Object.values(checks))if(c.met)earnedPoints+=c.points;
+
+  const yellow=row.quejasYellow||0;
+  const red=row.quejasRed||0;
+  const redEff=red+Math.floor(yellow/2);
+  const yellowEff=yellow%2;
+  const procedural=yellowEff;
+  const serious=redEff;
+  const absences=+(pen.absences||0);
+  const redemption=+(pen.redemption||0);
+
+  const lostPoints=redemption-(procedural*CFG.PEN.procedural)-(serious*CFG.PEN.serious)-(absences*CFG.PEN.absences);
+  const adjustedPoints=earnedPoints+lostPoints;
+
+  let tier=0,bonus=0;
+  for(const t of CFG.TIER){if(adjustedPoints>=t.min){tier=t.n;bonus=t.bonus;break;}}
+
+  return{
+    checks,earnedPoints,procedural,serious,absences,redemption,lostPoints,adjustedPoints,tier,bonus,
+    yellowOriginal:yellow,redOriginal:red,
+    baseSalary:CFG.BASE_SALARY,adjustedSalary:CFG.BASE_SALARY+bonus
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VISTAS / RENDER
+// ═══════════════════════════════════════════════════════════════════════════
+function renderActiveTab(){
+  const tab=document.querySelector('.tab.active');
+  if(!tab)return;
+  const which=tab.dataset.tab;
+  const containerId='view-'+which;
+  const c=$(containerId);
+  if(!c)return;
+  if(which==='scorecard')c.innerHTML=viewScorecard();
+  else if(which==='agente')c.innerHTML=viewAgente();
+  else if(which==='coordinador')c.innerHTML=viewCoordinador();
+  else if(which==='senior')c.innerHTML=viewSenior();
+  else if(which==='top')c.innerHTML=viewTop();
+  else if(which==='bono')c.innerHTML=viewBono();
+  else if(which==='distro')c.innerHTML=viewDistro();
+  else if(which==='cargar')c.innerHTML=viewCargar();
+  else if(which==='config')c.innerHTML=viewConfig();
+  
+  // Render charts after innerHTML
+  if(which==='agente'&&STATE.selectedAgent)renderAgentCharts();
+}
+
+function dateFilterBar(){
+  const f=STATE.dateFilter;
+  const dates=[...new Set(STATE.history.map(h=>h.date))].sort();
+  const months=[...new Set(dates.map(d=>d.slice(0,7)))].sort();
+  const weeks=[...new Set(dates.map(weekKey))].sort();
+  return`<div class="filter-row" style="margin-bottom:8px">
+    <div class="field"><label>Modo</label><select id="dfMode" onchange="changeDateMode(this.value)">
+      <option value="day"${f.mode==='day'?' selected':''}>Día</option>
+      <option value="week"${f.mode==='week'?' selected':''}>Semana</option>
+      <option value="month"${f.mode==='month'?' selected':''}>Mes</option>
+      <option value="range"${f.mode==='range'?' selected':''}>Rango</option>
+      <option value="all"${f.mode==='all'?' selected':''}>Todo el histórico</option>
+    </select></div>
+    ${f.mode==='day'?`<div class="field"><label>Día</label><select id="dfDay" onchange="STATE.dateFilter.day=this.value;reconstructCurrentDay();renderActiveTab()">
+      ${dates.map(d=>`<option value="${d}"${f.day===d?' selected':''}>${fmt.date(d)}</option>`).join('')}
+    </select></div>`:''}
+    ${f.mode==='week'?`<div class="field"><label>Semana</label><select id="dfWeek" onchange="STATE.dateFilter.week=this.value;reconstructCurrentDay();renderActiveTab()">
+      ${weeks.map(w=>`<option value="${w}"${f.week===w?' selected':''}>${w}</option>`).join('')}
+    </select></div>`:''}
+    ${f.mode==='month'?`<div class="field"><label>Mes</label><select id="dfMonth" onchange="STATE.dateFilter.month=this.value;reconstructCurrentDay();renderActiveTab()">
+      ${months.map(m=>`<option value="${m}"${f.month===m?' selected':''}>${m}</option>`).join('')}
+    </select></div>`:''}
+    ${f.mode==='range'?`<div class="field"><label>Desde</label><input type="date" id="dfStart" value="${f.start||''}" onchange="STATE.dateFilter.start=this.value;reconstructCurrentDay();renderActiveTab()"></div>
+      <div class="field"><label>Hasta</label><input type="date" id="dfEnd" value="${f.end||''}" onchange="STATE.dateFilter.end=this.value;reconstructCurrentDay();renderActiveTab()"></div>`:''}
+    <div style="font-size:11px;color:var(--muted2);align-self:center;font-family:var(--mono)">${dates.length} día(s) en histórico</div>
+  </div>`;
+}
+
+function changeDateMode(m){
+  STATE.dateFilter.mode=m;
+  const dates=[...new Set(STATE.history.map(h=>h.date))].sort();
+  if(m==='day'&&!STATE.dateFilter.day&&dates.length)STATE.dateFilter.day=dates[dates.length-1];
+  if(m==='month'&&!STATE.dateFilter.month&&dates.length)STATE.dateFilter.month=dates[dates.length-1].slice(0,7);
+  if(m==='week'&&!STATE.dateFilter.week&&dates.length)STATE.dateFilter.week=weekKey(dates[dates.length-1]);
+  if(m==='range'&&!STATE.dateFilter.start&&dates.length){
+    STATE.dateFilter.start=dates[0];STATE.dateFilter.end=dates[dates.length-1];
+  }
+  reconstructCurrentDay();
+  renderActiveTab();
+}
+
+// ═══════════════ VISTA: SCORECARD ═══════════════
+function viewScorecard(){
+  const rows=buildScorecard();
+  if(!rows.length){
+    return`<div class="card"><div class="empty">
+      <div class="empty-icon">▤</div>
+      <div class="empty-title">Sin distribución cargada</div>
+      <div class="empty-text">Esperando que se cargue la distribución desde Google Sheets…</div>
+    </div></div>`;
+  }
+  const noData=rows.every(r=>r.callsAt===0&&r.surveysSent===0&&!r.qaScore);
+  const validRR=rows.filter(r=>r.rr!=null);
+  const validCSAT=rows.filter(r=>r.csat!=null);
+  const validQA=rows.filter(r=>r.qaScore!=null);
+  const totalCalls=rows.reduce((s,r)=>s+(r.callsAt||0),0);
+  const totalQuejas=rows.reduce((s,r)=>s+(r.quejasTotal||0),0);
+  const avg=arr=>arr.length?arr.reduce((s,r)=>s+r,0)/arr.length:null;
+  const kRR=avg(validRR.map(r=>r.rr));
+  const kCSAT=avg(validCSAT.map(r=>r.csat));
+  const kQA=avg(validQA.map(r=>r.qaScore));
+
+  const filterCoord=$('filterCoord')?$('filterCoord').value:'';
+  const filterCluster=$('filterCluster')?$('filterCluster').value:'';
+  const filterSearch=($('filterSearch')?$('filterSearch').value:'').toLowerCase();
+
+  let displayed=rows;
+  if(filterCoord)displayed=displayed.filter(r=>r.coord===filterCoord);
+  if(filterCluster)displayed=displayed.filter(r=>r.cluster===filterCluster);
+  if(filterSearch)displayed=displayed.filter(r=>r.agent.toLowerCase().includes(filterSearch));
+
+  const coords=[...new Set(rows.map(r=>r.coord))].sort();
+  const clusters=[...new Set(rows.map(r=>r.cluster))].sort();
+
+  return`
+    ${dateFilterBar()}
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Agentes</div><div class="kpi-value">${rows.length}</div><div class="kpi-meta">Prod Agents</div></div>
+      <div class="kpi"><div class="kpi-label">Llamadas atendidas</div><div class="kpi-value">${fmt.num(totalCalls)}</div><div class="kpi-meta">Total periodo</div></div>
+      <div class="kpi"><div class="kpi-label">RR promedio</div><div class="kpi-value">${fmt.pct(kRR)}</div><div class="kpi-meta">Meta ≥${CFG.META_RR}%</div></div>
+      <div class="kpi"><div class="kpi-label">CSAT promedio</div><div class="kpi-value">${fmt.pct(kCSAT)}</div><div class="kpi-meta">Meta ≥${CFG.META_CSAT}%</div></div>
+      <div class="kpi"><div class="kpi-label">QA promedio</div><div class="kpi-value">${fmt.pct(kQA)}</div><div class="kpi-meta">Meta ≥${CFG.META_QA}%</div></div>
+      <div class="kpi"><div class="kpi-label">Quejas activas</div><div class="kpi-value">${totalQuejas}</div><div class="kpi-meta">Tarjetas aplicadas</div></div>
+    </div>
+
+    ${noData?'<div class="banner warn">⚠ No hay datos de operación cargados aún. Ve a <strong>Cargar datos</strong> para subir los archivos del día.</div>':''}
+
+    <div class="card">
+      <div class="filter-row">
+        <div class="field"><label>Buscar agente</label><input type="text" id="filterSearch" placeholder="Nombre…" value="${filterSearch}" oninput="renderActiveTab()"></div>
+        <div class="field"><label>Coordinador</label><select id="filterCoord" onchange="renderActiveTab()">
+          <option value="">Todos</option>
+          ${coords.map(c=>`<option value="${c}"${c===filterCoord?' selected':''}>${c}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Cluster</label><select id="filterCluster" onchange="renderActiveTab()">
+          <option value="">Todos</option>
+          ${clusters.map(c=>`<option value="${c}"${c===filterCluster?' selected':''}>${c}</option>`).join('')}
+        </select></div>
+      </div>
+
+      <div style="overflow-x:auto;max-height:70vh;overflow-y:auto">
+      <table>
+        <thead><tr>
+          <th style="min-width:180px">Agente</th>
+          <th>Coord</th>
+          <th>CL</th>
+          <th class="col-num">Llam.</th>
+          <th class="col-num">RR</th>
+          <th class="col-num">CSAT</th>
+          <th class="col-num">SDR</th>
+          <th class="col-num">SRR</th>
+          <th class="col-num">AHT</th>
+          <th class="col-num">ACW</th>
+          <th class="col-num">Hold</th>
+          <th class="col-num">Break</th>
+          <th class="col-num">Baño</th>
+          <th class="col-num">QA</th>
+          <th class="col-num">Rel%</th>
+          <th class="col-num">Out%</th>
+          <th class="col-num">Quejas</th>
+          <th class="col-num">Serv.</th>
+        </tr></thead>
+        <tbody>
+        ${displayed.map(r=>`<tr onclick="selectAgent('${r.nameKey}')">
+          <td class="col-name">${r.agent}</td>
+          <td class="muted">${r.coord}</td>
+          <td>${clusterTag(r.cluster)}</td>
+          <td class="col-num">${fmt.num(r.callsAt)}</td>
+          <td class="col-num">${statusCell(r.rr,CFG.META_RR,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(r.csat,CFG.META_CSAT,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(r.sdr,CFG.META_SDR,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(r.srr,CFG.META_SRR,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(r.aht,CFG.META_AHT_SEC,'lte',v=>fmt.secs(v))}</td>
+          <td class="col-num">${statusCell(r.acwMin,CFG.META_ACW_MIN,'lte',v=>fmt.mins(v))}</td>
+          <td class="col-num">${statusCell(r.holdMin,CFG.META_HOLD_MIN,'lte',v=>fmt.mins(v))}</td>
+          <td class="col-num">${statusCell(r.breakMin,CFG.META_BREAK_MIN,'lte',v=>v.toFixed(1)+' m')}</td>
+          <td class="col-num">${statusCell(r.banoMin,CFG.META_BANO_MIN,'lte',v=>v.toFixed(1)+' m')}</td>
+          <td class="col-num">${statusCell(r.qaScore,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(r.releasedPct,6,'lte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(r.outboundPct,30,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${r.quejasTotal>0?`<span class="b ${r.quejasRed>0?'bad':'warn'}">${r.quejasYellow}A · ${r.quejasRed}R</span>`:'<span class="muted">—</span>'}</td>
+          <td class="col-num">${r.servTotal||'<span class="muted">—</span>'}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted2);font-family:var(--mono)">Mostrando ${displayed.length} de ${rows.length} agentes · Click en una fila para ver el detalle</div>
+    </div>
+  `;
+}
+
+function selectAgent(nameKey){
+  STATE.selectedAgent=nameKey;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('[data-tab="agente"]').classList.add('active');
+  document.querySelectorAll('[id^=view-]').forEach(v=>v.classList.add('hidden'));
+  $('view-agente').classList.remove('hidden');
+  renderActiveTab();
+}
+
+// ═══════════════ VISTA: POR AGENTE ═══════════════
+function viewAgente(){
+  const rows=buildScorecard();
+  if(!rows.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
+  
+  const sel=STATE.selectedAgent||rows[0].nameKey;
+  const r=rows.find(x=>x.nameKey===sel)||rows[0];
+  STATE.selectedAgent=r.nameKey;
+  const bono=calcBono(r);
+  const pen=STATE.manualPenalties[r.nameKey]||{};
+
+  return`
+    <div class="card">
+      <div class="filter-row">
+        <div class="field" style="flex:2"><label>Seleccionar agente</label><select onchange="STATE.selectedAgent=this.value;renderActiveTab()">
+          ${rows.map(a=>`<option value="${a.nameKey}"${a.nameKey===r.nameKey?' selected':''}>${a.agent} · ${a.coord}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Senior</label><div class="kpi-value" style="font-size:14px;font-family:var(--sans)">${r.senior||'—'}</div></div>
+        <div class="field"><label>Coordinador</label><div class="kpi-value" style="font-size:14px;font-family:var(--sans)">${r.coord||'—'}</div></div>
+        <div class="field"><label>Cluster</label><div>${clusterTag(r.cluster)}</div></div>
+        <div class="field"><label>Extensión</label><div class="kpi-value" style="font-size:14px;font-family:var(--mono)">${r.extension||'—'}</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Métricas operativas</div>
+      <div class="metric-grid">
+        ${metricTile('RR',fmt.pct(r.rr),`Meta ≥${CFG.META_RR}%`,statusFor(r.rr,CFG.META_RR,'gte'))}
+        ${metricTile('CSAT',fmt.pct(r.csat),`Meta ≥${CFG.META_CSAT}%`,statusFor(r.csat,CFG.META_CSAT,'gte'))}
+        ${metricTile('Survey Delivery',fmt.pct(r.sdr),`Meta ≥${CFG.META_SDR}%`,statusFor(r.sdr,CFG.META_SDR,'gte'))}
+        ${metricTile('Survey Return',fmt.pct(r.srr),`Meta ≥${CFG.META_SRR}%`,statusFor(r.srr,CFG.META_SRR,'gte'))}
+        ${metricTile('AHT',fmt.secs(r.aht),`Meta ≤08:30`,statusFor(r.aht,CFG.META_AHT_SEC,'lte'))}
+        ${metricTile('ACW',fmt.mins(r.acwMin),`Meta ≤02:00`,statusFor(r.acwMin,CFG.META_ACW_MIN,'lte'))}
+        ${metricTile('Hold',fmt.mins(r.holdMin),`Meta ≤02:00`,statusFor(r.holdMin,CFG.META_HOLD_MIN,'lte'))}
+        ${metricTile('Break',r.breakMin!=null?r.breakMin.toFixed(1)+' min':'—',`Meta ≤30 min/día`,statusFor(r.breakMin,CFG.META_BREAK_MIN,'lte'))}
+        ${metricTile('Baño',r.banoMin!=null?r.banoMin.toFixed(1)+' min':'—',`Meta ≤10 min/día`,statusFor(r.banoMin,CFG.META_BANO_MIN,'lte'))}
+        ${metricTile('QA',fmt.pct(r.qaScore),`Meta ≥${CFG.META_QA}%${r.qaEvals?' · '+r.qaEvals+' eval':''}`,statusFor(r.qaScore,CFG.META_QA,'gte'))}
+        ${metricTile('Released',fmt.pct(r.releasedPct),`Meta ≤6%`,statusFor(r.releasedPct,6,'lte'))}
+        ${metricTile('Outbound',fmt.pct(r.outboundPct),`Meta ≥30%`,statusFor(r.outboundPct,30,'gte'))}
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Volumen</div>
+        <div class="metric-grid">
+          ${metricTile('Llamadas atendidas',fmt.num(r.callsAt),`${r.callsIn} entrantes / ${r.callsOut} salientes`,'neutral')}
+          ${metricTile('Encuestas enviadas',fmt.num(r.surveysSent),`${r.surveysAnswered} respondidas`,'neutral')}
+          ${metricTile('Servicios solicitados',fmt.num(r.servTotal),`${r.servComp} comp · ${r.servCanc} canc`,'neutral')}
+          ${metricTile('Quejas',`${r.quejasYellow}A + ${r.quejasRed}R`,`${r.quejasTotal} total`,r.quejasRed>0?'bad':r.quejasYellow>0?'warn':'ok')}
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="section-title">Bonificación estimada</div>
+        <div class="metric-grid">
+          ${metricTile('Earned points',fmt.num(bono.earnedPoints),'de 3,000 pts','neutral')}
+          ${metricTile('Adjusted points',fmt.num(bono.adjustedPoints),`Lost: ${bono.lostPoints>=0?'+':''}${fmt.num(bono.lostPoints)}`,bono.adjustedPoints>=2100?'ok':'warn')}
+          ${metricTile('Tier','Tier '+bono.tier,`<span class="tier-badge tier-${bono.tier}">Tier ${bono.tier}</span>`,bono.tier>=2?'ok':bono.tier===1?'warn':'neutral')}
+          ${metricTile('Bono',fmt.money(bono.bonus),`Salario ${fmt.money(bono.adjustedSalary)}`,bono.bonus>0?'ok':'neutral')}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">Tendencia histórica</div>
+        <div class="chart-wrap"><canvas id="chartTrend"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Volumen diario</div>
+        <div class="chart-wrap"><canvas id="chartVolume"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Penalizaciones manuales</div>
+      <p class="section-sub">Estos campos se ingresan manualmente y afectan el cálculo del bono. Click en guardar para aplicar.</p>
+      <div class="grid-4">
+        <div class="field"><label>Ausencias injustificadas</label><input type="number" id="penAbsences" value="${pen.absences||0}" min="0"></div>
+        <div class="field"><label>Redemption Points</label><input type="number" id="penRedemption" value="${pen.redemption||0}"></div>
+        <div class="field"><label>Absenteeism %</label><input type="number" id="penAbsenteeism" value="${pen.absenteeism!=null?pen.absenteeism:''}" step="0.1" placeholder="—"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn primary" onclick="savePenalties('${r.nameKey}')">Guardar</button></div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted2);font-family:var(--mono)">
+        Procedural failures: ${bono.procedural} (de ${bono.yellowOriginal} amarillas · ${Math.floor(bono.yellowOriginal/2)} convertidas a rojas) · 
+        Serious faults: ${bono.serious} (de ${bono.redOriginal} rojas + conversiones)
+      </div>
+    </div>
+  `;
+}
+
+function metricTile(label,value,meta,status){
+  const cls=status==='ok'?'cell-ok':status==='warn'?'cell-warn':status==='bad'?'cell-bad':'';
+  return`<div class="metric-tile">
+    <div class="metric-tile-label">${label}</div>
+    <div class="metric-tile-value ${cls}">${value}</div>
+    <div class="metric-tile-meta">${meta}</div>
+  </div>`;
+}
+
+async function savePenalties(nameKey){
+  if(!checkAuth())return;
+  const data={
+    absences:+($('penAbsences').value||0),
+    redemption:+($('penRedemption').value||0),
+    absenteeism:$('penAbsenteeism').value!==''?+$('penAbsenteeism').value:null
+  };
+  STATE.manualPenalties[nameKey]=data;
+  if(CFG.BACKEND_URL){
+    try{
+      await pushBackend({type:'penalties',nameKey,data});
+      showBanner('success','Penalizaciones guardadas y sincronizadas');
+    }catch(e){
+      showBanner('error','Error al guardar: '+e.message);
+    }
+  }
+  renderActiveTab();
+}
+
+function renderAgentCharts(){
+  if(!STATE.selectedAgent)return;
+  const k=STATE.selectedAgent;
+  const hist=STATE.history.filter(h=>h.nameKey===k).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!hist.length){
+    const t=$('chartTrend');if(t)t.parentElement.innerHTML='<div class="empty" style="padding:60px"><div class="empty-text">Sin histórico para gráficos</div></div>';
+    return;
+  }
+  const labels=hist.map(h=>h.date.slice(5));
+  
+  // Trend chart
+  const trendEl=$('chartTrend');
+  if(trendEl){
+    if(window._trendChart)window._trendChart.destroy();
+    window._trendChart=new Chart(trendEl,{
+      type:'line',
+      data:{labels,datasets:[
+        {label:'RR',data:hist.map(h=>h.rrN?h.rrPctSum/h.rrN:null),borderColor:'#0f7a56',backgroundColor:'rgba(15,122,86,.1)',tension:.3,spanGaps:true},
+        {label:'CSAT',data:hist.map(h=>h.csatN?h.csatPctSum/h.csatN:null),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.1)',tension:.3,spanGaps:true},
+        {label:'QA',data:hist.map(h=>h.qaScore||null),borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.1)',tension:.3,spanGaps:true}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}},
+        plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}
+      }
+    });
+  }
+  
+  const volEl=$('chartVolume');
+  if(volEl){
+    if(window._volChart)window._volChart.destroy();
+    window._volChart=new Chart(volEl,{
+      type:'bar',
+      data:{labels,datasets:[
+        {label:'Atendidas',data:hist.map(h=>h.callsAt||0),backgroundColor:'#0f7a56'},
+        {label:'Encuestas',data:hist.map(h=>h.surveysSent||0),backgroundColor:'#2563eb'}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}
+      }
+    });
+  }
+}
+
+// ═══════════════ VISTA: POR COORDINADOR ═══════════════
+function viewCoordinador(){
+  const rows=buildScorecard();
+  if(!rows.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
+  
+  const byCoord={};
+  for(const r of rows){
+    if(!byCoord[r.coord])byCoord[r.coord]={coord:r.coord,senior:r.senior,agents:[],rrSum:0,rrN:0,csatSum:0,csatN:0,qaSum:0,qaN:0,callsAt:0,quejas:0,bonusTotal:0,agentsBonus:0};
+    const c=byCoord[r.coord];
+    c.agents.push(r);
+    if(r.rr!=null){c.rrSum+=r.rr;c.rrN++;}
+    if(r.csat!=null){c.csatSum+=r.csat;c.csatN++;}
+    if(r.qaScore!=null){c.qaSum+=r.qaScore;c.qaN++;}
+    c.callsAt+=r.callsAt;
+    c.quejas+=r.quejasTotal;
+    const b=calcBono(r);
+    c.bonusTotal+=b.bonus;
+    if(b.bonus>0)c.agentsBonus++;
+  }
+
+  const list=Object.values(byCoord);
+  const sel=STATE.selectedCoord||list[0]?.coord;
+  const selData=list.find(c=>c.coord===sel)||list[0];
+
+  return`
+    <div class="card">
+      <div class="section-title">Resumen por coordinador</div>
+      <table>
+        <thead><tr>
+          <th>Coordinador</th>
+          <th>Senior</th>
+          <th class="col-num">Agentes</th>
+          <th class="col-num">Llamadas</th>
+          <th class="col-num">RR</th>
+          <th class="col-num">CSAT</th>
+          <th class="col-num">QA</th>
+          <th class="col-num">Quejas</th>
+          <th class="col-num">Agentes c/bono</th>
+          <th class="col-num">Bono total</th>
+        </tr></thead>
+        <tbody>
+        ${list.sort((a,b)=>a.coord.localeCompare(b.coord)).map(c=>`<tr onclick="STATE.selectedCoord='${c.coord}';renderActiveTab()" style="${c.coord===sel?'background:var(--accent-light)':''}">
+          <td class="col-name">${c.coord}</td>
+          <td class="muted">${c.senior||'—'}</td>
+          <td class="col-num">${c.agents.length}</td>
+          <td class="col-num">${fmt.num(c.callsAt)}</td>
+          <td class="col-num">${statusCell(c.rrN?c.rrSum/c.rrN:null,CFG.META_RR,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(c.csatN?c.csatSum/c.csatN:null,CFG.META_CSAT,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(c.qaN?c.qaSum/c.qaN:null,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${c.quejas||'<span class="muted">—</span>'}</td>
+          <td class="col-num">${c.agentsBonus} / ${c.agents.length}</td>
+          <td class="col-num">${fmt.money(c.bonusTotal)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    
+    ${selData?`<div class="card">
+      <div class="section-title">Equipo de ${selData.coord}</div>
+      <table>
+        <thead><tr>
+          <th>Agente</th><th>CL</th>
+          <th class="col-num">Llam.</th>
+          <th class="col-num">RR</th><th class="col-num">CSAT</th>
+          <th class="col-num">AHT</th><th class="col-num">QA</th>
+          <th class="col-num">Quejas</th>
+          <th class="col-num">Pts</th>
+          <th class="col-num">Bono</th>
+        </tr></thead>
+        <tbody>
+        ${selData.agents.map(r=>{
+          const b=calcBono(r);
+          return`<tr onclick="selectAgent('${r.nameKey}')">
+            <td class="col-name">${r.agent}</td>
+            <td>${clusterTag(r.cluster)}</td>
+            <td class="col-num">${fmt.num(r.callsAt)}</td>
+            <td class="col-num">${statusCell(r.rr,CFG.META_RR,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(r.csat,CFG.META_CSAT,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(r.aht,CFG.META_AHT_SEC,'lte',v=>fmt.secs(v))}</td>
+            <td class="col-num">${statusCell(r.qaScore,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${r.quejasTotal||'<span class="muted">—</span>'}</td>
+            <td class="col-num">${fmt.num(b.adjustedPoints)}</td>
+            <td class="col-num"><span class="tier-badge tier-${b.tier}">${fmt.money(b.bonus)}</span></td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>`:''}
+  `;
+}
+
+// ═══════════════ VISTA: POR SENIOR ═══════════════
+function viewSenior(){
+  const rows=buildScorecard();
+  if(!rows.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
+  
+  const bySr={};
+  for(const r of rows){
+    const sr=r.senior||'—';
+    if(!bySr[sr])bySr[sr]={senior:sr,coords:{},agents:[],rrSum:0,rrN:0,csatSum:0,csatN:0,qaSum:0,qaN:0,callsAt:0,quejas:0,bonusTotal:0};
+    const s=bySr[sr];
+    s.agents.push(r);
+    if(!s.coords[r.coord])s.coords[r.coord]=0;
+    s.coords[r.coord]++;
+    if(r.rr!=null){s.rrSum+=r.rr;s.rrN++;}
+    if(r.csat!=null){s.csatSum+=r.csat;s.csatN++;}
+    if(r.qaScore!=null){s.qaSum+=r.qaScore;s.qaN++;}
+    s.callsAt+=r.callsAt;
+    s.quejas+=r.quejasTotal;
+    s.bonusTotal+=calcBono(r).bonus;
+  }
+  return`
+    <div class="card">
+      <div class="section-title">Resumen por senior</div>
+      <table>
+        <thead><tr>
+          <th>Senior</th>
+          <th class="col-num">Coordinadores</th>
+          <th class="col-num">Agentes</th>
+          <th class="col-num">Llamadas</th>
+          <th class="col-num">RR</th>
+          <th class="col-num">CSAT</th>
+          <th class="col-num">QA</th>
+          <th class="col-num">Quejas</th>
+          <th class="col-num">Bono total</th>
+        </tr></thead>
+        <tbody>
+        ${Object.values(bySr).sort((a,b)=>a.senior.localeCompare(b.senior)).map(s=>`<tr>
+          <td class="col-name">${s.senior}</td>
+          <td class="col-num">${Object.keys(s.coords).length}</td>
+          <td class="col-num">${s.agents.length}</td>
+          <td class="col-num">${fmt.num(s.callsAt)}</td>
+          <td class="col-num">${statusCell(s.rrN?s.rrSum/s.rrN:null,CFG.META_RR,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(s.csatN?s.csatSum/s.csatN:null,CFG.META_CSAT,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(s.qaN?s.qaSum/s.qaN:null,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${s.quejas||'<span class="muted">—</span>'}</td>
+          <td class="col-num">${fmt.money(s.bonusTotal)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    
+    ${Object.values(bySr).map(s=>`<div class="card">
+      <div class="section-title">Equipo de ${s.senior}</div>
+      <p class="section-sub">${Object.keys(s.coords).length} coordinador(es) · ${s.agents.length} agentes</p>
+      <table>
+        <thead><tr>
+          <th>Coordinador</th>
+          <th class="col-num">Agentes</th>
+          <th class="col-num">RR prom</th>
+          <th class="col-num">CSAT prom</th>
+          <th class="col-num">QA prom</th>
+        </tr></thead>
+        <tbody>
+        ${Object.entries(s.coords).map(([c,n])=>{
+          const ags=s.agents.filter(a=>a.coord===c);
+          const rrV=ags.filter(a=>a.rr!=null);
+          const csV=ags.filter(a=>a.csat!=null);
+          const qaV=ags.filter(a=>a.qaScore!=null);
+          const rr=rrV.length?rrV.reduce((s,a)=>s+a.rr,0)/rrV.length:null;
+          const cs=csV.length?csV.reduce((s,a)=>s+a.csat,0)/csV.length:null;
+          const qa=qaV.length?qaV.reduce((s,a)=>s+a.qaScore,0)/qaV.length:null;
+          return`<tr>
+            <td class="col-name">${c}</td>
+            <td class="col-num">${n}</td>
+            <td class="col-num">${statusCell(rr,CFG.META_RR,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(cs,CFG.META_CSAT,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(qa,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>`).join('')}
+  `;
+}
+
+// ═══════════════ VISTA: TOP PERFORMERS ═══════════════
+function viewTop(){
+  const rows=buildScorecard();
+  if(!rows.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
+  
+  const sorted=[...rows].map(r=>({...r,bono:calcBono(r)}));
+  
+  const topRR=[...sorted].filter(r=>r.rr!=null).sort((a,b)=>b.rr-a.rr).slice(0,10);
+  const topCSAT=[...sorted].filter(r=>r.csat!=null).sort((a,b)=>b.csat-a.csat).slice(0,10);
+  const topQA=[...sorted].filter(r=>r.qaScore!=null).sort((a,b)=>b.qaScore-a.qaScore).slice(0,10);
+  const topPoints=[...sorted].sort((a,b)=>b.bono.adjustedPoints-a.bono.adjustedPoints).slice(0,10);
+  const topCalls=[...sorted].sort((a,b)=>b.callsAt-a.callsAt).slice(0,10);
+  const topServ=[...sorted].filter(r=>r.servTotal>0).sort((a,b)=>b.servTotal-a.servTotal).slice(0,10);
+
+  function topList(items,valueFn,fmtFn){
+    return`<table>
+      <thead><tr><th>#</th><th>Agente</th><th>Coord</th><th class="col-num">Valor</th></tr></thead>
+      <tbody>
+      ${items.map((r,i)=>`<tr onclick="selectAgent('${r.nameKey}')">
+        <td><strong>${i+1}</strong></td>
+        <td class="col-name">${r.agent}</td>
+        <td class="muted">${r.coord}</td>
+        <td class="col-num"><strong>${fmtFn(valueFn(r))}</strong></td>
+      </tr>`).join('')}
+      </tbody></table>`;
+  }
+
+  return`
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">🏆 Top RR</div>
+        ${topList(topRR,r=>r.rr,fmt.pct)}
+      </div>
+      <div class="card">
+        <div class="section-title">🏆 Top CSAT</div>
+        ${topList(topCSAT,r=>r.csat,fmt.pct)}
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">🏆 Top QA</div>
+        ${topList(topQA,r=>r.qaScore,fmt.pct)}
+      </div>
+      <div class="card">
+        <div class="section-title">🏆 Top Bonus Points</div>
+        ${topList(topPoints,r=>r.bono.adjustedPoints,v=>fmt.num(v)+' pts')}
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="section-title">🏆 Top Volumen llamadas</div>
+        ${topList(topCalls,r=>r.callsAt,fmt.num)}
+      </div>
+      <div class="card">
+        <div class="section-title">🏆 Top Servicios solicitados</div>
+        ${topList(topServ,r=>r.servTotal,fmt.num)}
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════ VISTA: BONIFICACIONES ═══════════════
+function viewBono(){
+  const rows=buildScorecard();
+  if(!rows.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
+  
+  const data=rows.map(r=>({...r,bono:calcBono(r)}));
+  const totalBono=data.reduce((s,r)=>s+r.bono.bonus,0);
+  const totalSalary=data.reduce((s,r)=>s+r.bono.adjustedSalary,0);
+  const tierCounts={0:0,1:0,2:0,3:0};
+  data.forEach(r=>tierCounts[r.bono.tier]++);
+
+  const filterCoord=$('bonoCoord')?$('bonoCoord').value:'';
+  const filterTier=$('bonoTier')?$('bonoTier').value:'';
+  let displayed=data;
+  if(filterCoord)displayed=displayed.filter(r=>r.coord===filterCoord);
+  if(filterTier!=='')displayed=displayed.filter(r=>String(r.bono.tier)===filterTier);
+  
+  const coords=[...new Set(rows.map(r=>r.coord))].sort();
+
+  return`
+    ${dateFilterBar()}
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Agentes</div><div class="kpi-value">${data.length}</div></div>
+      <div class="kpi"><div class="kpi-label">Tier 3 ($300)</div><div class="kpi-value cell-ok">${tierCounts[3]}</div></div>
+      <div class="kpi"><div class="kpi-label">Tier 2 ($150)</div><div class="kpi-value cell-warn">${tierCounts[2]}</div></div>
+      <div class="kpi"><div class="kpi-label">Tier 1 ($75)</div><div class="kpi-value">${tierCounts[1]}</div></div>
+      <div class="kpi"><div class="kpi-label">Tier 0 ($0)</div><div class="kpi-value cell-bad">${tierCounts[0]}</div></div>
+      <div class="kpi"><div class="kpi-label">Bono total</div><div class="kpi-value">${fmt.money(totalBono)}</div><div class="kpi-meta">+ ${fmt.money(data.length*CFG.BASE_SALARY)} base</div></div>
+    </div>
+
+    <div class="card">
+      <div class="filter-row">
+        <div class="field"><label>Coordinador</label><select id="bonoCoord" onchange="renderActiveTab()">
+          <option value="">Todos</option>
+          ${coords.map(c=>`<option value="${c}"${c===filterCoord?' selected':''}>${c}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Tier</label><select id="bonoTier" onchange="renderActiveTab()">
+          <option value="">Todos</option>
+          <option value="3"${filterTier==='3'?' selected':''}>Tier 3 ($300)</option>
+          <option value="2"${filterTier==='2'?' selected':''}>Tier 2 ($150)</option>
+          <option value="1"${filterTier==='1'?' selected':''}>Tier 1 ($75)</option>
+          <option value="0"${filterTier==='0'?' selected':''}>Tier 0 ($0)</option>
+        </select></div>
+      </div>
+      
+      <div style="overflow-x:auto;max-height:70vh;overflow-y:auto">
+      <table>
+        <thead><tr>
+          <th>Agente</th><th>Coord</th>
+          <th class="col-num" title="Quality">QA</th>
+          <th class="col-num" title="Released ≤6%">Rel%</th>
+          <th class="col-num" title="CSAT ≥85%">CSAT</th>
+          <th class="col-num" title="Outbound ≥30%">Out%</th>
+          <th class="col-num" title="RR ≥90%">RR</th>
+          <th class="col-num" title="SDR ≥45%">SDR</th>
+          <th class="col-num" title="Absent ≤1%">Ab%</th>
+          <th class="col-num">Earned</th>
+          <th class="col-num">Pen.</th>
+          <th class="col-num">Adjusted</th>
+          <th>Tier</th>
+          <th class="col-num">Bono</th>
+        </tr></thead>
+        <tbody>
+        ${displayed.sort((a,b)=>b.bono.adjustedPoints-a.bono.adjustedPoints).map(r=>{
+          const b=r.bono;
+          const ck=k=>b.checks[k].met?'<span class="cell-ok">✓</span>':b.checks[k].val==null?'<span class="muted">—</span>':'<span class="cell-bad">✗</span>';
+          return`<tr onclick="selectAgent('${r.nameKey}')">
+            <td class="col-name">${r.agent}</td>
+            <td class="muted">${r.coord}</td>
+            <td class="col-num">${ck('quality')}</td>
+            <td class="col-num">${ck('released')}</td>
+            <td class="col-num">${ck('csat')}</td>
+            <td class="col-num">${ck('outbound')}</td>
+            <td class="col-num">${ck('rr_bono')}</td>
+            <td class="col-num">${ck('sdr_bono')}</td>
+            <td class="col-num">${ck('absent')}</td>
+            <td class="col-num">${fmt.num(b.earnedPoints)}</td>
+            <td class="col-num ${b.lostPoints<0?'cell-bad':b.lostPoints>0?'cell-ok':''}">${b.lostPoints>=0?'+':''}${fmt.num(b.lostPoints)}</td>
+            <td class="col-num"><strong>${fmt.num(b.adjustedPoints)}</strong></td>
+            <td><span class="tier-badge tier-${b.tier}">Tier ${b.tier}</span></td>
+            <td class="col-num"><strong>${fmt.money(b.bonus)}</strong></td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="section-title">Reglas de bonificación</div>
+      <div class="bono-row" style="font-weight:700;color:var(--muted3);text-transform:uppercase;font-size:10.5px;letter-spacing:.5px">
+        <div>Métrica</div><div class="target">Target</div><div class="val">Puntos</div><div class="val">Tipo</div>
+      </div>
+      ${Object.entries(CFG.BONO).map(([k,v])=>`<div class="bono-row">
+        <div class="lbl">${v.label}</div>
+        <div class="target">${v.dir==='gte'?'≥':'≤'}${v.target}%</div>
+        <div class="val">${v.points}</div>
+        <div class="val muted">${v.dir==='gte'?'mayor=mejor':'menor=mejor'}</div>
+      </div>`).join('')}
+      <hr>
+      <p class="section-sub">Penalizaciones: Procedural failure (amarilla) -${CFG.PEN.procedural} · Serious fault (roja) -${CFG.PEN.serious} · Ausencia injustificada -${CFG.PEN.absences} · 2 amarillas = 1 roja</p>
+      <p class="section-sub">Tiers: ${CFG.TIER.slice().reverse().map(t=>`${t.label}: ≥${t.min} pts → ${fmt.money(t.bonus)}`).join(' · ')}</p>
+      <p class="section-sub">Salario base: ${fmt.money(CFG.BASE_SALARY)} (no incluido en bono)</p>
+    </div>
+  `;
+}
+
+// ═══════════════ VISTA: DISTRIBUCIÓN ═══════════════
+function viewDistro(){
+  if(!STATE.distro.length){
+    return`<div class="card"><div class="empty">
+      <div class="empty-icon">⏳</div>
+      <div class="empty-title">Cargando distribución…</div>
+      <div class="empty-text">Conectando a Google Sheets</div>
+    </div></div>`;
+  }
+  
+  const bySr={};
+  for(const a of STATE.distro){
+    if(!bySr[a.senior])bySr[a.senior]={coords:{}};
+    if(!bySr[a.senior].coords[a.coord])bySr[a.senior].coords[a.coord]=[];
+    bySr[a.senior].coords[a.coord].push(a);
+  }
+
+  return`
+    <div class="banner info">
+      <strong>Distribución conectada en tiempo real.</strong> Los cambios en la Google Sheet se reflejan automáticamente cada ${CFG.REFRESH_MS/1000} segundos.
+      <a href="https://docs.google.com/spreadsheets/d/${CFG.DISTRO_SHEET}/edit" target="_blank" style="color:var(--blue);text-decoration:underline">Abrir Sheet</a>
+    </div>
+    
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Total Prod Agents</div><div class="kpi-value">${STATE.distro.length}</div></div>
+      <div class="kpi"><div class="kpi-label">Seniors</div><div class="kpi-value">${Object.keys(bySr).length}</div></div>
+      <div class="kpi"><div class="kpi-label">Coordinadores</div><div class="kpi-value">${[...new Set(STATE.distro.map(a=>a.coord))].length}</div></div>
+      <div class="kpi"><div class="kpi-label">Clusters</div><div class="kpi-value">${[...new Set(STATE.distro.map(a=>a.cluster))].length}</div></div>
+    </div>
+    
+    ${Object.entries(bySr).map(([sr,d])=>`<div class="card">
+      <div class="section-title">${sr}</div>
+      <p class="section-sub">${Object.keys(d.coords).length} coordinador(es) · ${Object.values(d.coords).flat().length} agentes</p>
+      ${Object.entries(d.coords).map(([co,ags])=>`
+        <div style="margin-top:14px">
+          <div style="font-weight:700;font-size:12.5px;margin-bottom:6px;color:var(--muted3)">${co} <span class="muted" style="font-weight:400;font-family:var(--mono)">· ${ags.length} agentes</span></div>
+          <table>
+            <thead><tr><th>Agente</th><th>Cluster</th><th>Extensión</th></tr></thead>
+            <tbody>
+            ${ags.map(a=>`<tr onclick="selectAgent('${a.nameKey}')">
+              <td class="col-name">${a.agent}</td>
+              <td>${clusterTag(a.cluster)}</td>
+              <td class="muted">${a.extension||'—'}</td>
+            </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      `).join('')}
+    </div>`).join('')}
+  `;
+}
+
+// ═══════════════ VISTA: CARGAR DATOS ═══════════════
+function viewCargar(){
+  const today=STATE.uploadDate;
+  const p=STATE.pendingUploads;
+  
+  const uploadCard=(label,key,desc,acceptedTypes)=>{
+    const f=p[key];
+    return`<div class="upload-zone ${f?'has-file':''}" onclick="document.getElementById('file-${key}').click()">
+      <div class="upload-icon">${f?'✓':'⬆'}</div>
+      <div class="upload-text">${label}</div>
+      <div class="upload-sub">${f?f.name+' · '+(f.size/1024).toFixed(0)+' KB':desc}</div>
+      <input type="file" id="file-${key}" accept="${acceptedTypes}" style="display:none" onchange="onFileSelected('${key}',this.files[0])">
+    </div>`;
+  };
+  
+  return`
+    <div class="banner info">
+      <strong>Carga diaria de archivos.</strong> Los datos se procesan en el navegador, se calculan las métricas por agente, y se guardan en el histórico (Google Sheet backend) si hay un PIN válido.
+    </div>
+    
+    <div class="card">
+      <div class="filter-row">
+        <div class="field"><label>Fecha de los datos (día vencido)</label><input type="date" id="uploadDate" value="${today}" onchange="STATE.uploadDate=this.value"></div>
+        <div class="field"><label>PIN para guardar (admin)</label><input type="password" id="uploadPin" placeholder="••••" autocomplete="off"></div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn primary" onclick="processUploads()">Procesar y guardar</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="grid-2">
+      ${uploadCard('Encuestas','encuestas','InformeEncuestas.xls','.xls,.xlsx')}
+      ${uploadCard('Llamadas (Estadísticas)','llamadas','Estadísticas.xls','.xls,.xlsx')}
+      ${uploadCard('Auxiliares (Histórico Ausencias)','auxiliares','Histórico_Ausencias.csv','.csv')}
+      ${uploadCard('Servicios (Jobs)','servicios','Jobs.csv','.csv')}
+    </div>
+    
+    <div class="card" id="uploadStatus"></div>
+  `;
+}
+
+function onFileSelected(key,file){
+  if(!file)return;
+  STATE.pendingUploads[key]=file;
+  renderActiveTab();
+}
+
+async function processUploads(){
+  const pin=$('uploadPin').value;
+  if(pin!==CFG.UPLOAD_PIN){
+    showBanner('error','PIN incorrecto. Solo personas autorizadas pueden guardar datos.');
+    return;
+  }
+  STATE.authenticated=true;
+  
+  const date=$('uploadDate').value||STATE.uploadDate;
+  STATE.uploadDate=date;
+  const status=$('uploadStatus');
+  status.innerHTML='<div class="banner info"><span class="spinner"></span> Procesando archivos…</div>';
+  
+  const log=[];
+  try{
+    if(STATE.pendingUploads.encuestas){
+      log.push('Procesando encuestas…');
+      status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
+      STATE.encuestas=await parseEncuestas(STATE.pendingUploads.encuestas);
+      log[log.length-1]=`✓ Encuestas: ${Object.keys(STATE.encuestas).length} agentes procesados`;
+    }
+    if(STATE.pendingUploads.llamadas){
+      log.push('Procesando llamadas…');
+      status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
+      STATE.llamadas=await parseLlamadas(STATE.pendingUploads.llamadas);
+      log[log.length-1]=`✓ Llamadas: ${Object.keys(STATE.llamadas).length} agentes procesados`;
+    }
+    if(STATE.pendingUploads.auxiliares){
+      log.push('Procesando auxiliares…');
+      status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
+      STATE.auxiliares=await parseAuxiliares(STATE.pendingUploads.auxiliares);
+      log[log.length-1]=`✓ Auxiliares: ${Object.keys(STATE.auxiliares).length} agentes procesados`;
+    }
+    if(STATE.pendingUploads.servicios){
+      log.push('Procesando servicios…');
+      status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
+      STATE.servicios=await parseServicios(STATE.pendingUploads.servicios);
+      log[log.length-1]=`✓ Servicios: ${Object.keys(STATE.servicios).length} agentes procesados`;
+    }
+    
+    // Guardar al backend si hay
+    if(CFG.BACKEND_URL){
+      log.push('Guardando en histórico…');
+      status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
+      const records=buildHistoryRecords(date);
+      await pushBackend({type:'daily',date,records});
+      log[log.length-1]=`✓ Guardado: ${records.length} registros en histórico`;
+      // Recargar histórico
+      await fetchBackendHistory();
+    }else{
+      log.push('⚠ No hay backend configurado. Ve a Configuración para añadir la URL.');
+    }
+    
+    status.innerHTML=`<div class="banner success">${log.join('<br>')}</div>`;
+    STATE.pendingUploads={encuestas:null,llamadas:null,auxiliares:null,servicios:null};
+    renderActiveTab();
+    
+  }catch(e){
+    console.error(e);
+    log.push('✗ Error: '+e.message);
+    status.innerHTML=`<div class="banner error">${log.join('<br>')}</div>`;
+  }
+}
+
+function buildHistoryRecords(date){
+  // Construye un record por agente para guardar en el backend
+  const records=[];
+  const agentKeys=new Set([
+    ...Object.keys(STATE.encuestas),
+    ...Object.keys(STATE.llamadas),
+    ...Object.keys(STATE.auxiliares),
+    ...Object.keys(STATE.servicios)
+  ]);
+  for(const k of agentKeys){
+    const enc=STATE.encuestas[k]||{};
+    const llam=STATE.llamadas[k]||{};
+    const aux=STATE.auxiliares[k]||{};
+    const serv=STATE.servicios[k]||{};
+    const fullName=enc.fullName||llam.fullName||aux.fullName||serv.fullName||k;
+    
+    const callsAt=(llam.atendidasIn||0)+(llam.atendidasOut||0);
+    const aht=llam.ahtN?llam.ahtSum/llam.ahtN:null;
+    
+    records.push({
+      date,nameKey:k,fullName,
+      surveysSent:enc.sent||0,surveysAnswered:enc.answered||0,
+      rrPctSum:enc.rrSum||0,rrN:enc.rrN||0,
+      csatPctSum:enc.csatSum||0,csatN:enc.csatN||0,
+      callsAt,callsIn:llam.atendidasIn||0,callsOut:llam.atendidasOut||0,
+      ahtSecSum:llam.ahtSum||0,ahtN:llam.ahtN||0,
+      released:llam.released||0,
+      totalEntrantes:llam.totalEntrantes||0,
+      acwMinSum:aux.acwSum||0,acwN:aux.acwN||0,
+      holdMinSum:aux.holdSum||0,holdN:aux.holdN||0,
+      breakSum:aux.breakSum||0,banoSum:aux.banoSum||0,
+      servTotal:serv.total||0,servComp:serv.completed||0,servCanc:serv.canceled||0,
+      qaScore:STATE.qa[k]?STATE.qa[k].score:null
+    });
+  }
+  return records;
+}
+
+// ═══════════════ VISTA: CONFIGURACIÓN ═══════════════
+function viewConfig(){
+  return`
+    <div class="banner info">
+      <strong>Configuración de la herramienta.</strong> Cambia URLs de fuentes externas, metas, y el PIN para subir archivos. Los cambios solo aplican en este navegador (no se guardan globalmente).
+    </div>
+    
+    <div class="card">
+      <div class="section-title">Fuentes de datos en tiempo real</div>
+      <div class="field"><label>QA Apps Script URL</label><input type="url" id="cfgQA" value="${CFG.QA_URL}"></div>
+      <div class="field"><label>Distro Sheet ID</label><input type="text" id="cfgDistroId" value="${CFG.DISTRO_SHEET}"></div>
+      <div class="field"><label>Distro Tab Name</label><input type="text" id="cfgDistroTab" value="${CFG.DISTRO_TAB}"></div>
+      <div class="field"><label>Quejas Sheet ID</label><input type="text" id="cfgQuejasId" value="${CFG.QUEJAS_SHEET}"></div>
+      <div class="field"><label>Backend URL (Apps Script para histórico)</label><input type="url" id="cfgBackend" value="${CFG.BACKEND_URL}" placeholder="https://script.google.com/..."></div>
+      <div class="field"><label>PIN para subir archivos</label><input type="password" id="cfgPin" value="${CFG.UPLOAD_PIN}"></div>
+      <div style="margin-top:12px"><button class="btn primary" onclick="saveConfig()">Guardar configuración</button>
+        <button class="btn" onclick="fetchAll()" style="margin-left:6px">Refrescar todo</button></div>
+    </div>
+    
+    <div class="card">
+      <div class="section-title">Metas del scorecard</div>
+      <div class="grid-3">
+        <div class="field"><label>Meta RR (%)</label><input type="number" id="metaRR" value="${CFG.META_RR}"></div>
+        <div class="field"><label>Meta CSAT (%)</label><input type="number" id="metaCSAT" value="${CFG.META_CSAT}"></div>
+        <div class="field"><label>Meta QA (%)</label><input type="number" id="metaQA" value="${CFG.META_QA}"></div>
+        <div class="field"><label>Meta Survey Delivery (%)</label><input type="number" id="metaSDR" value="${CFG.META_SDR}"></div>
+        <div class="field"><label>Meta Survey Return (%)</label><input type="number" id="metaSRR" value="${CFG.META_SRR}"></div>
+        <div class="field"><label>Meta AHT (segundos)</label><input type="number" id="metaAHT" value="${CFG.META_AHT_SEC}"></div>
+        <div class="field"><label>Meta ACW (minutos)</label><input type="number" id="metaACW" value="${CFG.META_ACW_MIN}" step="0.5"></div>
+        <div class="field"><label>Meta Hold (minutos)</label><input type="number" id="metaHOLD" value="${CFG.META_HOLD_MIN}" step="0.5"></div>
+        <div class="field"><label>Meta Break (min/día)</label><input type="number" id="metaBREAK" value="${CFG.META_BREAK_MIN}"></div>
+        <div class="field"><label>Meta Baño (min/día)</label><input type="number" id="metaBANO" value="${CFG.META_BANO_MIN}"></div>
+      </div>
+      <div style="margin-top:12px"><button class="btn primary" onclick="saveMetas()">Guardar metas</button></div>
+    </div>
+    
+    <div class="card">
+      <div class="section-title">Estado del sistema</div>
+      <table>
+        <thead><tr><th>Fuente</th><th>Última sync</th><th class="col-num">Registros</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td>Distribución</td><td class="mono">${STATE.lastSync.distro?fmt.date(STATE.lastSync.distro)+' '+new Date(STATE.lastSync.distro).toLocaleTimeString('es-ES'):'—'}</td><td class="col-num">${STATE.distro.length}</td><td>${STATE.lastSync.distro?'<span class="b ok">✓ OK</span>':'<span class="b neutral">—</span>'}</td></tr>
+          <tr><td>QA</td><td class="mono">${STATE.lastSync.qa?fmt.date(STATE.lastSync.qa)+' '+new Date(STATE.lastSync.qa).toLocaleTimeString('es-ES'):'—'}</td><td class="col-num">${Object.keys(STATE.qa).length}</td><td>${STATE.lastSync.qa?'<span class="b ok">✓ OK</span>':'<span class="b neutral">—</span>'}</td></tr>
+          <tr><td>Quejas</td><td class="mono">${STATE.lastSync.quejas?fmt.date(STATE.lastSync.quejas)+' '+new Date(STATE.lastSync.quejas).toLocaleTimeString('es-ES'):'—'}</td><td class="col-num">${STATE.quejas.length}</td><td>${STATE.lastSync.quejas?'<span class="b ok">✓ OK</span>':'<span class="b neutral">—</span>'}</td></tr>
+          <tr><td>Backend (histórico)</td><td class="mono">${STATE.lastSync.backend?fmt.date(STATE.lastSync.backend)+' '+new Date(STATE.lastSync.backend).toLocaleTimeString('es-ES'):'—'}</td><td class="col-num">${STATE.history.length}</td><td>${CFG.BACKEND_URL?(STATE.lastSync.backend?'<span class="b ok">✓ OK</span>':'<span class="b warn">Sin sync</span>'):'<span class="b neutral">No configurado</span>'}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="card">
+      <div class="section-title">Agentes sin match</div>
+      <p class="section-sub">Agentes que aparecen en datos pero no están en la distribución. Útil para detectar typos.</p>
+      ${renderUnmatched()}
+    </div>
+  `;
+}
+
+function renderUnmatched(){
+  const distroKeys=new Set(STATE.distro.map(a=>a.nameKey));
+  const issues=[];
+  const sources=[
+    ['Encuestas',STATE.encuestas],['Llamadas',STATE.llamadas],
+    ['Auxiliares',STATE.auxiliares],['Servicios',STATE.servicios],['QA',STATE.qa]
+  ];
+  for(const [name,obj] of sources){
+    for(const [k,v] of Object.entries(obj||{})){
+      if(!distroKeys.has(k))issues.push({source:name,key:k,fullName:v.fullName||k});
+    }
+  }
+  if(!issues.length)return'<p class="muted" style="font-size:12px">Todos los agentes en datos hacen match con la distribución ✓</p>';
+  return`<table>
+    <thead><tr><th>Fuente</th><th>Nombre detectado</th><th>Clave normalizada</th></tr></thead>
+    <tbody>
+    ${issues.slice(0,30).map(i=>`<tr>
+      <td>${i.source}</td>
+      <td class="col-name">${i.fullName}</td>
+      <td class="muted">${i.key}</td>
+    </tr>`).join('')}
+    </tbody>
+  </table>${issues.length>30?`<p class="muted" style="font-size:11px;margin-top:6px">…y ${issues.length-30} más</p>`:''}`;
+}
+
+function saveConfig(){
+  CFG.QA_URL=$('cfgQA').value;
+  CFG.DISTRO_SHEET=$('cfgDistroId').value;
+  CFG.DISTRO_TAB=$('cfgDistroTab').value;
+  CFG.QUEJAS_SHEET=$('cfgQuejasId').value;
+  CFG.BACKEND_URL=$('cfgBackend').value;
+  CFG.UPLOAD_PIN=$('cfgPin').value;
+  // Persistir en localStorage para esta navegador (PIN no, por seguridad)
+  try{
+    const cfg={QA_URL:CFG.QA_URL,DISTRO_SHEET:CFG.DISTRO_SHEET,DISTRO_TAB:CFG.DISTRO_TAB,QUEJAS_SHEET:CFG.QUEJAS_SHEET,BACKEND_URL:CFG.BACKEND_URL};
+    localStorage.setItem('rmCfg',JSON.stringify(cfg));
+  }catch(e){}
+  showBanner('success','Configuración guardada en este navegador');
+  fetchAll();
+}
+
+function saveMetas(){
+  CFG.META_RR=+$('metaRR').value;
+  CFG.META_CSAT=+$('metaCSAT').value;
+  CFG.META_QA=+$('metaQA').value;
+  CFG.META_SDR=+$('metaSDR').value;
+  CFG.META_SRR=+$('metaSRR').value;
+  CFG.META_AHT_SEC=+$('metaAHT').value;
+  CFG.META_ACW_MIN=+$('metaACW').value;
+  CFG.META_HOLD_MIN=+$('metaHOLD').value;
+  CFG.META_BREAK_MIN=+$('metaBREAK').value;
+  CFG.META_BANO_MIN=+$('metaBANO').value;
+  try{
+    const metas={META_RR:CFG.META_RR,META_CSAT:CFG.META_CSAT,META_QA:CFG.META_QA,META_SDR:CFG.META_SDR,META_SRR:CFG.META_SRR,META_AHT_SEC:CFG.META_AHT_SEC,META_ACW_MIN:CFG.META_ACW_MIN,META_HOLD_MIN:CFG.META_HOLD_MIN,META_BREAK_MIN:CFG.META_BREAK_MIN,META_BANO_MIN:CFG.META_BANO_MIN};
+    localStorage.setItem('rmMetas',JSON.stringify(metas));
+  }catch(e){}
+  showBanner('success','Metas guardadas en este navegador');
+  renderActiveTab();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════════════════════════════
+function checkAuth(){
+  if(STATE.authenticated)return true;
+  const pin=prompt('Ingresa el PIN para esta acción:');
+  if(pin===CFG.UPLOAD_PIN){
+    STATE.authenticated=true;
+    return true;
+  }
+  showBanner('error','PIN incorrecto');
+  return false;
+}
+
+function showBanner(type,msg,timeout=4000){
+  const c=$('modalContainer');
+  c.innerHTML=`<div style="position:fixed;bottom:20px;right:20px;z-index:1001;max-width:400px"><div class="banner ${type}">${msg}</div></div>`;
+  setTimeout(()=>{c.innerHTML='';},timeout);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT & EVENT LISTENERS
+// ═══════════════════════════════════════════════════════════════════════════
+async function fetchAll(){
+  await Promise.all([fetchDistro(),fetchQA(),fetchQuejas(),fetchBackendHistory()]);
+}
+
+function setupTabs(){
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      document.querySelectorAll('[id^=view-]').forEach(v=>v.classList.add('hidden'));
+      $('view-'+t.dataset.tab).classList.remove('hidden');
+      renderActiveTab();
+    });
+  });
+}
+
+function loadLocalConfig(){
+  try{
+    const cfg=localStorage.getItem('rmCfg');
+    if(cfg)Object.assign(CFG,JSON.parse(cfg));
+  }catch(e){}
+  try{
+    const metas=localStorage.getItem('rmMetas');
+    if(metas)Object.assign(CFG,JSON.parse(metas));
+  }catch(e){}
+}
+
+async function init(){
+  loadLocalConfig();
+  setupTabs();
+  renderActiveTab();
+  
+  // Initial fetches
+  await fetchAll();
+  
+  // Refresh interval
+  setInterval(fetchQA,CFG.REFRESH_MS);
+  setInterval(fetchQuejas,CFG.REFRESH_MS*5); // quejas cada 5 min
+  setInterval(fetchDistro,CFG.REFRESH_MS*10); // distro cada 10 min
+  setInterval(fetchBackendHistory,CFG.REFRESH_MS*5);
+}
+
+window.addEventListener('DOMContentLoaded',init);
+
+// Funciones expuestas globalmente para onclick handlers
+window.renderActiveTab=renderActiveTab;
+window.selectAgent=selectAgent;
+window.savePenalties=savePenalties;
+window.processUploads=processUploads;
+window.onFileSelected=onFileSelected;
+window.saveConfig=saveConfig;
+window.saveMetas=saveMetas;
+window.fetchAll=fetchAll;
+window.changeDateMode=changeDateMode;
+
+</script>
+</body>
+</html>
+
+
