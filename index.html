@@ -640,16 +640,17 @@ async function fetchDistro(){
   try{
     const csv=await fetchSheetCSV(CFG.DISTRO_SHEET,CFG.DISTRO_TAB);
     let agents=[];
-    // El header está en la fila 2 (índice 1) según vimos
-    // Cols (índice 0): A=blank, B=Senior, C=Coord, D=Agent, E=Type, F=Hours, G=blank, H=Ext, I=Nivel
+    // Estructura confirmada de la Sheet "Schedules":
+    // A=blank, B=Senior, C=Coord, D=Agent, E=Type, F=Hours, G=Extension, H=Nivel
+    // (índices 0-based: 0=A, 1=B, 2=C, 3=D, 4=E, 5=F, 6=G, 7=H)
     for(let i=2;i<csv.length;i++){
       const r=csv[i];if(!r)continue;
       const senior=(r[1]||'').trim();
       const coord=(r[2]||'').trim();
       const agent=(r[3]||'').trim();
       const type=(r[4]||'').trim();
-      const ext=(r[7]||'').trim();
-      const nivel=(r[8]||'').trim();
+      const ext=(r[6]||'').trim();      // G = Extension
+      const nivel=(r[7]||'').trim();    // H = Nivel/Cluster
       if(!agent||!coord||!type)continue;
       if(type.toLowerCase()!=='prod agent')continue;
       agents.push({
