@@ -349,19 +349,79 @@ const normName=s=>!s?'':s.toString()
   .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   .toLowerCase().replace(/\s+/g,' ').trim();
 
+// Genera el nameKey canónico para un agente: primer nombre + primer apellido
+// Para nombres de 4 palabras: posiciones 0 + 2 (Nombre1 Apellido1)
+// Para 3: posiciones 0 + 2
+// Para 2: ambas
 const firstLast=fullName=>{
   if(!fullName)return'';
   const parts=normName(fullName).split(' ').filter(p=>p.length>0);
   if(parts.length<2)return parts.join(' ');
-  // Si tiene 4+ palabras: probablemente "Nombre Nombre Apellido Apellido"
-  // → tomar primer nombre + primer apellido (índice 0 + 2)
   if(parts.length>=4)return parts[0]+' '+parts[2];
-  // Si tiene 3 palabras: ambiguo, probar varias interpretaciones
-  // "Juan Carlos Lopez" → puede ser "Juan Lopez" o "Juan Carlos"
-  // Default: tomar 0 + 2 (primer nombre + último apellido visible)
   if(parts.length===3)return parts[0]+' '+parts[2];
   return parts[0]+' '+parts[1];
 };
+
+// Devuelve un Set de palabras normalizadas del nombre (>=2 letras, no comunes)
+const nameWords=fullName=>{
+  if(!fullName)return new Set();
+  const parts=normName(fullName).split(' ').filter(p=>p.length>=2);
+  return new Set(parts);
+};
+
+// Cache del index de matches: archivoName → distroNameKey
+const _matchCache={};
+let _distroIndexBuilt=false;
+
+// Construye un índice de palabras → nameKey de distro para búsqueda rápida
+function buildDistroIndex(){
+  _distroIndexBuilt=true;
+  // Limpiar cache cuando la distro cambia
+  for(const k of Object.keys(_matchCache))delete _matchCache[k];
+}
+
+// Dado un nombre tal como aparece en archivos, encuentra el nameKey de la distro
+// que mejor matchea (al menos 2 palabras en común). Si no hay match, devuelve el firstLast estándar
+function resolveAgentKey(fileName){
+  if(!fileName)return'';
+  if(_matchCache[fileName])return _matchCache[fileName];
+  
+  const fileWords=nameWords(fileName);
+  if(fileWords.size===0){
+    const k=firstLast(fileName);
+    _matchCache[fileName]=k;
+    return k;
+  }
+  
+  let bestMatch=null;
+  let bestScore=0;
+  
+  for(const ag of (STATE.distro||[])){
+    const distroWords=nameWords(ag.agent);
+    let common=0;
+    for(const w of fileWords){
+      if(distroWords.has(w))common++;
+    }
+    // Bonus: si el match cubre TODAS las palabras del fileName, es match perfecto
+    const coverage=common/fileWords.size;
+    const score=common+(coverage===1?0.5:0);
+    if(common>=2&&score>bestScore){
+      bestScore=score;
+      bestMatch=ag;
+    }
+  }
+  
+  // Si no encontró match ≥2 palabras, intentar con 1 palabra SOLO si fileName tiene 1 palabra
+  if(!bestMatch&&fileWords.size===1){
+    const word=[...fileWords][0];
+    const candidates=(STATE.distro||[]).filter(ag=>nameWords(ag.agent).has(word));
+    if(candidates.length===1)bestMatch=candidates[0]; // único candidato
+  }
+  
+  const result=bestMatch?bestMatch.nameKey:firstLast(fileName);
+  _matchCache[fileName]=result;
+  return result;
+}
 
 const extractAgent=str=>{
   if(!str)return null;
@@ -550,7 +610,7 @@ async function fetchQA(){
     for(const row of j.rows){
       const name=aName(row);
       if(!name)continue;
-      const key=firstLast(name);
+      const key=resolveAgentKey(name);
       if(!byAgent[key])byAgent[key]={fullName:name,scores:[]};
       byAgent[key].scores.push(score(row));
     }
@@ -636,7 +696,7 @@ async function fetchQuejas(){
       if(t==='noaplica'||t==='n/a'||t==='no'||t==='na')continue;
       const agentes=agente.split(/\s+y\s+|,/).map(s=>s.trim()).filter(s=>s);
       for(const a of agentes){
-        rows.push({agent:a,fecha,tarjeta,coord,nameKey:firstLast(a)});
+        rows.push({agent:a,fecha,tarjeta,coord,nameKey:resolveAgentKey(a)});
       }
     }
     STATE.quejas=rows;
@@ -932,7 +992,7 @@ async function parseEncuestas(file,defaultDate){
       }
     }
     if(!agName)continue;
-    const key=firstLast(agName);
+    const key=resolveAgentKey(agName);
     if(!acc[date])acc[date]={};
     if(!acc[date][key])acc[date][key]={fullName:agName,sent:0,answered:0,rrSum:0,rrN:0,csatSum:0,csatN:0};
     acc[date][key].sent++;
@@ -1005,7 +1065,7 @@ async function parseLlamadas(file,defaultDate){
     if(tipo==='Entrante')agName=extractAgent(r[iUltDest]);
     else if(tipo==='Saliente')agName=extractAgent(r[iLlamante]);
     if(!agName)continue;
-    const key=firstLast(agName);
+    const key=resolveAgentKey(agName);
     if(!acc[date])acc[date]={};
     if(!acc[date][key])acc[date][key]={fullName:agName,
       atendidasIn:0,atendidasOut:0,ahtSum:0,ahtN:0,released:0,totalEntrantes:0};
@@ -1051,7 +1111,7 @@ async function parseAuxiliares(file,defaultDate){
     const r=csv[i];if(!r||!r.length)continue;
     const agName=extractAgent(r[iAg]);
     if(!agName)continue;
-    const key=firstLast(agName);
+    const key=resolveAgentKey(agName);
     const causa=(r[iCausa]||'').trim();
     const date=parseDate(r[iDia])||defaultDate;
     if(!date)continue;
@@ -1094,7 +1154,7 @@ async function parseServicios(file,defaultDate){
     const date=iDate>=0?(parseDate((r[iDate]||'').replace(/^"|"$/g,''))||defaultDate):defaultDate;
     if(!date)continue;
     const cleaned=cleanAssigner(ass);
-    const key=firstLast(cleaned);
+    const key=resolveAgentKey(cleaned);
     if(!acc[date])acc[date]={};
     if(!acc[date][key])acc[date][key]={fullName:cleaned,total:0,completed:0,canceled:0};
     acc[date][key].total++;
