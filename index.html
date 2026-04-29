@@ -610,10 +610,25 @@ async function fetchQA(){
       return total;
     }
 
+    // Filtrar evaluaciones del mes calendario actual (1° al último día)
+    const now=new Date();
+    const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+    const monthEnd=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
+
+    const evalDate=row=>{
+      const raw=row['Marca temporal']||gCol(row,'Marca temporal')||row['Date of contact']||gCol(row,'Date of contact')||'';
+      if(!raw)return null;
+      const d=new Date(raw);
+      return isNaN(d.getTime())?null:d;
+    };
+
     const byAgent={};
     for(const row of j.rows){
       const name=aName(row);
       if(!name)continue;
+      // Filtrar por mes calendario actual
+      const d=evalDate(row);
+      if(!d||d<monthStart||d>monthEnd)continue;
       const key=resolveAgentKey(name);
       if(!byAgent[key])byAgent[key]={fullName:name,scores:[]};
       byAgent[key].scores.push(score(row));
