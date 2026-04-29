@@ -648,15 +648,17 @@ async function fetchBackendHistory(){
 
 async function pushBackend(payload){
   if(!CFG.BACKEND_URL)throw new Error('No hay BACKEND_URL configurada');
-  const fd=new FormData();
-  fd.append('action','write');
-  fd.append('payload',JSON.stringify(payload));
-  fd.append('pin',CFG.UPLOAD_PIN);
-  const r=await fetch(CFG.BACKEND_URL,{method:'POST',body:fd});
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  const j=await r.json();
-  if(!j.ok)throw new Error(j.error||'Error backend');
-  return j;
+  // Usamos text/plain para evitar CORS preflight con Apps Script de workspace
+  const body=JSON.stringify({action:'write',payload,pin:CFG.UPLOAD_PIN});
+  await fetch(CFG.BACKEND_URL,{
+    method:'POST',
+    mode:'no-cors',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body
+  });
+  // En modo no-cors no podemos leer la respuesta, asumimos éxito si no tira excepción
+  // y validamos haciendo un re-read del histórico después
+  return {ok:true,assumed:true};
 }
 
 // Aplica el filtro de fecha al historial y reconstruye el estado actual
