@@ -2073,42 +2073,40 @@ async function processUploads(){
       log[log.length-1]=`✓ Servicios: ${totalDays} días procesados`;
     }
     
-    // Guardar al backend, día por día
+    // Guardar al backend en UN SOLO request (con todos los días)
+    // Esto evita 403/rate-limit de auth de Roomonitor
     if(CFG.BACKEND_URL){
       const dates=Object.keys(byDate).sort();
-      log.push(`Guardando ${dates.length} día(s) en histórico…`);
-      status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
       
-      let totalSaved=0;
-      let dayIdx=0;
+      // Construir TODOS los records de todos los días en un array plano
+      const allRecords=[];
       for(const date of dates){
-        dayIdx++;
         const agents=byDate[date];
-        const records=Object.entries(agents).map(([k,v])=>({
-          date,nameKey:k,fullName:v.fullName||k,
-          surveysSent:v.surveysSent||0,surveysAnswered:v.surveysAnswered||0,
-          rrPctSum:v.rrPctSum||0,rrN:v.rrN||0,
-          csatPctSum:v.csatPctSum||0,csatN:v.csatN||0,
-          callsAt:v.callsAt||0,callsIn:v.callsIn||0,callsOut:v.callsOut||0,
-          ahtSecSum:v.ahtSecSum||0,ahtN:v.ahtN||0,
-          released:v.released||0,totalEntrantes:v.totalEntrantes||0,
-          acwMinSum:v.acwMinSum||0,acwN:v.acwN||0,
-          holdMinSum:v.holdMinSum||0,holdN:v.holdN||0,
-          breakSum:v.breakSum||0,banoSum:v.banoSum||0,
-          servTotal:v.servTotal||0,servComp:v.servComp||0,servCanc:v.servCanc||0,
-          qaScore:STATE.qa[k]?STATE.qa[k].score:''
-        }));
-        
-        log[log.length-1]=`Guardando día ${dayIdx}/${dates.length}: ${date} (${records.length} agentes)…`;
-        status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
-        
-        await pushBackend({type:'daily',date,records});
-        totalSaved+=records.length;
-        // Pausa para evitar saturar
-        await new Promise(r=>setTimeout(r,500));
+        for(const [k,v] of Object.entries(agents)){
+          allRecords.push({
+            date,nameKey:k,fullName:v.fullName||k,
+            surveysSent:v.surveysSent||0,surveysAnswered:v.surveysAnswered||0,
+            rrPctSum:v.rrPctSum||0,rrN:v.rrN||0,
+            csatPctSum:v.csatPctSum||0,csatN:v.csatN||0,
+            callsAt:v.callsAt||0,callsIn:v.callsIn||0,callsOut:v.callsOut||0,
+            ahtSecSum:v.ahtSecSum||0,ahtN:v.ahtN||0,
+            released:v.released||0,totalEntrantes:v.totalEntrantes||0,
+            acwMinSum:v.acwMinSum||0,acwN:v.acwN||0,
+            holdMinSum:v.holdMinSum||0,holdN:v.holdN||0,
+            breakSum:v.breakSum||0,banoSum:v.banoSum||0,
+            servTotal:v.servTotal||0,servComp:v.servComp||0,servCanc:v.servCanc||0,
+            qaScore:STATE.qa[k]?STATE.qa[k].score:''
+          });
+        }
       }
       
-      log[log.length-1]=`✓ Guardado: ${totalSaved} registros en ${dates.length} día(s)`;
+      log.push(`Guardando ${allRecords.length} registros (${dates.length} días) en UN solo envío…`);
+      status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
+      
+      // Un solo POST con todo
+      await pushBackend({type:'bulk',dates,records:allRecords});
+      
+      log[log.length-1]=`✓ Guardado: ${allRecords.length} registros en ${dates.length} día(s)`;
       
       // Recargar histórico
       log.push('Refrescando histórico…');
