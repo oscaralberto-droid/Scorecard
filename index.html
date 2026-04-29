@@ -648,17 +648,81 @@ async function fetchBackendHistory(){
 
 async function pushBackend(payload){
   if(!CFG.BACKEND_URL)throw new Error('No hay BACKEND_URL configurada');
-  // Usamos text/plain para evitar CORS preflight con Apps Script de workspace
-  const body=JSON.stringify({action:'write',payload,pin:CFG.UPLOAD_PIN});
-  await fetch(CFG.BACKEND_URL,{
-    method:'POST',
-    mode:'no-cors',
-    headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body
+  // Técnica: form submit a iframe oculto. Esto sigue redirecciones de auth
+  // de Google Workspace y evita CORS porque NO es un fetch.
+  return new Promise((resolve,reject)=>{
+    const iframeId='_backendFrame_'+Date.now();
+    const formId='_backendForm_'+Date.now();
+    
+    // Crear iframe oculto
+    const iframe=document.createElement('iframe');
+    iframe.name=iframeId;
+    iframe.id=iframeId;
+    iframe.style.display='none';
+    document.body.appendChild(iframe);
+    
+    // Crear form
+    const form=document.createElement('form');
+    form.id=formId;
+    form.method='POST';
+    form.action=CFG.BACKEND_URL;
+    form.target=iframeId;
+    form.style.display='none';
+    
+    // Campos del form (Apps Script los lee como e.parameter)
+    const addField=(name,value)=>{
+      const inp=document.createElement('input');
+      inp.type='hidden';
+      inp.name=name;
+      inp.value=value;
+      form.appendChild(inp);
+    };
+    addField('action','write');
+    addField('pin',CFG.UPLOAD_PIN);
+    addField('payload',JSON.stringify(payload));
+    
+    document.body.appendChild(form);
+    
+    // Listener para cuando el iframe carga
+    let resolved=false;
+    iframe.onload=()=>{
+      if(resolved)return;
+      resolved=true;
+      // Intentar leer la respuesta del iframe (puede fallar por CORS, no importa)
+      try{
+        const doc=iframe.contentDocument||iframe.contentWindow.document;
+        const text=doc.body?doc.body.innerText:'';
+        if(text){
+          try{
+            const j=JSON.parse(text);
+            resolve(j);
+          }catch{resolve({ok:true,assumed:true,raw:text});}
+        }else{
+          resolve({ok:true,assumed:true});
+        }
+      }catch(e){
+        // No podemos leer la respuesta por CORS, pero el POST sí pasó
+        resolve({ok:true,assumed:true});
+      }
+      // Limpiar
+      setTimeout(()=>{
+        try{document.body.removeChild(form);}catch(e){}
+        try{document.body.removeChild(iframe);}catch(e){}
+      },1000);
+    };
+    
+    // Timeout de seguridad
+    setTimeout(()=>{
+      if(!resolved){
+        resolved=true;
+        try{document.body.removeChild(form);}catch(e){}
+        try{document.body.removeChild(iframe);}catch(e){}
+        reject(new Error('Timeout: el backend no respondió en 30 segundos'));
+      }
+    },30000);
+    
+    form.submit();
   });
-  // En modo no-cors no podemos leer la respuesta, asumimos éxito si no tira excepción
-  // y validamos haciendo un re-read del histórico después
-  return {ok:true,assumed:true};
 }
 
 // Aplica el filtro de fecha al historial y reconstruye el estado actual
