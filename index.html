@@ -562,24 +562,26 @@ async function fetchQA(){
     const j=await r.json();
     if(!j.ok)throw new Error(j.error||'Error');
 
+    // Estructura de calificación QA basada en el QA Dashboard original de Roomonitor
+    // Total = 100 pts. Cada sección suma su weight si todo es Yes/N/A. Cada No resta los pts del criterio.
     const SECTIONS=[
       {id:'s2',weight:20,criteria:[
-        {col:'Did the agent confirm the building name and the room/apartment',pts:3},
-        {col:'Did the agent ask for any additional information',pts:3},
-        {col:'Did the agent identify the issue properly',pts:4},
-        {col:'Did the agent take ownership',pts:10}
+        {col:'Did the agent provide the correct ope',pts:3},   // Apertura
+        {col:'Did the agent provide the correct clo',pts:3},   // Cierre
+        {col:'Did the agent provide a follow up num',pts:4},   // Follow-up SF ticket
+        {col:'Did the agent ask for all the mandato',pts:10}   // Info mandatoria
       ]},
       {id:'s3',weight:50,criteria:[
-        {col:'Did the agent provide accurate information',pts:15},
-        {col:'Did the agent follow the proper procedure',pts:10},
-        {col:'Did the agent escalate when necessary',pts:10},
-        {col:'Did the agent resolve the issue',pts:15}
+        {col:'Did the agent act based on client',pts:15},      // Protocolos
+        {col:'Did the agent verify all necessary',pts:10},     // Herramientas
+        {col:"Agent's notes reflect",pts:10},                  // Notas en SF
+        {col:'Agent documented all mandatory',pts:15}          // Info en reporte
       ]},
       {id:'s4',weight:30,criteria:[
-        {col:'Did the agent demonstrate empathy',pts:5},
-        {col:'Did the agent communicate clearly',pts:10},
-        {col:'Did the agent maintain a professional tone',pts:10},
-        {col:'Did the agent close the call appropriately',pts:5}
+        {col:'Agent used appropriate hold time',pts:5},        // Hold
+        {col:'Did the agent use probing questions',pts:10},    // Probing
+        {col:'Did the agent use a friendly',pts:10},           // Tono
+        {col:'Did the agent offer the survey',pts:5}           // Encuesta
       ]}
     ];
 
@@ -590,7 +592,8 @@ async function fetchQA(){
     const aName=rw=>rw["Agent's name"]||gCol(rw,"Agent name")||'';
 
     function score(rw){
-      const af=(gCol(rw,'commit any errors that could potentially impact')||gCol(rw,'business impact')||'').toLowerCase().trim();
+      // Auto-fail: si "commit any errors..." es Yes → score 0
+      const af=(gCol(rw,'commit any errors that could potentially impact')||gCol(rw,'business impact')||gCol(rw,'business')||'').toLowerCase().trim();
       if(af==='yes'||af==='failed'||af==='fail')return 0;
       let total=0;
       for(const sec of SECTIONS){
@@ -599,6 +602,7 @@ async function fetchQA(){
           const v=gCol(rw,c.col).toLowerCase().trim();
           const na=(v===''||v==='n/a'||v==='na'||v==='not applicable');
           const yes=(v==='yes');
+          // Solo resta puntos si NO es N/A y NO es Yes (i.e., es No)
           if(!na&&!yes)s-=c.pts;
         }
         total+=s;
