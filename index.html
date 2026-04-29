@@ -384,6 +384,34 @@ const parseMin=s=>{
   return isNaN(v)?0:v;
 };
 
+// Parser robusto de fecha: acepta DD/MM/YYYY, YYYY-MM-DD, Date object, ISO string
+// Devuelve siempre 'YYYY-MM-DD' o null si no se pudo parsear
+const parseDate=v=>{
+  if(v==null||v==='')return null;
+  if(v instanceof Date){
+    const y=v.getFullYear();
+    const m=String(v.getMonth()+1).padStart(2,'0');
+    const d=String(v.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+d;
+  }
+  const s=v.toString().trim();
+  // YYYY-MM-DD
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return m[1]+'-'+m[2]+'-'+m[3];
+  // DD/MM/YYYY o DD-MM-YYYY
+  m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+  // Intento general
+  const d=new Date(s);
+  if(!isNaN(d.getTime())){
+    const y=d.getFullYear();
+    const mo=String(d.getMonth()+1).padStart(2,'0');
+    const da=String(d.getDate()).padStart(2,'0');
+    return y+'-'+mo+'-'+da;
+  }
+  return null;
+};
+
 function setSync(which,status,label){
   const el=$('sync'+which);
   if(!el)return;
@@ -875,19 +903,25 @@ function weekKey(dateStr){
 // ═══════════════════════════════════════════════════════════════════════════
 // PARSERS DE ARCHIVOS DIARIOS
 // ═══════════════════════════════════════════════════════════════════════════
-async function parseEncuestas(file){
+async function parseEncuestas(file,defaultDate){
   const buf=await file.arrayBuffer();
   const wb=XLSX.read(buf,{type:'array'});
   const ws=wb.Sheets[wb.SheetNames[0]];
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true});
   const header=rows[0]||[];
+  const iFecha=header.findIndex(h=>(h||'').toString().toLowerCase().trim()==='fecha');
   const iLlamante=header.findIndex(h=>(h||'').toString().toLowerCase().trim()==='llamante');
   const iDest=header.findIndex(h=>(h||'').toString().toLowerCase().includes('nombre destino'));
   const iPuls=header.findIndex(h=>(h||'').toString().toLowerCase().includes('pulsacion'));
 
+  // Estructura: acc[date][agentKey] = {sent,answered,rrSum,rrN,csatSum,csatN,fullName}
   const acc={};
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r.length)continue;
+    
+    const date=parseDate(r[iFecha])||defaultDate;
+    if(!date)continue;
+    
     let agName=null;
     const dest=r[iDest];
     if(dest){agName=extractAgent(dest);}
@@ -899,16 +933,16 @@ async function parseEncuestas(file){
     }
     if(!agName)continue;
     const key=firstLast(agName);
-    if(!acc[key])acc[key]={fullName:agName,sent:0,answered:0,rrSum:0,rrN:0,csatSum:0,csatN:0};
-    acc[key].sent++;
+    if(!acc[date])acc[date]={};
+    if(!acc[date][key])acc[date][key]={fullName:agName,sent:0,answered:0,rrSum:0,rrN:0,csatSum:0,csatN:0};
+    acc[date][key].sent++;
 
     const p=r[iPuls];
     if(p==null||p==='')continue;
     const s=p.toString().trim();
     if(!s)continue;
-    acc[key].answered++;
+    acc[date][key].answered++;
 
-    // Extraer dígitos en orden
     const digits=s.split(/[;,\s\-_/]+/).filter(x=>/^\d+$/.test(x)).map(x=>parseInt(x));
     if(!digits.length)continue;
 
@@ -916,7 +950,7 @@ async function parseEncuestas(file){
     let rrPct=null;
     if(rr===1)rrPct=100;
     else if(rr===2||rr===3)rrPct=0;
-    if(rrPct!=null){acc[key].rrSum+=rrPct;acc[key].rrN++;}
+    if(rrPct!=null){acc[date][key].rrSum+=rrPct;acc[date][key].rrN++;}
 
     if(digits.length>=2){
       const csat=digits[digits.length-1];
@@ -924,13 +958,13 @@ async function parseEncuestas(file){
       if(csat>=8)csatPct=100;
       else if(csat>=6)csatPct=50;
       else if(csat>=1)csatPct=0;
-      if(csatPct!=null){acc[key].csatSum+=csatPct;acc[key].csatN++;}
+      if(csatPct!=null){acc[date][key].csatSum+=csatPct;acc[date][key].csatN++;}
     }
   }
   return acc;
 }
 
-async function parseLlamadas(file){
+async function parseLlamadas(file,defaultDate){
   const buf=await file.arrayBuffer();
   const wb=XLSX.read(buf,{type:'array'});
   const ws=wb.Sheets[wb.SheetNames[0]];
@@ -938,11 +972,16 @@ async function parseLlamadas(file){
   const h=rows[0]||[];
   const findCol=(...names)=>{
     for(const n of names){
+      for(const c of names){
+        const exact=h.findIndex(x=>(x||'').toString().toLowerCase().trim()===c.toLowerCase());
+        if(exact>=0)return exact;
+      }
       const i=h.findIndex(c=>(c||'').toString().toLowerCase().includes(n.toLowerCase()));
       if(i>=0)return i;
     }
     return-1;
   };
+  const iFecha=findCol('fecha');
   const iTipo=findCol('tipo');
   const iLlamante=findCol('llamante');
   const iUltDest=findCol('último destino','ultimo destino');
@@ -953,6 +992,10 @@ async function parseLlamadas(file){
   const acc={};
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r.length)continue;
+    
+    const date=parseDate(r[iFecha])||defaultDate;
+    if(!date)continue;
+    
     const tipo=(r[iTipo]||'').toString();
     const res=(r[iRes]||'').toString();
     const colgo=(r[iColgo]||'').toString();
@@ -963,25 +1006,26 @@ async function parseLlamadas(file){
     else if(tipo==='Saliente')agName=extractAgent(r[iLlamante]);
     if(!agName)continue;
     const key=firstLast(agName);
-    if(!acc[key])acc[key]={fullName:agName,
+    if(!acc[date])acc[date]={};
+    if(!acc[date][key])acc[date][key]={fullName:agName,
       atendidasIn:0,atendidasOut:0,ahtSum:0,ahtN:0,released:0,totalEntrantes:0};
 
-    if(tipo==='Entrante')acc[key].totalEntrantes++;
+    if(tipo==='Entrante')acc[date][key].totalEntrantes++;
     if(res==='Atendida'){
       if(tipo==='Entrante'){
-        acc[key].atendidasIn++;
-        acc[key].ahtSum+=dur;acc[key].ahtN++;
-        if(colgo==='Destino'&&dur<10)acc[key].released++;
+        acc[date][key].atendidasIn++;
+        acc[date][key].ahtSum+=dur;acc[date][key].ahtN++;
+        if(colgo==='Destino'&&dur<10)acc[date][key].released++;
       }else if(tipo==='Saliente'){
-        acc[key].atendidasOut++;
-        acc[key].ahtSum+=dur;acc[key].ahtN++;
+        acc[date][key].atendidasOut++;
+        acc[date][key].ahtSum+=dur;acc[date][key].ahtN++;
       }
     }
   }
   return acc;
 }
 
-async function parseAuxiliares(file){
+async function parseAuxiliares(file,defaultDate){
   const text=await file.text();
   const cleaned=text.replace(/^\uFEFF/,'');
   const csv=parseCSV(cleaned,';');
@@ -999,6 +1043,8 @@ async function parseAuxiliares(file){
   const iDur=header.findIndex(c=>(c||'').toLowerCase().includes('duración')||(c||'').toLowerCase().includes('duracion'));
 
   const ACW_CAUSAS=['acw','wrap-up','wrap_up','wrap_contacto'];
+  // acc[date][agentKey] = {fullName,acwSum,acwN,holdSum,holdN,breakSum,banoSum}
+  // Por día, break y baño se suman directamente (es el total del día)
   const acc={};
 
   for(let i=1;i<csv.length;i++){
@@ -1007,61 +1053,54 @@ async function parseAuxiliares(file){
     if(!agName)continue;
     const key=firstLast(agName);
     const causa=(r[iCausa]||'').trim();
-    const dia=(r[iDia]||'').trim();
+    const date=parseDate(r[iDia])||defaultDate;
+    if(!date)continue;
     const dur=parseMin(r[iDur]);
 
-    if(!acc[key])acc[key]={fullName:agName,acwSum:0,acwN:0,holdSum:0,holdN:0,
-      breakDays:{},banoDays:{}};
+    if(!acc[date])acc[date]={};
+    if(!acc[date][key])acc[date][key]={fullName:agName,
+      acwSum:0,acwN:0,holdSum:0,holdN:0,breakSum:0,banoSum:0};
 
     const ck=causa.toLowerCase().replace(/\s+/g,'');
     if(ACW_CAUSAS.includes(ck)){
-      acc[key].acwSum+=dur;acc[key].acwN++;
+      acc[date][key].acwSum+=dur;acc[date][key].acwN++;
     }else if(causa==='Hold Time'){
-      acc[key].holdSum+=dur;acc[key].holdN++;
+      acc[date][key].holdSum+=dur;acc[date][key].holdN++;
     }else if(causa==='Break'){
-      if(!acc[key].breakDays[dia])acc[key].breakDays[dia]=0;
-      acc[key].breakDays[dia]+=dur;
+      acc[date][key].breakSum+=dur;
     }else if(causa==='Baño'){
-      if(!acc[key].banoDays[dia])acc[key].banoDays[dia]=0;
-      acc[key].banoDays[dia]+=dur;
+      acc[date][key].banoSum+=dur;
     }
-  }
-  for(const k of Object.keys(acc)){
-    const a=acc[k];
-    const bd=Object.values(a.breakDays);
-    const nd=Object.values(a.banoDays);
-    a.breakAvg=bd.length?bd.reduce((x,y)=>x+y,0)/bd.length:null;
-    a.banoAvg=nd.length?nd.reduce((x,y)=>x+y,0)/nd.length:null;
-    a.breakMaxDay=bd.length?Math.max(...bd):null;
-    a.banoMaxDay=nd.length?Math.max(...nd):null;
-    a.breakSum=bd.length?bd.reduce((x,y)=>x+y,0):0;
-    a.banoSum=nd.length?nd.reduce((x,y)=>x+y,0):0;
-    delete a.breakDays;delete a.banoDays;
   }
   return acc;
 }
 
-async function parseServicios(file){
+async function parseServicios(file,defaultDate){
   const text=await file.text();
   const csv=parseCSV(text,',');
   if(csv.length<2)return{};
   const header=csv[0].map(h=>(h||'').toString().replace(/^"|"$/g,'').trim());
   const iAssigner=header.findIndex(h=>h.toLowerCase()==='assigner name');
   const iStatus=header.findIndex(h=>h.toLowerCase()==='status');
+  const iDate=header.findIndex(h=>h.toLowerCase()==='service date');
   if(iAssigner<0)return{};
 
+  // acc[date][agentKey] = {fullName,total,completed,canceled}
   const acc={};
   for(let i=1;i<csv.length;i++){
     const r=csv[i];if(!r||!r.length)continue;
     const ass=(r[iAssigner]||'').toString().replace(/^"|"$/g,'').trim();
     if(!ass)continue;
+    const date=iDate>=0?(parseDate((r[iDate]||'').replace(/^"|"$/g,''))||defaultDate):defaultDate;
+    if(!date)continue;
     const cleaned=cleanAssigner(ass);
     const key=firstLast(cleaned);
-    if(!acc[key])acc[key]={fullName:cleaned,total:0,completed:0,canceled:0};
-    acc[key].total++;
+    if(!acc[date])acc[date]={};
+    if(!acc[date][key])acc[date][key]={fullName:cleaned,total:0,completed:0,canceled:0};
+    acc[date][key].total++;
     const st=((r[iStatus]||'').toString().replace(/^"|"$/g,'').trim()).toLowerCase();
-    if(st.includes('complet'))acc[key].completed++;
-    else if(st.includes('cancel'))acc[key].canceled++;
+    if(st.includes('complet'))acc[date][key].completed++;
+    else if(st.includes('cancel'))acc[date][key].canceled++;
   }
   return acc;
 }
@@ -1912,24 +1951,24 @@ function viewCargar(){
   
   return`
     <div class="banner info">
-      <strong>Carga diaria de archivos.</strong> Los datos se procesan en el navegador, se calculan las métricas por agente, y se guardan en el histórico (Google Sheet backend) si hay un PIN válido.
+      <strong>Carga inteligente por fecha.</strong> El sistema lee la fecha de cada registro y los reparte automáticamente a su día. Puedes subir archivos con datos de UN día, una semana o todo el mes — todo se distribuye correctamente. La fecha de abajo solo se usa como respaldo si algún registro no tiene fecha válida.
     </div>
     
     <div class="card">
       <div class="filter-row">
-        <div class="field"><label>Fecha de los datos (día vencido)</label><input type="date" id="uploadDate" value="${today}" onchange="STATE.uploadDate=this.value"></div>
+        <div class="field"><label>Fecha por defecto (opcional, fallback)</label><input type="date" id="uploadDate" value="${today}" onchange="STATE.uploadDate=this.value"></div>
         <div class="field"><label>PIN para guardar (admin)</label><input type="password" id="uploadPin" placeholder="••••" autocomplete="off"></div>
         <div style="display:flex;align-items:flex-end;gap:8px">
-          <button class="btn primary" onclick="processUploads()">Procesar y guardar</button>
+          <button class="btn primary" onclick="processUploads()">Procesar y distribuir por día</button>
         </div>
       </div>
     </div>
     
     <div class="grid-2">
-      ${uploadCard('Encuestas','encuestas','InformeEncuestas.xls','.xls,.xlsx')}
-      ${uploadCard('Llamadas (Estadísticas)','llamadas','Estadísticas.xls','.xls,.xlsx')}
-      ${uploadCard('Auxiliares (Histórico Ausencias)','auxiliares','Histórico_Ausencias.csv','.csv')}
-      ${uploadCard('Servicios (Jobs)','servicios','Jobs.csv','.csv')}
+      ${uploadCard('Encuestas','encuestas','InformeEncuestas.xls (col Fecha)','.xls,.xlsx')}
+      ${uploadCard('Llamadas (Estadísticas)','llamadas','Estadísticas.xls (col Fecha)','.xls,.xlsx')}
+      ${uploadCard('Auxiliares (Histórico Ausencias)','auxiliares','Histórico_Ausencias.csv (col Día)','.csv')}
+      ${uploadCard('Servicios (Jobs)','servicios','Jobs.csv (col Service Date)','.csv')}
     </div>
     
     <div class="card" id="uploadStatus"></div>
@@ -1950,47 +1989,132 @@ async function processUploads(){
   }
   STATE.authenticated=true;
   
-  const date=$('uploadDate').value||STATE.uploadDate;
-  STATE.uploadDate=date;
+  const fallbackDate=$('uploadDate').value||STATE.uploadDate;
+  STATE.uploadDate=fallbackDate;
   const status=$('uploadStatus');
   status.innerHTML='<div class="banner info"><span class="spinner"></span> Procesando archivos…</div>';
   
   const log=[];
+  // byDate[date][agentKey] = {sources combinadas}
+  const byDate={};
+  
+  const ensure=(date,key)=>{
+    if(!byDate[date])byDate[date]={};
+    if(!byDate[date][key])byDate[date][key]={fullName:key};
+    return byDate[date][key];
+  };
+  
   try{
     if(STATE.pendingUploads.encuestas){
       log.push('Procesando encuestas…');
       status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
-      STATE.encuestas=await parseEncuestas(STATE.pendingUploads.encuestas);
-      log[log.length-1]=`✓ Encuestas: ${Object.keys(STATE.encuestas).length} agentes procesados`;
+      const encByDate=await parseEncuestas(STATE.pendingUploads.encuestas,fallbackDate);
+      let totalDays=0;
+      for(const [date,agents] of Object.entries(encByDate)){
+        totalDays++;
+        for(const [k,v] of Object.entries(agents)){
+          const a=ensure(date,k);
+          a.fullName=v.fullName;
+          a.surveysSent=v.sent;a.surveysAnswered=v.answered;
+          a.rrPctSum=v.rrSum;a.rrN=v.rrN;
+          a.csatPctSum=v.csatSum;a.csatN=v.csatN;
+        }
+      }
+      log[log.length-1]=`✓ Encuestas: ${totalDays} días procesados`;
     }
     if(STATE.pendingUploads.llamadas){
       log.push('Procesando llamadas…');
       status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
-      STATE.llamadas=await parseLlamadas(STATE.pendingUploads.llamadas);
-      log[log.length-1]=`✓ Llamadas: ${Object.keys(STATE.llamadas).length} agentes procesados`;
+      const llamByDate=await parseLlamadas(STATE.pendingUploads.llamadas,fallbackDate);
+      let totalDays=0;
+      for(const [date,agents] of Object.entries(llamByDate)){
+        totalDays++;
+        for(const [k,v] of Object.entries(agents)){
+          const a=ensure(date,k);
+          if(!a.fullName||a.fullName===k)a.fullName=v.fullName;
+          a.callsAt=(v.atendidasIn||0)+(v.atendidasOut||0);
+          a.callsIn=v.atendidasIn;a.callsOut=v.atendidasOut;
+          a.ahtSecSum=v.ahtSum;a.ahtN=v.ahtN;
+          a.released=v.released;a.totalEntrantes=v.totalEntrantes;
+        }
+      }
+      log[log.length-1]=`✓ Llamadas: ${totalDays} días procesados`;
     }
     if(STATE.pendingUploads.auxiliares){
       log.push('Procesando auxiliares…');
       status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
-      STATE.auxiliares=await parseAuxiliares(STATE.pendingUploads.auxiliares);
-      log[log.length-1]=`✓ Auxiliares: ${Object.keys(STATE.auxiliares).length} agentes procesados`;
+      const auxByDate=await parseAuxiliares(STATE.pendingUploads.auxiliares,fallbackDate);
+      let totalDays=0;
+      for(const [date,agents] of Object.entries(auxByDate)){
+        totalDays++;
+        for(const [k,v] of Object.entries(agents)){
+          const a=ensure(date,k);
+          if(!a.fullName||a.fullName===k)a.fullName=v.fullName;
+          a.acwMinSum=v.acwSum;a.acwN=v.acwN;
+          a.holdMinSum=v.holdSum;a.holdN=v.holdN;
+          a.breakSum=v.breakSum;a.banoSum=v.banoSum;
+        }
+      }
+      log[log.length-1]=`✓ Auxiliares: ${totalDays} días procesados`;
     }
     if(STATE.pendingUploads.servicios){
       log.push('Procesando servicios…');
       status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
-      STATE.servicios=await parseServicios(STATE.pendingUploads.servicios);
-      log[log.length-1]=`✓ Servicios: ${Object.keys(STATE.servicios).length} agentes procesados`;
+      const servByDate=await parseServicios(STATE.pendingUploads.servicios,fallbackDate);
+      let totalDays=0;
+      for(const [date,agents] of Object.entries(servByDate)){
+        totalDays++;
+        for(const [k,v] of Object.entries(agents)){
+          const a=ensure(date,k);
+          if(!a.fullName||a.fullName===k)a.fullName=v.fullName;
+          a.servTotal=v.total;a.servComp=v.completed;a.servCanc=v.canceled;
+        }
+      }
+      log[log.length-1]=`✓ Servicios: ${totalDays} días procesados`;
     }
     
-    // Guardar al backend si hay
+    // Guardar al backend, día por día
     if(CFG.BACKEND_URL){
-      log.push('Guardando en histórico…');
+      const dates=Object.keys(byDate).sort();
+      log.push(`Guardando ${dates.length} día(s) en histórico…`);
       status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
-      const records=buildHistoryRecords(date);
-      await pushBackend({type:'daily',date,records});
-      log[log.length-1]=`✓ Guardado: ${records.length} registros en histórico`;
+      
+      let totalSaved=0;
+      let dayIdx=0;
+      for(const date of dates){
+        dayIdx++;
+        const agents=byDate[date];
+        const records=Object.entries(agents).map(([k,v])=>({
+          date,nameKey:k,fullName:v.fullName||k,
+          surveysSent:v.surveysSent||0,surveysAnswered:v.surveysAnswered||0,
+          rrPctSum:v.rrPctSum||0,rrN:v.rrN||0,
+          csatPctSum:v.csatPctSum||0,csatN:v.csatN||0,
+          callsAt:v.callsAt||0,callsIn:v.callsIn||0,callsOut:v.callsOut||0,
+          ahtSecSum:v.ahtSecSum||0,ahtN:v.ahtN||0,
+          released:v.released||0,totalEntrantes:v.totalEntrantes||0,
+          acwMinSum:v.acwMinSum||0,acwN:v.acwN||0,
+          holdMinSum:v.holdMinSum||0,holdN:v.holdN||0,
+          breakSum:v.breakSum||0,banoSum:v.banoSum||0,
+          servTotal:v.servTotal||0,servComp:v.servComp||0,servCanc:v.servCanc||0,
+          qaScore:STATE.qa[k]?STATE.qa[k].score:''
+        }));
+        
+        log[log.length-1]=`Guardando día ${dayIdx}/${dates.length}: ${date} (${records.length} agentes)…`;
+        status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
+        
+        await pushBackend({type:'daily',date,records});
+        totalSaved+=records.length;
+        // Pausa para evitar saturar
+        await new Promise(r=>setTimeout(r,500));
+      }
+      
+      log[log.length-1]=`✓ Guardado: ${totalSaved} registros en ${dates.length} día(s)`;
+      
       // Recargar histórico
+      log.push('Refrescando histórico…');
+      status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
       await fetchBackendHistory();
+      log[log.length-1]='✓ Histórico actualizado';
     }else{
       log.push('⚠ No hay backend configurado. Ve a Configuración para añadir la URL.');
     }
