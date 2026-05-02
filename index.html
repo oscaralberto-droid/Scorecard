@@ -187,6 +187,15 @@ hr{border:none;border-top:1px solid var(--border);margin:14px 0}
 .tend-bar-fill.bad{background:var(--danger)}
 
 @media print{header,.tabs{display:none}.card{box-shadow:none;break-inside:avoid}}
+
+/* Tabs admin: ocultas por defecto, visibles cuando body tiene clase .admin */
+.tab.admin-only{display:none}
+body.admin .tab.admin-only{display:inline-block}
+
+/* Botón admin (candado) en el header */
+.admin-pill{cursor:pointer;user-select:none}
+.admin-pill:hover{background:var(--s3)}
+body.admin .admin-pill{background:var(--accent-light);color:var(--accent);border-color:rgba(15,122,86,.3)}
 </style>
 </head>
 <body>
@@ -207,6 +216,9 @@ hr{border:none;border-top:1px solid var(--border);margin:14px 0}
       <div class="sync-pill" id="syncQuejas" title="Quejas en tiempo real"><div class="dot"></div><span>Quejas</span></div>
       <div class="sync-pill" id="syncBackend" title="Histórico (backend)"><div class="dot"></div><span>Backend</span></div>
       <div class="sync-pill" id="lastUpdate"><span class="muted">—</span></div>
+      <div class="sync-pill admin-pill" id="adminPill" onclick="toggleAdmin()" title="Modo administrador">
+        <span id="adminIcon">🔒</span><span id="adminLabel">Admin</span>
+      </div>
     </div>
   </div>
 </header>
@@ -220,8 +232,8 @@ hr{border:none;border-top:1px solid var(--border);margin:14px 0}
     <button class="tab" data-tab="top">Top performers</button>
     <button class="tab" data-tab="bono">Bonificaciones</button>
     <button class="tab" data-tab="distro">Distribución</button>
-    <button class="tab" data-tab="cargar">Cargar datos</button>
-    <button class="tab" data-tab="config">Configuración</button>
+    <button class="tab admin-only" data-tab="cargar">Cargar datos</button>
+    <button class="tab admin-only" data-tab="config">Configuración</button>
   </div>
 
   <div class="content">
@@ -2404,6 +2416,42 @@ function showBanner(type,msg,timeout=4000){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// MODO ADMIN
+// ═══════════════════════════════════════════════════════════════════════════
+function toggleAdmin(){
+  if(STATE.authenticated){
+    // Cerrar sesión admin
+    STATE.authenticated=false;
+    document.body.classList.remove('admin');
+    $('adminIcon').textContent='🔒';
+    $('adminLabel').textContent='Admin';
+    // Si estaba en una tab admin, regresar a Scorecard
+    const active=document.querySelector('.tab.active');
+    if(active&&(active.dataset.tab==='cargar'||active.dataset.tab==='config')){
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      document.querySelector('[data-tab="scorecard"]').classList.add('active');
+      document.querySelectorAll('[id^=view-]').forEach(v=>v.classList.add('hidden'));
+      $('view-scorecard').classList.remove('hidden');
+      renderActiveTab();
+    }
+    showBanner('info','Sesión admin cerrada');
+  }else{
+    // Iniciar sesión admin
+    const pin=prompt('Ingresa el PIN de administrador:');
+    if(pin==null)return; // canceló
+    if(pin===CFG.UPLOAD_PIN){
+      STATE.authenticated=true;
+      document.body.classList.add('admin');
+      $('adminIcon').textContent='🔓';
+      $('adminLabel').textContent='Admin ON';
+      showBanner('success','Modo admin activado · ahora ves Cargar datos y Configuración');
+    }else{
+      showBanner('error','PIN incorrecto');
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // QA MONTH SELECTOR
 // ═══════════════════════════════════════════════════════════════════════════
 function toggleQAMonthPicker(){
@@ -2495,6 +2543,7 @@ window.saveConfig=saveConfig;
 window.saveMetas=saveMetas;
 window.fetchAll=fetchAll;
 window.changeDateMode=changeDateMode;
+window.toggleAdmin=toggleAdmin;
 window.toggleQAMonthPicker=toggleQAMonthPicker;
 window.changeQAMonth=changeQAMonth;
 
