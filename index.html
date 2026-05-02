@@ -286,7 +286,7 @@ const CFG = {
     quality:{target:85,points:1200,dir:'gte',label:'Quality %'},
     released:{target:6,points:500,dir:'lte',label:'Released Calls %'},
     csat:{target:85,points:400,dir:'gte',label:'Surveys - Satisfaction %'},
-    outbound:{target:30,points:300,dir:'gte',label:'Outbound Calls %'},
+    outbound:{target:30,points:300,dir:'lte',label:'Outbound Calls %'},
     rr_bono:{target:90,points:250,dir:'gte',label:'Surveys - Return Rate %'},
     sdr_bono:{target:45,points:200,dir:'gte',label:'Surveys - Delivery Rate %'},
     absent:{target:1,points:150,dir:'lte',label:'Absenteeism %'}
@@ -364,7 +364,11 @@ const STATE = {
   
   // Penalizaciones/ajustes manuales por COORDINADOR
   // {coordName: {ausentismo, quejasDirectas, greenCards, buenDesempeno}}
-  coordManual:{}
+  coordManual:{},
+  
+  // P90 de duración de llamadas por coord-día
+  // [{date, coordName, p90Sec, totalCalls, callsUnder20Min, ahtP90Pct}]
+  coordDaily:[]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -493,6 +497,15 @@ const parseMin=s=>{
 
 // Parser robusto de fecha: acepta DD/MM/YYYY, YYYY-MM-DD, Date object, ISO string
 // Devuelve siempre 'YYYY-MM-DD' o null si no se pudo parsear
+
+// Helper: calcula el percentil 90 de un array de números
+function percentile(arr, p){
+  if(!arr||!arr.length)return null;
+  const sorted=[...arr].sort((a,b)=>a-b);
+  const idx=Math.ceil((p/100)*sorted.length)-1;
+  return sorted[Math.max(0,Math.min(idx,sorted.length-1))];
+}
+
 const parseDate=v=>{
   if(v==null||v==='')return null;
   if(v instanceof Date){
@@ -838,6 +851,10 @@ async function fetchBackendHistory(){
             }
           }
         }
+        // Cargar coordDaily (P90 por coord-día)
+        if(j&&j.ok&&Array.isArray(j.coordDaily)){
+          STATE.coordDaily=j.coordDaily;
+        }
         setSync('Backend','live','Backend · '+STATE.history.length);
         STATE.lastSync.backend=Date.now();
         setLastUpdate();
@@ -1171,10 +1188,14 @@ async function parseLlamadas(file,defaultDate){
       if(tipo==='Entrante'){
         acc[date][key].atendidasIn++;
         acc[date][key].ahtSum+=dur;acc[date][key].ahtN++;
+        if(!acc[date][key].durations)acc[date][key].durations=[];
+        acc[date][key].durations.push(dur);
         if(colgo==='Destino'&&dur<10)acc[date][key].released++;
       }else if(tipo==='Saliente'){
         acc[date][key].atendidasOut++;
         acc[date][key].ahtSum+=dur;acc[date][key].ahtN++;
+        if(!acc[date][key].durations)acc[date][key].durations=[];
+        acc[date][key].durations.push(dur);
       }
     }
   }
@@ -1313,7 +1334,7 @@ function calcBono(row){
   checks.quality={val:row.qaScore,target:CFG.BONO.quality.target,met:row.qaScore!=null&&row.qaScore>=CFG.BONO.quality.target,points:CFG.BONO.quality.points,label:CFG.BONO.quality.label,dir:'gte'};
   checks.released={val:row.releasedPct,target:CFG.BONO.released.target,met:row.releasedPct!=null&&row.releasedPct<=CFG.BONO.released.target,points:CFG.BONO.released.points,label:CFG.BONO.released.label,dir:'lte'};
   checks.csat={val:row.csat,target:CFG.BONO.csat.target,met:row.csat!=null&&row.csat>=CFG.BONO.csat.target,points:CFG.BONO.csat.points,label:CFG.BONO.csat.label,dir:'gte'};
-  checks.outbound={val:row.outboundPct,target:CFG.BONO.outbound.target,met:row.outboundPct!=null&&row.outboundPct>=CFG.BONO.outbound.target,points:CFG.BONO.outbound.points,label:CFG.BONO.outbound.label,dir:'gte'};
+  checks.outbound={val:row.outboundPct,target:CFG.BONO.outbound.target,met:row.outboundPct!=null&&row.outboundPct<=CFG.BONO.outbound.target,points:CFG.BONO.outbound.points,label:CFG.BONO.outbound.label,dir:'lte'};
   checks.rr_bono={val:row.rr,target:CFG.BONO.rr_bono.target,met:row.rr!=null&&row.rr>=CFG.BONO.rr_bono.target,points:CFG.BONO.rr_bono.points,label:CFG.BONO.rr_bono.label,dir:'gte'};
   checks.sdr_bono={val:row.sdr,target:CFG.BONO.sdr_bono.target,met:row.sdr!=null&&row.sdr>=CFG.BONO.sdr_bono.target,points:CFG.BONO.sdr_bono.points,label:CFG.BONO.sdr_bono.label,dir:'gte'};
   
@@ -1509,7 +1530,7 @@ function viewScorecard(){
           <td class="col-num">${statusCell(r.banoMin,CFG.META_BANO_MIN,'lte',v=>v.toFixed(1)+' m')}</td>
           <td class="col-num">${statusCell(r.qaScore,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
           <td class="col-num">${statusCell(r.releasedPct,6,'lte',v=>fmt.pct(v))}</td>
-          <td class="col-num">${statusCell(r.outboundPct,30,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(r.outboundPct,30,'lte',v=>fmt.pct(v))}</td>
           <td class="col-num">${r.quejasTotal>0?`<span class="b ${r.quejasRed>0?'bad':'warn'}">${r.quejasYellow}A · ${r.quejasRed}R</span>`:'<span class="muted">—</span>'}</td>
           <td class="col-num">${r.servTotal||'<span class="muted">—</span>'}</td>
         </tr>`).join('')}
@@ -1568,7 +1589,7 @@ function viewAgente(){
         ${metricTile('Baño',r.banoMin!=null?r.banoMin.toFixed(1)+' min':'—',`Meta ≤10 min/día`,statusFor(r.banoMin,CFG.META_BANO_MIN,'lte'))}
         ${metricTile('QA',fmt.pct(r.qaScore),`Meta ≥${CFG.META_QA}%${r.qaEvals?' · '+r.qaEvals+' eval':''}`,statusFor(r.qaScore,CFG.META_QA,'gte'))}
         ${metricTile('Released',fmt.pct(r.releasedPct),`Meta ≤6%`,statusFor(r.releasedPct,6,'lte'))}
-        ${metricTile('Outbound',fmt.pct(r.outboundPct),`Meta ≥30%`,statusFor(r.outboundPct,30,'gte'))}
+        ${metricTile('Outbound',fmt.pct(r.outboundPct),`Meta ≤30%`,statusFor(r.outboundPct,30,'lte'))}
       </div>
     </div>
 
@@ -1696,24 +1717,18 @@ function renderAgentCharts(){
 
 // ═══════════════ CÁLCULO DE MÉTRICAS DE COORDINADOR ═══════════════
 
-// AHT P90: percentil 90 de duración de llamadas atendidas (en segundos)
-// Necesita acceso al detalle de duraciones, lo aproximamos con avg AHT por ahora
-// y hacemos el cálculo real cuando tengamos los registros granulares
-function calcCoordMetrics(coordAgents){
-  // Agrupar todos los datos del equipo
-  let totalLlamadasAt=0,totalEntrantes=0,totalReleased=0;
-  let totalSalientes=0,totalAtendidas=0;
+// AHT P90 < 20 min: porcentaje de llamadas con duración < 1200 seg
+// Se calcula desde STATE.coordDaily (que tiene P90 real por coord-día)
+// usando el rango de fechas del filtro actual
+function calcCoordMetrics(coordAgents,coordName){
+  let totalLlamadasAt=0,totalEntrantes=0;
+  let totalSalientes=0;
   let rrSum=0,rrN=0,csatSum=0,csatN=0,qaSum=0,qaN=0;
   let releasedPctSum=0,releasedPctN=0;
   let outboundPctSum=0,outboundPctN=0;
   
-  // Para AHT P90: necesitamos las llamadas individuales por duración
-  // Como aproximación, usamos: % de agentes con AHT promedio < 20 min
-  let ahtUnder20=0,ahtTotal=0;
-  
   for(const a of coordAgents){
     totalLlamadasAt+=a.callsAt||0;
-    totalAtendidas+=a.callsAt||0;
     if(a.callsIn)totalEntrantes+=a.callsIn;
     if(a.callsOut)totalSalientes+=a.callsOut;
     
@@ -1722,16 +1737,31 @@ function calcCoordMetrics(coordAgents){
     if(a.qaScore!=null){qaSum+=a.qaScore;qaN++;}
     if(a.releasedPct!=null){releasedPctSum+=a.releasedPct;releasedPctN++;}
     if(a.outboundPct!=null){outboundPctSum+=a.outboundPct;outboundPctN++;}
-    
-    // AHT < 20 min (1200 seg)
-    if(a.aht!=null){
-      ahtTotal++;
-      if(a.aht<1200)ahtUnder20++;
+  }
+  
+  // AHT P90: leer de STATE.coordDaily, sumar todas las llamadas del coord en el rango filtrado
+  // Total calls + bajo 20 min = % cumplido
+  let totalCallsAll=0,totalUnder20=0;
+  let p90Best=null;  // P90 ponderado: del día con más llamadas (informativo)
+  
+  if(coordName){
+    const filteredDaily=filterCoordDailyByDate(STATE.coordDaily,coordName);
+    for(const r of filteredDaily){
+      totalCallsAll+=(+r.totalCalls||0);
+      totalUnder20+=(+r.callsUnder20Min||0);
+      if(p90Best==null||(+r.totalCalls>p90Best.calls)){
+        p90Best={calls:+r.totalCalls,p90:+r.p90Sec};
+      }
     }
   }
   
+  const ahtP90Pct=totalCallsAll>0?(totalUnder20/totalCallsAll)*100:null;
+  
   return{
-    ahtP90:ahtTotal?(ahtUnder20/ahtTotal)*100:null,
+    ahtP90:ahtP90Pct,
+    p90Sec:p90Best?p90Best.p90:null,
+    p90TotalCalls:totalCallsAll,
+    p90Under20:totalUnder20,
     colgadas:releasedPctN?releasedPctSum/releasedPctN:null,
     outbound:outboundPctN?outboundPctSum/outboundPctN:null,
     qa:qaN?qaSum/qaN:null,
@@ -1742,8 +1772,23 @@ function calcCoordMetrics(coordAgents){
   };
 }
 
+// Filtrar coordDaily según el filtro de fecha global del scorecard
+function filterCoordDailyByDate(rows,coordName){
+  if(!rows)return[];
+  const f=STATE.dateFilter;
+  return rows.filter(r=>{
+    if(coordName&&r.coordName!==coordName)return false;
+    if(f.mode==='all')return true;
+    if(f.mode==='day'&&f.day)return r.date===f.day;
+    if(f.mode==='range'&&f.start&&f.end)return r.date>=f.start&&r.date<=f.end;
+    if(f.mode==='month'&&f.month)return r.date&&r.date.startsWith(f.month);
+    if(f.mode==='week'&&f.week)return weekKey(r.date)===f.week;
+    return true;
+  });
+}
+
 function calcCoordBono(coordName,coordAgents){
-  const m=calcCoordMetrics(coordAgents);
+  const m=calcCoordMetrics(coordAgents,coordName);
   const manual=STATE.coordManual[coordName]||{};
   const ausentismo=manual.ausentismo!=null?+manual.ausentismo:null;
   const quejasDirectas=+(manual.quejasDirectas||0);
@@ -1945,7 +1990,7 @@ function viewCoordinador(){
             <td class="col-num">${statusCell(r.aht,CFG.META_AHT_SEC,'lte',v=>fmt.secs(v))}</td>
             <td class="col-num">${statusCell(r.qaScore,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(r.releasedPct,6,'lte',v=>fmt.pct(v))}</td>
-            <td class="col-num">${statusCell(r.outboundPct,30,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(r.outboundPct,30,'lte',v=>fmt.pct(v))}</td>
             <td class="col-num">${r.quejasTotal||'<span class="muted">—</span>'}</td>
             <td class="col-num"><span class="tier-badge tier-${ab.tier}">${fmt.money(ab.bonus)}</span></td>
           </tr>`;
@@ -2176,7 +2221,7 @@ function viewBono(){
           <th class="col-num" title="Quality">QA</th>
           <th class="col-num" title="Released ≤6%">Rel%</th>
           <th class="col-num" title="CSAT ≥85%">CSAT</th>
-          <th class="col-num" title="Outbound ≥30%">Out%</th>
+          <th class="col-num" title="Outbound ≤30%">Out%</th>
           <th class="col-num" title="RR ≥90%">RR</th>
           <th class="col-num" title="SDR ≥45%">SDR</th>
           <th class="col-num" title="Absent ≤1%">Ab%</th>
@@ -2429,6 +2474,53 @@ async function processUploads(){
       
       // Construir TODOS los records de todos los días en un array plano
       const allRecords=[];
+      
+      // Estructura para acumular duraciones por coord-día (para calcular P90)
+      // coordDurations[date][coordName] = [duraciones...]
+      const coordDurations={};
+      
+      // Mapa nameKey → coord (de la distro)
+      const agentToCoord={};
+      for(const ag of (STATE.distro||[])){
+        agentToCoord[ag.nameKey]=ag.coord;
+      }
+      
+      // Procesar llamadas para extraer duraciones por coord-día
+      // Las duraciones están en el parser de llamadas (acumuladas como arrays)
+      // Como ya las pasamos a byDate, hay que volver a leerlas del parser
+      // Pero para no cambiar todo, lo hacemos aquí:
+      // Reprocesamos solo el archivo de llamadas si está disponible
+      if(STATE.pendingUploads.llamadas){
+        const llamByDate=await parseLlamadas(STATE.pendingUploads.llamadas,fallbackDate);
+        for(const [date,agents] of Object.entries(llamByDate)){
+          if(!coordDurations[date])coordDurations[date]={};
+          for(const [k,v] of Object.entries(agents)){
+            const coord=agentToCoord[k];
+            if(!coord||!v.durations||!v.durations.length)continue;
+            if(!coordDurations[date][coord])coordDurations[date][coord]=[];
+            coordDurations[date][coord].push(...v.durations);
+          }
+        }
+      }
+      
+      // Calcular P90 por coord-día y agregar registros tipo "coord"
+      const coordRecords=[];
+      for(const [date,coords] of Object.entries(coordDurations)){
+        for(const [coordName,durations] of Object.entries(coords)){
+          if(!durations.length)continue;
+          const p90=percentile(durations,90);
+          const under20=durations.filter(d=>d<1200).length;
+          const pctUnder20=(under20/durations.length)*100;
+          coordRecords.push({
+            date,coordName,
+            p90Sec:p90,
+            totalCalls:durations.length,
+            callsUnder20Min:under20,
+            ahtP90Pct:pctUnder20  // % de llamadas bajo 20 min (esta es la métrica que usa el bono)
+          });
+        }
+      }
+      
       for(const date of dates){
         const agents=byDate[date];
         for(const [k,v] of Object.entries(agents)){
@@ -2453,7 +2545,7 @@ async function processUploads(){
       status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
       
       // Un solo POST con todo
-      await pushBackend({type:'bulk',dates,records:allRecords});
+      await pushBackend({type:'bulk',dates,records:allRecords,coordRecords});
       
       log[log.length-1]=`✓ Guardado: ${allRecords.length} registros en ${dates.length} día(s)`;
       
