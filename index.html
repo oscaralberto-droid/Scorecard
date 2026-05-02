@@ -292,6 +292,32 @@ const CFG = {
     absent:{target:1,points:150,dir:'lte',label:'Absenteeism %'}
   },
   PEN:{procedural:600,serious:1300,absences:500},
+  
+  // Bonos de COORDINADORES (todo o nada por métrica)
+  COORD_BONO:{
+    aht_p90:{target:90,points:900,dir:'gte',label:'AHT P90 < 20 min %'},
+    ausentismo:{target:5,points:150,dir:'lte',label:'Ausentismo %'},
+    colgadas:{target:6,points:150,dir:'lte',label:'Llamadas Colgadas %'},
+    outbound:{target:30,points:200,dir:'lte',label:'Outbound vs Inbound %'},
+    qa:{target:85,points:1100,dir:'gte',label:'QA equipo %'},
+    rr:{target:90,points:200,dir:'gte',label:'Survey Return Rate %'},
+    csat:{target:90,points:300,dir:'gte',label:'CSAT %'}
+  },
+  // Penalizaciones de coord (por total de tarjetas del equipo: amarillas+rojas)
+  COORD_PEN_CARDS:[
+    {min:6,max:8,deduction:600},
+    {min:9,max:11,deduction:1300},
+    {min:12,max:9999,setZero:true}
+  ],
+  // Tiers de bono coordinador
+  COORD_TIER:[
+    {min:2700,bonus:300,n:3,label:'Tier 3'},
+    {min:2400,bonus:150,n:2,label:'Tier 2'},
+    {min:2100,bonus:75,n:1,label:'Tier 1'},
+    {min:0,bonus:0,n:0,label:'Tier 0'},
+    {min:-99,bonus:-100,n:-1,label:'Penalización -$100'},
+    {min:-99999,bonus:-200,n:-2,label:'Penalización -$200'}
+  ],
   TIER:[
     {min:2800,bonus:300,n:3,label:'Tier 3'},
     {min:2400,bonus:150,n:2,label:'Tier 2'},
@@ -334,7 +360,11 @@ const STATE = {
   
   // Filtro de mes para QA (formato YYYY-MM)
   qaMonth:new Date().toISOString().slice(0,7),
-  qaAvailableMonths:[]  // Se llena al cargar QA
+  qaAvailableMonths:[],
+  
+  // Penalizaciones/ajustes manuales por COORDINADOR
+  // {coordName: {ausentismo, quejasDirectas, greenCards, buenDesempeno}}
+  coordManual:{}
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -793,6 +823,20 @@ async function fetchBackendHistory(){
         if(j&&j.ok&&Array.isArray(j.history)){
           STATE.history=j.history;
           reconstructCurrentDay();
+        }
+        // Cargar también coordManual desde el backend
+        if(j&&j.ok&&Array.isArray(j.coordManual)){
+          STATE.coordManual={};
+          for(const c of j.coordManual){
+            if(c.coordName){
+              STATE.coordManual[c.coordName]={
+                ausentismo:c.ausentismo!==''&&c.ausentismo!=null?+c.ausentismo:null,
+                quejasDirectas:+(c.quejasDirectas||0),
+                greenCards:+(c.greenCards||0),
+                buenDesempeno:+(c.buenDesempeno||0)
+              };
+            }
+          }
         }
         setSync('Backend','live','Backend · '+STATE.history.length);
         STATE.lastSync.backend=Date.now();
@@ -1650,64 +1694,233 @@ function renderAgentCharts(){
   }
 }
 
+// ═══════════════ CÁLCULO DE MÉTRICAS DE COORDINADOR ═══════════════
+
+// AHT P90: percentil 90 de duración de llamadas atendidas (en segundos)
+// Necesita acceso al detalle de duraciones, lo aproximamos con avg AHT por ahora
+// y hacemos el cálculo real cuando tengamos los registros granulares
+function calcCoordMetrics(coordAgents){
+  // Agrupar todos los datos del equipo
+  let totalLlamadasAt=0,totalEntrantes=0,totalReleased=0;
+  let totalSalientes=0,totalAtendidas=0;
+  let rrSum=0,rrN=0,csatSum=0,csatN=0,qaSum=0,qaN=0;
+  let releasedPctSum=0,releasedPctN=0;
+  let outboundPctSum=0,outboundPctN=0;
+  
+  // Para AHT P90: necesitamos las llamadas individuales por duración
+  // Como aproximación, usamos: % de agentes con AHT promedio < 20 min
+  let ahtUnder20=0,ahtTotal=0;
+  
+  for(const a of coordAgents){
+    totalLlamadasAt+=a.callsAt||0;
+    totalAtendidas+=a.callsAt||0;
+    if(a.callsIn)totalEntrantes+=a.callsIn;
+    if(a.callsOut)totalSalientes+=a.callsOut;
+    
+    if(a.rr!=null){rrSum+=a.rr;rrN++;}
+    if(a.csat!=null){csatSum+=a.csat;csatN++;}
+    if(a.qaScore!=null){qaSum+=a.qaScore;qaN++;}
+    if(a.releasedPct!=null){releasedPctSum+=a.releasedPct;releasedPctN++;}
+    if(a.outboundPct!=null){outboundPctSum+=a.outboundPct;outboundPctN++;}
+    
+    // AHT < 20 min (1200 seg)
+    if(a.aht!=null){
+      ahtTotal++;
+      if(a.aht<1200)ahtUnder20++;
+    }
+  }
+  
+  return{
+    ahtP90:ahtTotal?(ahtUnder20/ahtTotal)*100:null,
+    colgadas:releasedPctN?releasedPctSum/releasedPctN:null,
+    outbound:outboundPctN?outboundPctSum/outboundPctN:null,
+    qa:qaN?qaSum/qaN:null,
+    rr:rrN?rrSum/rrN:null,
+    csat:csatN?csatSum/csatN:null,
+    totalLlamadas:totalLlamadasAt,
+    totalEntrantes,totalSalientes
+  };
+}
+
+function calcCoordBono(coordName,coordAgents){
+  const m=calcCoordMetrics(coordAgents);
+  const manual=STATE.coordManual[coordName]||{};
+  const ausentismo=manual.ausentismo!=null?+manual.ausentismo:null;
+  const quejasDirectas=+(manual.quejasDirectas||0);
+  const greenCards=+(manual.greenCards||0);
+  const buenDesempeno=+(manual.buenDesempeno||0);
+  
+  // Tarjetas del equipo: sumar amarillas y rojas de cada agente
+  let amarillas=0,rojas=0;
+  for(const a of coordAgents){
+    amarillas+=(a.quejasYellow||0);
+    rojas+=(a.quejasRed||0);
+  }
+  const totalCards=amarillas+rojas;
+  
+  // Calcular puntos por métrica
+  const checks={
+    aht_p90:{val:m.ahtP90,target:CFG.COORD_BONO.aht_p90.target,met:m.ahtP90!=null&&m.ahtP90>=CFG.COORD_BONO.aht_p90.target,points:CFG.COORD_BONO.aht_p90.points,label:CFG.COORD_BONO.aht_p90.label,dir:'gte'},
+    ausentismo:{val:ausentismo,target:CFG.COORD_BONO.ausentismo.target,met:ausentismo!=null&&ausentismo<=CFG.COORD_BONO.ausentismo.target,points:CFG.COORD_BONO.ausentismo.points,label:CFG.COORD_BONO.ausentismo.label,dir:'lte'},
+    colgadas:{val:m.colgadas,target:CFG.COORD_BONO.colgadas.target,met:m.colgadas!=null&&m.colgadas<=CFG.COORD_BONO.colgadas.target,points:CFG.COORD_BONO.colgadas.points,label:CFG.COORD_BONO.colgadas.label,dir:'lte'},
+    outbound:{val:m.outbound,target:CFG.COORD_BONO.outbound.target,met:m.outbound!=null&&m.outbound<=CFG.COORD_BONO.outbound.target,points:CFG.COORD_BONO.outbound.points,label:CFG.COORD_BONO.outbound.label,dir:'lte'},
+    qa:{val:m.qa,target:CFG.COORD_BONO.qa.target,met:m.qa!=null&&m.qa>=CFG.COORD_BONO.qa.target,points:CFG.COORD_BONO.qa.points,label:CFG.COORD_BONO.qa.label,dir:'gte'},
+    rr:{val:m.rr,target:CFG.COORD_BONO.rr.target,met:m.rr!=null&&m.rr>=CFG.COORD_BONO.rr.target,points:CFG.COORD_BONO.rr.points,label:CFG.COORD_BONO.rr.label,dir:'gte'},
+    csat:{val:m.csat,target:CFG.COORD_BONO.csat.target,met:m.csat!=null&&m.csat>=CFG.COORD_BONO.csat.target,points:CFG.COORD_BONO.csat.points,label:CFG.COORD_BONO.csat.label,dir:'gte'}
+  };
+  
+  let earnedPoints=0;
+  for(const c of Object.values(checks))if(c.met)earnedPoints+=c.points;
+  
+  // Penalización por tarjetas
+  let cardPenalty=0;
+  let zeroOut=false;
+  for(const rule of CFG.COORD_PEN_CARDS){
+    if(totalCards>=rule.min&&totalCards<=rule.max){
+      if(rule.setZero){zeroOut=true;}
+      else cardPenalty=rule.deduction;
+      break;
+    }
+  }
+  
+  let preliminaryPoints=zeroOut?0:earnedPoints-cardPenalty;
+  // Restar quejas directas (cada queja -100 por defecto, configurable)
+  preliminaryPoints-=(quejasDirectas*100);
+  // Sumar green cards (+50 cada una por defecto)
+  preliminaryPoints+=(greenCards*50);
+  // Sumar buen desempeño (manual)
+  preliminaryPoints+=buenDesempeno;
+  
+  // Calcular tier y bono
+  let tier=0,bonus=0;
+  for(const t of CFG.COORD_TIER){
+    if(preliminaryPoints>=t.min){
+      tier=t.n;bonus=t.bonus;break;
+    }
+  }
+  
+  return{
+    metrics:m,checks,
+    earnedPoints,cardPenalty,zeroOut,
+    amarillas,rojas,totalCards,
+    quejasDirectas,greenCards,buenDesempeno,
+    finalPoints:preliminaryPoints,
+    tier,bonus,ausentismo
+  };
+}
+
 // ═══════════════ VISTA: POR COORDINADOR ═══════════════
 function viewCoordinador(){
   const rows=buildScorecard();
   if(!rows.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
   
+  // Agrupar agentes por coordinador
   const byCoord={};
   for(const r of rows){
-    if(!byCoord[r.coord])byCoord[r.coord]={coord:r.coord,senior:r.senior,agents:[],rrSum:0,rrN:0,csatSum:0,csatN:0,qaSum:0,qaN:0,callsAt:0,quejas:0,bonusTotal:0,agentsBonus:0};
-    const c=byCoord[r.coord];
-    c.agents.push(r);
-    if(r.rr!=null){c.rrSum+=r.rr;c.rrN++;}
-    if(r.csat!=null){c.csatSum+=r.csat;c.csatN++;}
-    if(r.qaScore!=null){c.qaSum+=r.qaScore;c.qaN++;}
-    c.callsAt+=r.callsAt;
-    c.quejas+=r.quejasTotal;
-    const b=calcBono(r);
-    c.bonusTotal+=b.bonus;
-    if(b.bonus>0)c.agentsBonus++;
+    if(!byCoord[r.coord])byCoord[r.coord]={coord:r.coord,senior:r.senior,agents:[]};
+    byCoord[r.coord].agents.push(r);
   }
-
-  const list=Object.values(byCoord);
-  const sel=STATE.selectedCoord||list[0]?.coord;
-  const selData=list.find(c=>c.coord===sel)||list[0];
-
-  return`
+  
+  // Calcular bonos
+  const coords=Object.values(byCoord).map(c=>({
+    ...c,
+    bono:calcCoordBono(c.coord,c.agents)
+  })).sort((a,b)=>a.coord.localeCompare(b.coord));
+  
+  const sel=STATE.selectedCoord||coords[0]?.coord;
+  const selData=coords.find(c=>c.coord===sel)||coords[0];
+  
+  // Tabla resumen
+  const summary=`
     <div class="card">
-      <div class="section-title">Resumen por coordinador</div>
+      <div class="section-title">Bonificaciones de coordinadores</div>
+      <p class="section-sub">Click en una fila para ver el detalle. El ausentismo se ingresa manualmente en el detalle.</p>
       <table>
         <thead><tr>
           <th>Coordinador</th>
           <th>Senior</th>
           <th class="col-num">Agentes</th>
-          <th class="col-num">Llamadas</th>
+          <th class="col-num" title="P90 AHT < 20min">AHT P90</th>
+          <th class="col-num" title="Ausentismo">Ausen.</th>
+          <th class="col-num" title="Llamadas Colgadas">Colg.</th>
+          <th class="col-num" title="Outbound vs Inbound">Out%</th>
+          <th class="col-num">QA</th>
           <th class="col-num">RR</th>
           <th class="col-num">CSAT</th>
-          <th class="col-num">QA</th>
-          <th class="col-num">Quejas</th>
-          <th class="col-num">Agentes c/bono</th>
-          <th class="col-num">Bono total</th>
+          <th class="col-num">Tarjetas</th>
+          <th class="col-num">Pts</th>
+          <th class="col-num">Bono</th>
         </tr></thead>
         <tbody>
-        ${list.sort((a,b)=>a.coord.localeCompare(b.coord)).map(c=>`<tr onclick="STATE.selectedCoord='${c.coord}';renderActiveTab()" style="${c.coord===sel?'background:var(--accent-light)':''}">
-          <td class="col-name">${c.coord}</td>
-          <td class="muted">${c.senior||'—'}</td>
-          <td class="col-num">${c.agents.length}</td>
-          <td class="col-num">${fmt.num(c.callsAt)}</td>
-          <td class="col-num">${statusCell(c.rrN?c.rrSum/c.rrN:null,CFG.META_RR,'gte',v=>fmt.pct(v))}</td>
-          <td class="col-num">${statusCell(c.csatN?c.csatSum/c.csatN:null,CFG.META_CSAT,'gte',v=>fmt.pct(v))}</td>
-          <td class="col-num">${statusCell(c.qaN?c.qaSum/c.qaN:null,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
-          <td class="col-num">${c.quejas||'<span class="muted">—</span>'}</td>
-          <td class="col-num">${c.agentsBonus} / ${c.agents.length}</td>
-          <td class="col-num">${fmt.money(c.bonusTotal)}</td>
-        </tr>`).join('')}
+        ${coords.map(c=>{
+          const b=c.bono;
+          const m=b.metrics;
+          return`<tr onclick="STATE.selectedCoord='${c.coord}';renderActiveTab()" style="${c.coord===sel?'background:var(--accent-light)':''}">
+            <td class="col-name">${c.coord}</td>
+            <td class="muted">${c.senior||'—'}</td>
+            <td class="col-num">${c.agents.length}</td>
+            <td class="col-num">${statusCell(m.ahtP90,90,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${b.ausentismo!=null?statusCell(b.ausentismo,5,'lte',v=>fmt.pct(v)):'<span class="muted">—</span>'}</td>
+            <td class="col-num">${statusCell(m.colgadas,6,'lte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(m.outbound,30,'lte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(m.qa,85,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(m.rr,90,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(m.csat,90,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${b.totalCards>0?`<span class="b ${b.totalCards>=12?'bad':b.totalCards>=6?'warn':'neutral'}">${b.amarillas}A · ${b.rojas}R</span>`:'<span class="muted">—</span>'}</td>
+            <td class="col-num"><strong>${fmt.num(b.finalPoints)}</strong></td>
+            <td class="col-num"><span class="tier-badge tier-${Math.max(0,b.tier)}">${b.bonus<0?'-$'+Math.abs(b.bonus):fmt.money(b.bonus)}</span></td>
+          </tr>`;
+        }).join('')}
         </tbody>
       </table>
     </div>
+  `;
+  
+  // Detalle del coordinador seleccionado
+  if(!selData)return summary;
+  const b=selData.bono;
+  const m=b.metrics;
+  const manual=STATE.coordManual[selData.coord]||{};
+  
+  const detail=`
+    <div class="card">
+      <div class="section-title">Detalle de ${selData.coord}</div>
+      <p class="section-sub">${selData.senior?'Senior: '+selData.senior+' · ':''}${selData.agents.length} Prod Agents · ${m.totalLlamadas} llamadas atendidas</p>
+      
+      <div class="metric-grid" style="margin-top:14px">
+        ${metricTile('AHT P90 < 20min',fmt.pct(m.ahtP90),'Meta ≥90% · '+(b.checks.aht_p90.met?'+900pts':'+0pts'),statusFor(m.ahtP90,90,'gte'))}
+        ${metricTile('Ausentismo',b.ausentismo!=null?fmt.pct(b.ausentismo):'—','Meta ≤5% · '+(b.checks.ausentismo.met?'+150pts':'+0pts'),b.ausentismo!=null?statusFor(b.ausentismo,5,'lte'):'neutral')}
+        ${metricTile('Llamadas Colgadas',fmt.pct(m.colgadas),'Meta ≤6% · '+(b.checks.colgadas.met?'+150pts':'+0pts'),statusFor(m.colgadas,6,'lte'))}
+        ${metricTile('Outbound vs Inbound',fmt.pct(m.outbound),'Meta ≤30% · '+(b.checks.outbound.met?'+200pts':'+0pts'),statusFor(m.outbound,30,'lte'))}
+        ${metricTile('QA equipo',fmt.pct(m.qa),'Meta ≥85% · '+(b.checks.qa.met?'+1100pts':'+0pts'),statusFor(m.qa,85,'gte'))}
+        ${metricTile('Survey Return Rate',fmt.pct(m.rr),'Meta ≥90% · '+(b.checks.rr.met?'+200pts':'+0pts'),statusFor(m.rr,90,'gte'))}
+        ${metricTile('CSAT',fmt.pct(m.csat),'Meta ≥90% · '+(b.checks.csat.met?'+300pts':'+0pts'),statusFor(m.csat,90,'gte'))}
+      </div>
+    </div>
     
-    ${selData?`<div class="card">
+    <div class="card">
+      <div class="section-title">Resumen de bonificación</div>
+      <div class="metric-grid">
+        ${metricTile('Earned points',fmt.num(b.earnedPoints),'de 3,000 pts','neutral')}
+        ${metricTile('Tarjetas equipo',`${b.amarillas}A · ${b.rojas}R`,b.zeroOut?'⚠ >11 tarjetas: score 0':b.cardPenalty>0?'-'+b.cardPenalty+' pts':'sin penalización',b.totalCards>=12?'bad':b.totalCards>=6?'warn':'ok')}
+        ${metricTile('Final points',fmt.num(b.finalPoints),`Tier ${Math.max(0,b.tier)}`,b.finalPoints>=2100?'ok':'warn')}
+        ${metricTile('Bono',b.bonus<0?'-$'+Math.abs(b.bonus):fmt.money(b.bonus),b.bonus<0?'Penalización al salario':b.bonus>0?'Sumado al salario':'Sin bono','neutral')}
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="section-title">Ajustes manuales</div>
+      <p class="section-sub">Estos campos los ingresas manualmente y afectan el cálculo del bono. Click en guardar para aplicar.</p>
+      <div class="grid-4">
+        <div class="field"><label>Ausentismo %</label><input type="number" id="coordAusentismo" value="${manual.ausentismo!=null?manual.ausentismo:''}" step="0.01" placeholder="—"></div>
+        <div class="field"><label>Quejas directas (-100 c/u)</label><input type="number" id="coordQuejasDirectas" value="${manual.quejasDirectas||0}" min="0"></div>
+        <div class="field"><label>Green cards (+50 c/u)</label><input type="number" id="coordGreenCards" value="${manual.greenCards||0}" min="0"></div>
+        <div class="field"><label>Buen desempeño (pts)</label><input type="number" id="coordBuenDesempeno" value="${manual.buenDesempeno||0}"></div>
+      </div>
+      <div style="margin-top:12px"><button class="btn primary" onclick="saveCoordManual('${selData.coord}')">Guardar</button></div>
+    </div>
+    
+    <div class="card">
       <div class="section-title">Equipo de ${selData.coord}</div>
       <table>
         <thead><tr>
@@ -1715,13 +1928,14 @@ function viewCoordinador(){
           <th class="col-num">Llam.</th>
           <th class="col-num">RR</th><th class="col-num">CSAT</th>
           <th class="col-num">AHT</th><th class="col-num">QA</th>
+          <th class="col-num">Rel%</th>
+          <th class="col-num">Out%</th>
           <th class="col-num">Quejas</th>
-          <th class="col-num">Pts</th>
           <th class="col-num">Bono</th>
         </tr></thead>
         <tbody>
         ${selData.agents.map(r=>{
-          const b=calcBono(r);
+          const ab=calcBono(r);
           return`<tr onclick="selectAgent('${r.nameKey}')">
             <td class="col-name">${r.agent}</td>
             <td>${clusterTag(r.cluster)}</td>
@@ -1730,15 +1944,38 @@ function viewCoordinador(){
             <td class="col-num">${statusCell(r.csat,CFG.META_CSAT,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(r.aht,CFG.META_AHT_SEC,'lte',v=>fmt.secs(v))}</td>
             <td class="col-num">${statusCell(r.qaScore,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(r.releasedPct,6,'lte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(r.outboundPct,30,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${r.quejasTotal||'<span class="muted">—</span>'}</td>
-            <td class="col-num">${fmt.num(b.adjustedPoints)}</td>
-            <td class="col-num"><span class="tier-badge tier-${b.tier}">${fmt.money(b.bonus)}</span></td>
+            <td class="col-num"><span class="tier-badge tier-${ab.tier}">${fmt.money(ab.bonus)}</span></td>
           </tr>`;
         }).join('')}
         </tbody>
       </table>
-    </div>`:''}
+    </div>
   `;
+  
+  return summary+detail;
+}
+
+async function saveCoordManual(coordName){
+  if(!checkAuth())return;
+  const data={
+    ausentismo:$('coordAusentismo').value!==''?+$('coordAusentismo').value:null,
+    quejasDirectas:+($('coordQuejasDirectas').value||0),
+    greenCards:+($('coordGreenCards').value||0),
+    buenDesempeno:+($('coordBuenDesempeno').value||0)
+  };
+  STATE.coordManual[coordName]=data;
+  if(CFG.BACKEND_URL){
+    try{
+      await pushBackend({type:'coordManual',coordName,data});
+      showBanner('success','Datos del coordinador guardados');
+    }catch(e){
+      showBanner('error','Error al guardar: '+e.message);
+    }
+  }
+  renderActiveTab();
 }
 
 // ═══════════════ VISTA: POR SENIOR ═══════════════
@@ -2544,6 +2781,7 @@ window.saveMetas=saveMetas;
 window.fetchAll=fetchAll;
 window.changeDateMode=changeDateMode;
 window.toggleAdmin=toggleAdmin;
+window.saveCoordManual=saveCoordManual;
 window.toggleQAMonthPicker=toggleQAMonthPicker;
 window.changeQAMonth=changeQAMonth;
 
