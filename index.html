@@ -202,7 +202,8 @@ hr{border:none;border-top:1px solid var(--border);margin:14px 0}
     </div>
     <div class="hdr-right">
       <div class="sync-pill" id="syncDistro" title="Distribución"><div class="dot"></div><span>Distro</span></div>
-      <div class="sync-pill" id="syncQA" title="QA en tiempo real"><div class="dot"></div><span>QA</span></div>
+      <div class="sync-pill" id="syncQA" title="QA en tiempo real" style="cursor:pointer" onclick="toggleQAMonthPicker()"><div class="dot"></div><span>QA</span></div>
+      <select id="qaMonthSelect" style="display:none;font-size:11px;font-family:var(--mono);padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--s1);color:var(--text)" onchange="changeQAMonth(this.value)"></select>
       <div class="sync-pill" id="syncQuejas" title="Quejas en tiempo real"><div class="dot"></div><span>Quejas</span></div>
       <div class="sync-pill" id="syncBackend" title="Histórico (backend)"><div class="dot"></div><span>Backend</span></div>
       <div class="sync-pill" id="lastUpdate"><span class="muted">—</span></div>
@@ -317,7 +318,11 @@ const STATE = {
   
   // Cargas pendientes
   pendingUploads:{encuestas:null,llamadas:null,auxiliares:null,servicios:null},
-  uploadDate:new Date().toISOString().slice(0,10)
+  uploadDate:new Date().toISOString().slice(0,10),
+  
+  // Filtro de mes para QA (formato YYYY-MM)
+  qaMonth:new Date().toISOString().slice(0,7),
+  qaAvailableMonths:[]  // Se llena al cargar QA
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -610,23 +615,38 @@ async function fetchQA(){
       return total;
     }
 
-    // Filtrar evaluaciones del mes calendario actual (1° al último día)
-    const now=new Date();
-    const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
-    const monthEnd=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
-
     const evalDate=row=>{
       const raw=row['Marca temporal']||gCol(row,'Marca temporal')||row['Date of contact']||gCol(row,'Date of contact')||'';
       if(!raw)return null;
       const d=new Date(raw);
       return isNaN(d.getTime())?null:d;
     };
+    
+    // Recolectar meses disponibles en las evaluaciones
+    const monthSet=new Set();
+    for(const row of j.rows){
+      const d=evalDate(row);
+      if(d){
+        const ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+        monthSet.add(ym);
+      }
+    }
+    STATE.qaAvailableMonths=[...monthSet].sort().reverse(); // más recientes primero
+    
+    // Si el mes seleccionado no tiene datos, usar el más reciente disponible
+    if(!monthSet.has(STATE.qaMonth)&&STATE.qaAvailableMonths.length>0){
+      STATE.qaMonth=STATE.qaAvailableMonths[0];
+    }
+    
+    // Filtrar evaluaciones del mes seleccionado (STATE.qaMonth, formato YYYY-MM)
+    const [yr,mo]=STATE.qaMonth.split('-').map(Number);
+    const monthStart=new Date(yr,mo-1,1);
+    const monthEnd=new Date(yr,mo,0,23,59,59);
 
     const byAgent={};
     for(const row of j.rows){
       const name=aName(row);
       if(!name)continue;
-      // Filtrar por mes calendario actual
       const d=evalDate(row);
       if(!d||d<monthStart||d>monthEnd)continue;
       const key=resolveAgentKey(name);
@@ -2384,6 +2404,41 @@ function showBanner(type,msg,timeout=4000){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// QA MONTH SELECTOR
+// ═══════════════════════════════════════════════════════════════════════════
+function toggleQAMonthPicker(){
+  const sel=$('qaMonthSelect');
+  if(!sel)return;
+  if(sel.style.display==='none'){
+    populateQAMonthSelect();
+    sel.style.display='inline-block';
+  }else{
+    sel.style.display='none';
+  }
+}
+
+function populateQAMonthSelect(){
+  const sel=$('qaMonthSelect');
+  if(!sel)return;
+  const months=STATE.qaAvailableMonths||[];
+  if(!months.length){
+    sel.innerHTML='<option>Sin datos</option>';
+    return;
+  }
+  const fmtMonth=(ym)=>{
+    const [y,m]=ym.split('-');
+    const names=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    return names[parseInt(m)-1]+' '+y;
+  };
+  sel.innerHTML=months.map(m=>`<option value="${m}"${m===STATE.qaMonth?' selected':''}>${fmtMonth(m)}</option>`).join('');
+}
+
+function changeQAMonth(ym){
+  STATE.qaMonth=ym;
+  fetchQA(); // re-fetch con el nuevo mes
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // INIT & EVENT LISTENERS
 // ═══════════════════════════════════════════════════════════════════════════
 async function fetchAll(){
@@ -2440,6 +2495,8 @@ window.saveConfig=saveConfig;
 window.saveMetas=saveMetas;
 window.fetchAll=fetchAll;
 window.changeDateMode=changeDateMode;
+window.toggleQAMonthPicker=toggleQAMonthPicker;
+window.changeQAMonth=changeQAMonth;
 
 </script>
 </body>
