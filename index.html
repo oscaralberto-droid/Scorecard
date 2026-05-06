@@ -802,16 +802,51 @@ async function fetchDistro(){
     const csv=await fetchSheetCSV(CFG.DISTRO_SHEET,CFG.DISTRO_TAB);
     let agents=[];
     // Estructura confirmada de la Sheet "Schedules":
-    // A=blank, B=Senior, C=Coord, D=Agent, E=Type, F=Hours, G=Extension, H=Nivel
-    // (índices 0-based: 0=A, 1=B, 2=C, 3=D, 4=E, 5=F, 6=G, 7=H)
-    for(let i=2;i<csv.length;i++){
+    // A=Senior, B=Coord, C=Agent, D=Type, E=Hours, F=Extension, G=Nivel
+    // (índices 0-based: 0=A, 1=B, 2=C, 3=D, 4=E, 5=F, 6=G)
+    // Detectar automáticamente la fila del header (busca "Senior" o "Coordinador")
+    let headerRow=-1;
+    for(let i=0;i<Math.min(csv.length,5);i++){
       const r=csv[i];if(!r)continue;
-      const senior=(r[1]||'').trim();
-      const coord=(r[2]||'').trim();
-      const agent=(r[3]||'').trim();
-      const type=(r[4]||'').trim();
-      const ext=(r[6]||'').trim();      // G = Extension
-      const nivel=(r[7]||'').trim();    // H = Nivel/Cluster
+      const cells=r.map(c=>(c||'').toString().toLowerCase());
+      if(cells.some(c=>c.includes('senior'))&&cells.some(c=>c.includes('agent'))){
+        headerRow=i;break;
+      }
+    }
+    // Si no detectó header, asumir fila 1 (índice 0) como header → datos empiezan en índice 1
+    const startIdx=headerRow>=0?headerRow+1:1;
+    
+    // Detectar las columnas correctas buscando los headers
+    let cSenior=-1,cCoord=-1,cAgent=-1,cType=-1,cHours=-1,cExt=-1,cNivel=-1;
+    if(headerRow>=0){
+      const h=csv[headerRow].map(c=>(c||'').toString().toLowerCase().trim());
+      for(let i=0;i<h.length;i++){
+        if(h[i].includes('senior'))cSenior=i;
+        else if(h[i].includes('coord'))cCoord=i;
+        else if(h[i]==='agente'||h[i]==='agent'||h[i].includes('agente'))cAgent=i;
+        else if(h[i].includes('type'))cType=i;
+        else if(h[i].includes('hour'))cHours=i;
+        else if(h[i].includes('exten'))cExt=i;
+        else if(h[i].includes('nivel')||h[i].includes('cluster'))cNivel=i;
+      }
+    }
+    // Fallback: si no detectó las columnas, usar índices clásicos (0-based)
+    // Layout actual: A=Senior(0), B=Coord(1), C=Agent(2), D=Type(3), E=Hours(4), F=Extension(5), G=Nivel(6)
+    if(cSenior<0)cSenior=0;
+    if(cCoord<0)cCoord=1;
+    if(cAgent<0)cAgent=2;
+    if(cType<0)cType=3;
+    if(cExt<0)cExt=5;
+    if(cNivel<0)cNivel=6;
+    
+    for(let i=startIdx;i<csv.length;i++){
+      const r=csv[i];if(!r)continue;
+      const senior=(r[cSenior]||'').trim();
+      const coord=(r[cCoord]||'').trim();
+      const agent=(r[cAgent]||'').trim();
+      const type=(r[cType]||'').trim();
+      const ext=(r[cExt]||'').trim();
+      const nivel=(r[cNivel]||'').trim();
       if(!agent||!coord||!type)continue;
       if(type.toLowerCase()!=='prod agent')continue;
       agents.push({
