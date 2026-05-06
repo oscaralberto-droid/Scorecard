@@ -1336,7 +1336,8 @@ function reconstructCurrentDay(){
       STATE.llamadas[k]={fullName:v.fullName,
         atendidasIn:v.callsIn,atendidasOut:v.callsOut,
         ahtSum:v.ahtSecSum,ahtN:v.ahtN,
-        released:v.released,totalEntrantes:v.totalEntrantes};
+        released:v.released,totalEntrantes:v.totalEntrantes,
+        callsUnder20Min:v.callsUnder20Min||0};  // P90: bajo 20 min
     }
     if(v.acwN||v.holdN||v.breakSum||v.banoSum){
       STATE.auxiliares[k]={fullName:v.fullName,
@@ -1358,7 +1359,8 @@ function emptyAccumulator(){
     callsAt:0,callsIn:0,callsOut:0,ahtSecSum:0,ahtN:0,released:0,totalEntrantes:0,
     acwMinSum:0,acwN:0,holdMinSum:0,holdN:0,
     breakSum:0,breakDays:0,breakMaxDay:0,banoSum:0,banoDays:0,banoMaxDay:0,
-    servTotal:0,servComp:0,servCanc:0};
+    servTotal:0,servComp:0,servCanc:0,
+    callsUnder20Min:0};  // P90: cuántas llamadas duraron menos de 20 min
 }
 function accumulate(acc,h){
   if(h.fullName)acc.fullName=h.fullName;
@@ -1381,6 +1383,7 @@ function accumulate(acc,h){
   acc.servTotal+=(+h.servTotal||0);
   acc.servComp+=(+h.servComp||0);
   acc.servCanc+=(+h.servCanc||0);
+  acc.callsUnder20Min+=(+h.callsUnder20Min||0);
 }
 
 function filterHistoryByDate(history){
@@ -1638,6 +1641,8 @@ function buildScorecard(){
     const srr=enc&&enc.sent?(enc.answered/enc.sent)*100:null;
     const aht=llam&&llam.ahtN?llam.ahtSum/llam.ahtN:null;
     const callsAt=llam?llam.atendidasIn+llam.atendidasOut:0;
+    // P90: % de llamadas del agente que duraron menos de 20 min
+    const ahtP90Pct=(llam&&llam.ahtN&&llam.callsUnder20Min!=null&&llam.ahtN>0)?(llam.callsUnder20Min/llam.ahtN)*100:null;
     const outboundPct=callsAt?(llam.atendidasOut/callsAt)*100:null;
     const releasedPct=llam&&llam.atendidasIn?(llam.released/llam.atendidasIn)*100:null;
     const sdr=enc&&llam&&llam.atendidasIn?(enc.sent/llam.atendidasIn)*100:null;
@@ -1651,7 +1656,7 @@ function buildScorecard(){
 
     out.push({
       ...ag,
-      rr,csat,srr,sdr,aht,acwMin,holdMin,breakMin,banoMin,
+      rr,csat,srr,sdr,aht,ahtP90Pct,acwMin,holdMin,breakMin,banoMin,
       callsAt,callsIn:llam?llam.atendidasIn:0,callsOut:llam?llam.atendidasOut:0,
       outboundPct,releasedPct,
       qaScore,qaEvals:qa?qa.evals:0,
@@ -1905,6 +1910,7 @@ function viewScorecard(){
           <th class="col-num">SDR</th>
           <th class="col-num">SRR</th>
           <th class="col-num">AHT</th>
+          <th class="col-num" title="P90: % de llamadas bajo 20 min">P90</th>
           <th class="col-num">ACW</th>
           <th class="col-num">Hold</th>
           <th class="col-num">Break</th>
@@ -1926,6 +1932,7 @@ function viewScorecard(){
           <td class="col-num">${statusCell(r.sdr,CFG.META_SDR,'gte',v=>fmt.pct(v))}</td>
           <td class="col-num">${statusCell(r.srr,CFG.META_SRR,'gte',v=>fmt.pct(v))}</td>
           <td class="col-num">${statusCell(r.aht,CFG.META_AHT_SEC,'lte',v=>fmt.secs(v))}</td>
+          <td class="col-num">${statusCell(r.ahtP90Pct,90,'gte',v=>fmt.pct(v))}</td>
           <td class="col-num">${statusCell(r.acwMin,CFG.META_ACW_MIN,'lte',v=>fmt.mins(v))}</td>
           <td class="col-num">${statusCell(r.holdMin,CFG.META_HOLD_MIN,'lte',v=>fmt.mins(v))}</td>
           <td class="col-num">${statusCell(r.breakMin,CFG.META_BREAK_MIN,'lte',v=>v.toFixed(1)+' m')}</td>
@@ -1986,6 +1993,7 @@ function viewAgente(){
         ${metricTile('Survey Delivery',fmt.pct(r.sdr),`Meta ≥${CFG.META_SDR}%`,statusFor(r.sdr,CFG.META_SDR,'gte'))}
         ${metricTile('Survey Return',fmt.pct(r.srr),`Meta ≥${CFG.META_SRR}%`,statusFor(r.srr,CFG.META_SRR,'gte'))}
         ${metricTile('AHT',fmt.secs(r.aht),`Meta ≤08:30`,statusFor(r.aht,CFG.META_AHT_SEC,'lte'))}
+        ${metricTile('P90 < 20min',fmt.pct(r.ahtP90Pct),'Meta ≥90% (% llamadas bajo 20 min)',statusFor(r.ahtP90Pct,90,'gte'))}
         ${metricTile('ACW',fmt.mins(r.acwMin),`Meta ≤02:00`,statusFor(r.acwMin,CFG.META_ACW_MIN,'lte'))}
         ${metricTile('Hold',fmt.mins(r.holdMin),`Meta ≤02:00`,statusFor(r.holdMin,CFG.META_HOLD_MIN,'lte'))}
         ${metricTile('Break',r.breakMin!=null?r.breakMin.toFixed(1)+' min':'—',`Meta ≤30 min/día`,statusFor(r.breakMin,CFG.META_BREAK_MIN,'lte'))}
@@ -2376,7 +2384,7 @@ function viewCoordinador(){
           <th>Agente</th><th>CL</th>
           <th class="col-num">Llam.</th>
           <th class="col-num">RR</th><th class="col-num">CSAT</th>
-          <th class="col-num">AHT</th><th class="col-num">QA</th>
+          <th class="col-num">AHT</th><th class="col-num" title="P90: % bajo 20 min">P90</th><th class="col-num">QA</th>
           <th class="col-num">Rel%</th>
           <th class="col-num">Out%</th>
           <th class="col-num">Quejas</th>
@@ -2392,6 +2400,7 @@ function viewCoordinador(){
             <td class="col-num">${statusCell(r.rr,CFG.META_RR,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(r.csat,CFG.META_CSAT,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(r.aht,CFG.META_AHT_SEC,'lte',v=>fmt.secs(v))}</td>
+            <td class="col-num">${statusCell(r.ahtP90Pct,90,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(r.qaScore,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(r.releasedPct,6,'lte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(r.outboundPct,30,'lte',v=>fmt.pct(v))}</td>
@@ -3062,6 +3071,7 @@ async function processUploads(){
           a.callsIn=v.atendidasIn;a.callsOut=v.atendidasOut;
           a.ahtSecSum=v.ahtSum;a.ahtN=v.ahtN;
           a.released=v.released;a.totalEntrantes=v.totalEntrantes;
+          a.durations=v.durations||[];  // P90: array de duraciones individuales
         }
       }
       log[log.length-1]=`✓ Llamadas: ${totalDays} días procesados`;
@@ -3156,6 +3166,12 @@ async function processUploads(){
       for(const date of dates){
         const agents=byDate[date];
         for(const [k,v] of Object.entries(agents)){
+          // P90: calcular cuántas llamadas duraron < 20 min (1200 seg)
+          // El parser ya guardó las durations en byDate[date][k].durations
+          let callsUnder20=0;
+          if(v.durations&&v.durations.length){
+            callsUnder20=v.durations.filter(d=>d<1200).length;
+          }
           allRecords.push({
             date,nameKey:k,fullName:v.fullName||k,
             surveysSent:v.surveysSent||0,surveysAnswered:v.surveysAnswered||0,
@@ -3168,7 +3184,8 @@ async function processUploads(){
             holdMinSum:v.holdMinSum||0,holdN:v.holdN||0,
             breakSum:v.breakSum||0,banoSum:v.banoSum||0,
             servTotal:v.servTotal||0,servComp:v.servComp||0,servCanc:v.servCanc||0,
-            qaScore:STATE.qa[k]?STATE.qa[k].score:''
+            qaScore:STATE.qa[k]?STATE.qa[k].score:'',
+            callsUnder20Min:callsUnder20
           });
         }
       }
