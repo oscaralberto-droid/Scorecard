@@ -469,6 +469,7 @@ body.admin .admin-only{display:inline-block!important}
     <button class="tab" data-tab="top">Top performers</button>
     <button class="tab" data-tab="bono">Bonificaciones</button>
     <button class="tab" data-tab="distro">Distribución</button>
+    <button class="tab" data-tab="llamadasLargas">📞 Llamadas largas</button>
     <button class="tab" data-tab="informe">📊 Informe</button>
     <button class="tab admin-only" data-tab="cargar">Cargar datos</button>
     <button class="tab admin-only" data-tab="config">Configuración</button>
@@ -482,6 +483,7 @@ body.admin .admin-only{display:inline-block!important}
     <div id="view-top" class="hidden"></div>
     <div id="view-bono" class="hidden"></div>
     <div id="view-distro" class="hidden"></div>
+    <div id="view-llamadasLargas" class="hidden"></div>
     <div id="view-informe" class="hidden"></div>
     <div id="view-cargar" class="hidden"></div>
     <div id="view-config" class="hidden"></div>
@@ -1192,6 +1194,10 @@ async function fetchBackendHistory(){
         if(j&&j.ok&&Array.isArray(j.coordDaily)){
           STATE.coordDaily=j.coordDaily;
         }
+        // Cargar llamadas largas persistidas
+        if(j&&j.ok&&Array.isArray(j.longCalls)){
+          STATE.longCallsBackend=j.longCalls;
+        }
         setSync('Backend','live','Backend · '+STATE.history.length);
         STATE.lastSync.backend=Date.now();
         setLastUpdate();
@@ -1495,14 +1501,19 @@ async function parseLlamadas(file,defaultDate){
     return-1;
   };
   const iFecha=findCol('fecha');
+  const iHora=findCol('hora');
   const iTipo=findCol('tipo');
   const iLlamante=findCol('llamante');
   const iUltDest=findCol('último destino','ultimo destino');
   const iDur=findCol('duración','duracion');
   const iColgo=findCol('colgó','colgo');
   const iRes=findCol('resultado');
+  const iGrab=findCol('grabacion','grabación');
 
   const acc={};
+  // Acumular llamadas largas (>20 min) para la pestaña Llamadas largas
+  if(!STATE.longCalls)STATE.longCalls=[];
+  STATE.longCalls.length=0;  // reset al re-parsear
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r.length)continue;
     
@@ -1531,11 +1542,34 @@ async function parseLlamadas(file,defaultDate){
         if(!acc[date][key].durations)acc[date][key].durations=[];
         acc[date][key].durations.push(dur);
         if(colgo==='Destino'&&dur<10)acc[date][key].released++;
+        // Capturar si es llamada larga (>=20 min)
+        if(dur>=1200){
+          STATE.longCalls.push({
+            date:date,
+            hora:(r[iHora]||'').toString(),
+            agent:agName,
+            nameKey:key,
+            tipo:tipo,
+            duration:dur,
+            grabacion:(r[iGrab]||'').toString()
+          });
+        }
       }else if(tipo==='Saliente'){
         acc[date][key].atendidasOut++;
         acc[date][key].ahtSum+=dur;acc[date][key].ahtN++;
         if(!acc[date][key].durations)acc[date][key].durations=[];
         acc[date][key].durations.push(dur);
+        if(dur>=1200){
+          STATE.longCalls.push({
+            date:date,
+            hora:(r[iHora]||'').toString(),
+            agent:agName,
+            nameKey:key,
+            tipo:tipo,
+            duration:dur,
+            grabacion:(r[iGrab]||'').toString()
+          });
+        }
       }
     }
   }
@@ -1731,6 +1765,7 @@ function renderActiveTab(){
   else if(which==='bono')c.innerHTML=viewBono();
   else if(which==='distro')c.innerHTML=viewDistro();
   else if(which==='informe')c.innerHTML=viewInforme();
+  else if(which==='llamadasLargas')c.innerHTML=viewLlamadasLargas();
   else if(which==='cargar')c.innerHTML=viewCargar();
   else if(which==='config')c.innerHTML=viewConfig();
   
@@ -2969,6 +3004,141 @@ function exportInforme(){
 window.exportInforme=exportInforme;
 
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW: LLAMADAS LARGAS (≥ 20 min)
+// ═══════════════════════════════════════════════════════════════════════════
+function viewLlamadasLargas(){
+  const sessionCalls=STATE.longCalls||[];
+  const backendCalls=STATE.longCallsBackend||[];
+  const seen={};
+  const all=[];
+  for(const c of [...sessionCalls,...backendCalls]){
+    const k=c.date+'|'+c.hora+'|'+c.nameKey+'|'+c.duration;
+    if(seen[k])continue;
+    seen[k]=true;
+    all.push(c);
+  }
+  
+  if(!all.length){
+    return `<div class="card"><div class="empty">
+      <div class="empty-title">Sin llamadas largas</div>
+      <p class="muted">No hay llamadas ≥ 20 minutos registradas.</p>
+      <p class="muted" style="font-size:11px;margin-top:8px">Sube el archivo de llamadas desde "Cargar datos" para detectar llamadas largas del periodo.</p>
+    </div></div>`;
+  }
+  
+  const filterAgent=$('llFilterAgent')?$('llFilterAgent').value:'';
+  const filterCoord=$('llFilterCoord')?$('llFilterCoord').value:'';
+  const filterDate=$('llFilterDate')?$('llFilterDate').value:'';
+  
+  const agentCoord={};
+  for(const ag of (STATE.distro||[]))agentCoord[ag.nameKey]=ag.coord;
+  
+  let filtered=all.filter(c=>{
+    if(filterAgent&&c.nameKey!==filterAgent)return false;
+    if(filterCoord&&agentCoord[c.nameKey]!==filterCoord)return false;
+    if(filterDate&&c.date!==filterDate)return false;
+    return true;
+  });
+  
+  filtered.sort((a,b)=>{
+    const cmp=(b.date||'').localeCompare(a.date||'');
+    if(cmp!==0)return cmp;
+    return (b.hora||'').localeCompare(a.hora||'');
+  });
+  
+  const agents=[...new Set(all.map(c=>c.nameKey))].map(k=>{
+    const ag=(STATE.distro||[]).find(a=>a.nameKey===k);
+    return{nameKey:k,name:ag?ag.agent:k};
+  }).sort((a,b)=>a.name.localeCompare(b.name));
+  
+  const coords=[...new Set(all.map(c=>agentCoord[c.nameKey]).filter(Boolean))].sort();
+  const dates=[...new Set(all.map(c=>c.date))].sort().reverse();
+  
+  const totalDur=filtered.reduce((s,c)=>s+(c.duration||0),0);
+  const avgDur=filtered.length?Math.round(totalDur/filtered.length):0;
+  const maxDur=filtered.length?Math.max(...filtered.map(c=>c.duration||0)):0;
+  
+  return `
+    <div class="card">
+      <div class="section-title">📞 Llamadas largas (≥ 20 minutos)</div>
+      <p class="section-sub">Llamadas detectadas con duración ≥ 20 minutos. Estas son las que afectan el P90 de los agentes.</p>
+      
+      <div class="metric-grid" style="margin-top:14px">
+        <div class="metric-tile">
+          <div class="metric-tile-label">Total filtradas</div>
+          <div class="metric-tile-value">${filtered.length}</div>
+          <div class="metric-tile-meta">de ${all.length} totales</div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-label">Duración promedio</div>
+          <div class="metric-tile-value">${fmt.secs(avgDur)}</div>
+          <div class="metric-tile-meta">en filtro actual</div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-label">Duración máxima</div>
+          <div class="metric-tile-value">${fmt.secs(maxDur)}</div>
+          <div class="metric-tile-meta">la más larga</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="filter-row" style="margin-bottom:12px">
+        <div class="field"><label>Agente</label><select id="llFilterAgent" onchange="renderActiveTab()">
+          <option value="">Todos (${agents.length})</option>
+          ${agents.map(a=>`<option value="${a.nameKey}"${a.nameKey===filterAgent?' selected':''}>${a.name}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Coordinador</label><select id="llFilterCoord" onchange="renderActiveTab()">
+          <option value="">Todos</option>
+          ${coords.map(c=>`<option value="${c}"${c===filterCoord?' selected':''}>${c}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>Fecha</label><select id="llFilterDate" onchange="renderActiveTab()">
+          <option value="">Todas</option>
+          ${dates.map(d=>`<option value="${d}"${d===filterDate?' selected':''}>${fmt.date(d)}</option>`).join('')}
+        </select></div>
+      </div>
+      
+      <div style="overflow-x:auto;max-height:65vh;overflow-y:auto">
+      <table>
+        <thead><tr>
+          <th>Agente</th>
+          <th>Coord</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Tipo</th>
+          <th class="col-num">Duración</th>
+          <th>Grabación</th>
+        </tr></thead>
+        <tbody>
+          ${filtered.map(c=>{
+            const coord=agentCoord[c.nameKey]||'—';
+            const ag=(STATE.distro||[]).find(a=>a.nameKey===c.nameKey);
+            const agentName=ag?ag.agent:c.agent;
+            const link=c.grabacion&&c.grabacion.startsWith('http')?
+              `<a href="${c.grabacion}" target="_blank" style="color:var(--accent);text-decoration:underline">▶ Escuchar</a>`:
+              '<span class="muted">—</span>';
+            return `<tr>
+              <td class="col-name">${agentName}</td>
+              <td class="muted">${coord}</td>
+              <td>${fmt.date(c.date)}</td>
+              <td class="muted">${c.hora||'—'}</td>
+              <td><span class="b ${c.tipo==='Entrante'?'ok':'neutral'}">${c.tipo}</span></td>
+              <td class="col-num"><strong>${fmt.secs(c.duration)}</strong></td>
+              <td>${link}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      </div>
+      
+      ${filtered.length===0?'<div class="muted" style="text-align:center;padding:20px">Sin resultados con los filtros actuales</div>':''}
+    </div>
+  `;
+}
+
+
 // ═══════════════ VISTA: CARGAR DATOS ═══════════════
 function viewCargar(){
   const today=STATE.uploadDate;
@@ -3194,7 +3364,9 @@ async function processUploads(){
       status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
       
       // Un solo POST con todo
-      await pushBackend({type:'bulk',dates,records:allRecords,coordRecords});
+      // Enviar también las llamadas largas al backend para persistencia
+      const longCallsToSend=STATE.longCalls||[];
+      await pushBackend({type:'bulk',dates,records:allRecords,coordRecords,longCalls:longCallsToSend});
       
       log[log.length-1]=`✓ Guardado: ${allRecords.length} registros en ${dates.length} día(s)`;
       
