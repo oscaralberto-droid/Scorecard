@@ -2718,6 +2718,234 @@ function viewDistro(){
   `;
 }
 
+
+// Construye el scorecard para un rango de fechas específico, sin mutar STATE
+function buildScorecardForRange(startDate, endDate){
+  const filtered = STATE.history.filter(h => h.date >= startDate && h.date <= endDate);
+  const byAgent = {};
+  for(const h of filtered){
+    if(!byAgent[h.nameKey]) byAgent[h.nameKey] = {n:0, ...emptyAccumulator()};
+    accumulate(byAgent[h.nameKey], h);
+    byAgent[h.nameKey].n++;
+  }
+  // Construir filas estilo scorecard
+  const rows=[];
+  for(const ag of (STATE.distro||[])){
+    if(ag.type.toLowerCase()!=='prod agent') continue;
+    const v=byAgent[ag.nameKey];
+    if(!v){
+      rows.push({
+        nameKey:ag.nameKey, agent:ag.agent, coord:ag.coord, senior:ag.senior,
+        cluster:ag.cluster, extension:ag.extension,
+        callsAt:0,callsIn:0,callsOut:0,
+        rr:null, csat:null, qaScore: STATE.qa[ag.nameKey]?.score ?? null,
+        aht:null, releasedPct:null, outboundPct:null,
+        surveysSent:0, surveysAnswered:0, sdr:null, srr:null,
+        acwMin:null, holdMin:null, breakMin:null, banoMin:null,
+        servTotal:0, servComp:0, servCanc:0, quejasTotal:0, quejasYellow:0, quejasRed:0
+      });
+      continue;
+    }
+    const callsAt = (v.callsIn||0)+(v.callsOut||0);
+    const aht = v.ahtN ? v.ahtSecSum/v.ahtN : null;
+    const rr = v.rrN ? v.rrPctSum/v.rrN : null;
+    const csat = v.csatN ? v.csatPctSum/v.csatN : null;
+    const sdr = v.callsIn ? (v.surveysSent/v.callsIn)*100 : null;
+    const srr = v.surveysSent ? (v.surveysAnswered/v.surveysSent)*100 : null;
+    const releasedPct = v.totalEntrantes ? (v.released/v.totalEntrantes)*100 : null;
+    const outboundPct = callsAt ? (v.callsOut/callsAt)*100 : null;
+    const acw = v.acwN ? v.acwMinSum/v.acwN : null;
+    const hold = v.holdN ? v.holdMinSum/v.holdN : null;
+    // Quejas
+    const quejas=(STATE.quejas||[]).filter(q=>q.nameKey===ag.nameKey&&q.fecha>=startDate&&q.fecha<=endDate);
+    const quejasYellow=quejas.filter(q=>(q.tarjeta||'').toLowerCase().includes('amaril')).length;
+    const quejasRed=quejas.filter(q=>(q.tarjeta||'').toLowerCase().includes('roj')).length;
+    rows.push({
+      nameKey:ag.nameKey, agent:ag.agent, coord:ag.coord, senior:ag.senior,
+      cluster:ag.cluster, extension:ag.extension,
+      callsAt, callsIn:v.callsIn||0, callsOut:v.callsOut||0,
+      rr, csat, qaScore: STATE.qa[ag.nameKey]?.score ?? null,
+      aht, releasedPct, outboundPct,
+      surveysSent:v.surveysSent||0, surveysAnswered:v.surveysAnswered||0, sdr, srr,
+      acwMin:acw, holdMin:hold,
+      breakMin: v.n? v.breakSum/v.n : null,
+      banoMin: v.n? v.banoSum/v.n : null,
+      servTotal:v.servTotal||0, servComp:v.servComp||0, servCanc:v.servCanc||0,
+      quejasTotal: quejas.length, quejasYellow, quejasRed
+    });
+  }
+  return rows;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VIEW: INFORME OPERATIVO SEMANAL
+// ═══════════════════════════════════════════════════════════════════════════
+
+function getWeekRange(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const day=d.getDay()||7;
+  const monday=new Date(d);
+  monday.setDate(d.getDate()-day+1);
+  const sunday=new Date(monday);
+  sunday.setDate(monday.getDate()+6);
+  const fmtDate=dt=>dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+  const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const fmtSpa=dt=>dt.getDate()+' '+meses[dt.getMonth()]+' '+dt.getFullYear();
+  return{start:fmtDate(monday),end:fmtDate(sunday),label:fmtSpa(monday)+' al '+fmtSpa(sunday)};
+}
+
+function listAvailableWeeks(){
+  const dates=[...new Set(STATE.history.map(h=>h.date))].sort();
+  if(!dates.length)return[];
+  const weeks={};
+  for(const d of dates){
+    const w=getWeekRange(d);
+    weeks[w.start]={start:w.start,end:w.end,label:w.label};
+  }
+  return Object.values(weeks).sort((a,b)=>b.start.localeCompare(a.start));
+}
+
+function viewInforme(){
+  const weeks=listAvailableWeeks();
+  if(!weeks.length){
+    return '<div class="card"><div class="empty"><div class="empty-title">Sin datos</div><p class="muted">Carga datos en el histórico para generar informes</p></div></div>';
+  }
+  if(!STATE.informeWeek)STATE.informeWeek=weeks[0].start;
+  const selectedWeek=weeks.find(w=>w.start===STATE.informeWeek)||weeks[0];
+
+  // Construir filas DIRECTAMENTE filtrando por la semana sin tocar STATE
+  const rows=buildScorecardForRange(selectedWeek.start,selectedWeek.end);
+
+  let totalLlamadasIn=0,totalLlamadasOut=0,totalEncSent=0,totalEncAns=0,totalServ=0,totalServComp=0;
+  let rrSum=0,rrN=0,csatSum=0,csatN=0,qaSum=0,qaN=0;
+  let agentsRR=0,agentsCSAT=0,agentsQA=0;
+  let totalBono=0;
+  const tierCount={0:0,1:0,2:0,3:0};
+
+  for(const r of rows){
+    totalLlamadasIn+=(r.callsIn||0);
+    totalLlamadasOut+=(r.callsOut||0);
+    totalEncSent+=(r.surveysSent||0);
+    totalEncAns+=(r.surveysAnswered||0);
+    totalServ+=(r.servTotal||0);
+    totalServComp+=(r.servComp||0);
+    if(r.rr!=null){rrSum+=r.rr;rrN++;if(r.rr>=CFG.META_RR)agentsRR++;}
+    if(r.csat!=null){csatSum+=r.csat;csatN++;if(r.csat>=CFG.META_CSAT)agentsCSAT++;}
+    if(r.qaScore!=null){qaSum+=r.qaScore;qaN++;if(r.qaScore>=CFG.META_QA)agentsQA++;}
+    const b=calcBono(r);
+    totalBono+=b.bonus;
+    tierCount[b.tier]=(tierCount[b.tier]||0)+1;
+  }
+
+  const totalAgents=rows.length;
+  const totalLlamadas=totalLlamadasIn+totalLlamadasOut;
+  const avgRR=rrN?rrSum/rrN:null;
+  const avgCSAT=csatN?csatSum/csatN:null;
+  const avgQA=qaN?qaSum/qaN:null;
+
+  const byCoord={};
+  for(const r of rows){
+    if(!byCoord[r.coord])byCoord[r.coord]={coord:r.coord,senior:r.senior,agents:[],bonusTotal:0,agentsBonus:0};
+    byCoord[r.coord].agents.push(r);
+    const b=calcBono(r);
+    byCoord[r.coord].bonusTotal+=b.bonus;
+    if(b.bonus>0)byCoord[r.coord].agentsBonus++;
+  }
+  const coordList=Object.values(byCoord).sort((a,b)=>b.bonusTotal-a.bonusTotal);
+
+  const sorted=rows.map(r=>({...r,bono:calcBono(r)})).sort((a,b)=>b.bono.adjustedPoints-a.bono.adjustedPoints);
+  const top5=sorted.slice(0,5);
+  const bottom5=sorted.slice(-5).reverse();
+
+  STATE.dateFilter=origFilter;
+  reconstructCurrentDay();
+
+  const progressBar=(label,value,target,achievers,total)=>{
+    const ok=value!=null&&value>=target;
+    const pct=value!=null?Math.min(100,Math.max(0,value)):0;
+    const color=ok?'#10b981':'#ef4444';
+    return '<div class="report-progress-row"><div class="report-progress-header"><span class="report-progress-label">'+label+'</span><span class="report-progress-value" style="color:'+color+'">'+fmt.pct(value)+' <span class="muted" style="font-size:11px">vs meta &ge;'+target+'%</span></span></div><div class="report-progress-bar"><div class="report-progress-fill" style="width:'+pct+'%;background:'+color+'"></div></div><div class="report-progress-count">'+achievers+' de '+total+' agentes en target ('+(total?Math.round(achievers/total*100):0)+'%)</div></div>';
+  };
+
+  let html='<div class="card no-print"><div class="filter-row" style="align-items:flex-end">';
+  html+='<div class="field" style="flex:1.5"><label>Semana del informe</label><select onchange="STATE.informeWeek=this.value;renderActiveTab()">';
+  html+=weeks.map(w=>'<option value="'+w.start+'"'+(w.start===selectedWeek.start?' selected':'')+'>'+w.label+'</option>').join('');
+  html+='</select></div>';
+  html+='<div class="field"><label>&nbsp;</label><button class="btn primary admin-only" onclick="exportInforme()">🖨️ Exportar a PDF</button> <span class="muted not-admin" style="font-size:11px">Activa modo admin para exportar</span></div>';
+  html+='</div></div>';
+
+  html+='<div id="reportContent" class="report-doc">';
+  html+='<div class="report-header"><div><div class="report-title">Informe Operativo Semanal</div><div class="report-subtitle">Roomonitor &middot; '+selectedWeek.label+'</div></div><div class="report-brand">SCORECARD &middot; ROOMONITOR 2026</div></div>';
+
+  html+='<div class="report-section"><h3>📞 Volumen del periodo</h3><div class="report-kpis">';
+  html+='<div class="report-kpi"><div class="report-kpi-value">'+fmt.num(totalLlamadas)+'</div><div class="report-kpi-label">Llamadas atendidas</div><div class="report-kpi-sub">'+fmt.num(totalLlamadasIn)+' ent &middot; '+fmt.num(totalLlamadasOut)+' sal</div></div>';
+  html+='<div class="report-kpi"><div class="report-kpi-value">'+fmt.num(totalEncSent)+'</div><div class="report-kpi-label">Encuestas enviadas</div><div class="report-kpi-sub">'+fmt.num(totalEncAns)+' respondidas ('+(totalEncSent?Math.round(totalEncAns/totalEncSent*100):0)+'%)</div></div>';
+  html+='<div class="report-kpi"><div class="report-kpi-value">'+fmt.num(totalServ)+'</div><div class="report-kpi-label">Servicios solicitados</div><div class="report-kpi-sub">'+fmt.num(totalServComp)+' completados</div></div>';
+  html+='<div class="report-kpi"><div class="report-kpi-value">'+totalAgents+'</div><div class="report-kpi-label">Prod Agents activos</div><div class="report-kpi-sub">'+coordList.length+' coordinadores</div></div>';
+  html+='<div class="report-kpi report-kpi-accent"><div class="report-kpi-value">'+fmt.money(totalBono)+'</div><div class="report-kpi-label">Total bonos del periodo</div><div class="report-kpi-sub">'+(tierCount[3]+tierCount[2]+tierCount[1])+' de '+totalAgents+' agentes con bono</div></div>';
+  html+='</div></div>';
+
+  html+='<div class="report-section"><h3>🎯 Cumplimiento de metas</h3><div class="report-progress-grid">';
+  html+=progressBar('Survey Return Rate (RR)',avgRR,CFG.META_RR,agentsRR,rrN);
+  html+=progressBar('Customer Satisfaction (CSAT)',avgCSAT,CFG.META_CSAT,agentsCSAT,csatN);
+  html+=progressBar('Quality Assurance (QA)',avgQA,CFG.META_QA,agentsQA,qaN);
+  html+='</div></div>';
+
+  html+='<div class="report-section"><h3>👥 Desempeño por coordinador</h3>';
+  html+='<table class="report-table"><thead><tr><th>Coordinador</th><th>Senior</th><th class="col-num">Agentes</th><th class="col-num">Llamadas</th><th class="col-num">RR</th><th class="col-num">CSAT</th><th class="col-num">QA</th><th class="col-num">Con bono</th><th class="col-num">Bono total</th></tr></thead><tbody>';
+  for(const c of coordList){
+    const rrAg=c.agents.filter(a=>a.rr!=null);
+    const csAg=c.agents.filter(a=>a.csat!=null);
+    const qaAg=c.agents.filter(a=>a.qaScore!=null);
+    const rrV=rrAg.length?rrAg.reduce((s,a)=>s+a.rr,0)/rrAg.length:null;
+    const csV=csAg.length?csAg.reduce((s,a)=>s+a.csat,0)/csAg.length:null;
+    const qaV=qaAg.length?qaAg.reduce((s,a)=>s+a.qaScore,0)/qaAg.length:null;
+    const callsT=c.agents.reduce((s,a)=>s+(a.callsAt||0),0);
+    html+='<tr><td><strong>'+c.coord+'</strong></td><td class="muted">'+(c.senior||'—')+'</td><td class="col-num">'+c.agents.length+'</td><td class="col-num">'+fmt.num(callsT)+'</td><td class="col-num">'+fmt.pct(rrV)+'</td><td class="col-num">'+fmt.pct(csV)+'</td><td class="col-num">'+fmt.pct(qaV)+'</td><td class="col-num">'+c.agentsBonus+'/'+c.agents.length+'</td><td class="col-num"><strong>'+fmt.money(c.bonusTotal)+'</strong></td></tr>';
+  }
+  html+='</tbody></table></div>';
+
+  html+='<div class="report-section report-two-col">';
+  html+='<div><h3>🏆 Top 5 agentes</h3><table class="report-table"><thead><tr><th>#</th><th>Agente</th><th>Coord</th><th class="col-num">Pts</th><th class="col-num">Bono</th></tr></thead><tbody>';
+  top5.forEach((r,i)=>{
+    html+='<tr><td>'+(i+1)+'</td><td><strong>'+r.agent+'</strong></td><td class="muted">'+r.coord+'</td><td class="col-num">'+fmt.num(r.bono.adjustedPoints)+'</td><td class="col-num"><strong>'+fmt.money(r.bono.bonus)+'</strong></td></tr>';
+  });
+  html+='</tbody></table></div>';
+  html+='<div><h3>⚠️ Requieren atención</h3><table class="report-table"><thead><tr><th>#</th><th>Agente</th><th>Coord</th><th class="col-num">Pts</th><th class="col-num">Bono</th></tr></thead><tbody>';
+  bottom5.forEach((r,i)=>{
+    html+='<tr><td>'+(i+1)+'</td><td><strong>'+r.agent+'</strong></td><td class="muted">'+r.coord+'</td><td class="col-num">'+fmt.num(r.bono.adjustedPoints)+'</td><td class="col-num">'+fmt.money(r.bono.bonus)+'</td></tr>';
+  });
+  html+='</tbody></table></div></div>';
+
+  html+='<div class="report-section"><h3>💰 Distribución de bonificaciones</h3><div class="report-tier-bars">';
+  const tierMeta={3:{label:'Tier 3 ($300)',color:'#10b981'},2:{label:'Tier 2 ($200)',color:'#3b82f6'},1:{label:'Tier 1 ($100)',color:'#f59e0b'},0:{label:'Tier 0 ($0)',color:'#94a3b8'}};
+  for(const t of [3,2,1,0]){
+    const count=tierCount[t]||0;
+    const pct=totalAgents?(count/totalAgents)*100:0;
+    html+='<div class="report-tier-row"><div class="report-tier-label">'+tierMeta[t].label+'</div><div class="report-tier-bar"><div class="report-tier-fill" style="width:'+pct+'%;background:'+tierMeta[t].color+'"></div></div><div class="report-tier-count">'+count+' agentes</div></div>';
+  }
+  html+='</div></div>';
+
+  html+='<div class="report-footer"><div>Generado: '+new Date().toLocaleString('es-ES')+'</div><div>Roomonitor 2026 &middot; Scorecard Operativo</div></div>';
+  html+='</div>';
+  return html;
+}
+
+function exportInforme(){
+  if(!STATE.authenticated){
+    showBanner('error','Necesitas modo admin para exportar');
+    return;
+  }
+  document.body.classList.add('printing-report');
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){document.body.classList.remove('printing-report')},500);
+  },100);
+}
+
+window.exportInforme=exportInforme;
+
+
 // ═══════════════ VISTA: CARGAR DATOS ═══════════════
 function viewCargar(){
   const today=STATE.uploadDate;
