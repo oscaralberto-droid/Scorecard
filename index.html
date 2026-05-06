@@ -427,12 +427,30 @@ let _distroIndexBuilt=false;
 // Construye un índice de palabras → nameKey de distro para búsqueda rápida
 function buildDistroIndex(){
   _distroIndexBuilt=true;
-  // Limpiar cache cuando la distro cambia
+  // Limpiar cache y frecuencia cuando la distro cambia
   for(const k of Object.keys(_matchCache))delete _matchCache[k];
+  _wordFrequency=null;
 }
 
-// Dado un nombre tal como aparece en archivos, encuentra el nameKey de la distro
-// que mejor matchea (al menos 2 palabras en común). Si no hay match, devuelve el firstLast estándar
+// Construye un mapa de cuántas veces aparece cada palabra en TODA la distro
+// Las palabras que aparecen muchas veces (como "carlos", "maria") son menos discriminantes
+let _wordFrequency=null;
+function buildWordFrequency(){
+  _wordFrequency={};
+  for(const ag of (STATE.distro||[])){
+    const words=nameWords(ag.agent);
+    for(const w of words){
+      _wordFrequency[w]=(_wordFrequency[w]||0)+1;
+    }
+  }
+}
+
+// Dado un nombre tal como aparece en archivos, encuentra el nameKey de la distro.
+// Reglas (en orden de prioridad):
+// 1. Match exacto del fileName completo en distro → match seguro
+// 2. fileName ⊆ distroAgent: TODAS las palabras del fileName están en el distro → match si solo 1 candidato
+// 3. ≥2 palabras en común Y al menos UNA es discriminante (aparece <=2 veces en toda la distro)
+// 4. Si hay ambigüedad (varios candidatos con mismo score) → NO hace match (devuelve firstLast)
 function resolveAgentKey(fileName){
   if(!fileName)return'';
   if(_matchCache[fileName])return _matchCache[fileName];
@@ -444,29 +462,66 @@ function resolveAgentKey(fileName){
     return k;
   }
   
-  let bestMatch=null;
-  let bestScore=0;
+  // Construir frecuencia de palabras si no existe
+  if(!_wordFrequency)buildWordFrequency();
   
+  // Función: ¿es palabra discriminante? (aparece pocas veces en distro = es probablemente un apellido único)
+  const isDiscriminant=w=>(_wordFrequency[w]||0)<=2;
+  
+  // Buscar todos los candidatos con sus scores
+  const candidates=[];
   for(const ag of (STATE.distro||[])){
     const distroWords=nameWords(ag.agent);
     let common=0;
+    let discriminantCommon=0;
+    let allFileWordsInDistro=true;
     for(const w of fileWords){
-      if(distroWords.has(w))common++;
+      if(distroWords.has(w)){
+        common++;
+        if(isDiscriminant(w))discriminantCommon++;
+      }else{
+        allFileWordsInDistro=false;
+      }
     }
-    // Bonus: si el match cubre TODAS las palabras del fileName, es match perfecto
-    const coverage=common/fileWords.size;
-    const score=common+(coverage===1?0.5:0);
-    if(common>=2&&score>bestScore){
-      bestScore=score;
-      bestMatch=ag;
+    if(common===0)continue;
+    
+    // Calcular score
+    // - Match perfecto (todas las palabras del fileName están en distro): score muy alto
+    // - Si tiene al menos 1 palabra discriminante: score normal
+    // - Si solo tiene palabras comunes (Francisco, Alejandro, etc.): score bajo
+    let score=0;
+    if(allFileWordsInDistro&&fileWords.size>=2){
+      score=1000+common; // match casi perfecto
+    }else if(discriminantCommon>=1&&common>=2){
+      score=100+common+discriminantCommon*10;
+    }else if(common>=2){
+      // Solo palabras comunes: descartado, no hacer match
+      continue;
     }
+    candidates.push({ag,score,common,discriminantCommon});
   }
   
-  // Si no encontró match ≥2 palabras, intentar con 1 palabra SOLO si fileName tiene 1 palabra
+  // Ordenar por score
+  candidates.sort((a,b)=>b.score-a.score);
+  
+  let bestMatch=null;
+  if(candidates.length===1){
+    bestMatch=candidates[0].ag;
+  }else if(candidates.length>=2){
+    // Si el primero tiene score significativamente mayor (>=20% más), usarlo
+    if(candidates[0].score>=candidates[1].score*1.2){
+      bestMatch=candidates[0].ag;
+    }
+    // Si están empatados o muy cerca, NO hacer match (ambigüedad)
+  }
+  
+  // Caso de fileName con 1 sola palabra: solo si es discriminante y único
   if(!bestMatch&&fileWords.size===1){
     const word=[...fileWords][0];
-    const candidates=(STATE.distro||[]).filter(ag=>nameWords(ag.agent).has(word));
-    if(candidates.length===1)bestMatch=candidates[0]; // único candidato
+    if(isDiscriminant(word)){
+      const cands=(STATE.distro||[]).filter(ag=>nameWords(ag.agent).has(word));
+      if(cands.length===1)bestMatch=cands[0];
+    }
   }
   
   const result=bestMatch?bestMatch.nameKey:firstLast(fileName);
