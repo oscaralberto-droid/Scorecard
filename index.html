@@ -349,15 +349,14 @@ const STATE = {
   // Filtro de fecha global (compatibilidad)
   dateFilter:{mode:'day',day:null,start:null,end:null,month:null,week:null},
   
-  // Filtros independientes por pestaña - cada uno recuerda su última selección
+  // Filtro master del Scorecard (heredado por las demás pestañas al entrar)
+  // Cada pestaña puede sobrescribir localmente sin afectar a las demás
   dateFilters:{
-    scorecard:{mode:'day',day:null,start:null,end:null,month:null,week:null},
-    agent:{mode:'day',day:null,start:null,end:null,month:null,week:null},
-    coordinador:{mode:'month',day:null,start:null,end:null,month:null,week:null},
-    senior:{mode:'month',day:null,start:null,end:null,month:null,week:null},
-    top:{mode:'month',day:null,start:null,end:null,month:null,week:null},
-    bono:{mode:'month',day:null,start:null,end:null,month:null,week:null}
+    scorecard:{mode:'day',day:null,start:null,end:null,month:null,week:null}
   },
+  
+  // Trackea qué pestañas tienen un filtro local sobrescrito (no hereda hasta volver a Scorecard)
+  dateFilterOverridden:{},
   
   loading:{qa:false,quejas:false,distro:false,backend:false},
   lastSync:{qa:null,quejas:null,distro:null,backend:null},
@@ -1499,19 +1498,53 @@ function renderActiveTab(){
 
 
 // Obtiene el filtro de fecha de la pestaña activa actual
+// Lógica: Scorecard es el master. Las demás heredan del Scorecard al entrar,
+// PERO pueden sobrescribirlo localmente sin afectar a otras pestañas.
 function getActiveDateFilter(){
   const tab=STATE.activeTab||'scorecard';
-  if(!STATE.dateFilters[tab])STATE.dateFilters[tab]={mode:'day',day:null,start:null,end:null,month:null,week:null};
+  
+  // Scorecard siempre devuelve su propio filtro (es el master)
+  if(tab==='scorecard'){
+    if(!STATE.dateFilters.scorecard)STATE.dateFilters.scorecard={mode:'day',day:null,start:null,end:null,month:null,week:null};
+    return STATE.dateFilters.scorecard;
+  }
+  
+  // Otras pestañas: si tienen override local, usarlo; si no, heredar del scorecard
+  if(STATE.dateFilterOverridden[tab]&&STATE.dateFilters[tab]){
+    return STATE.dateFilters[tab];
+  }
+  
+  // Heredar del scorecard (clonando para no mutarlo accidentalmente)
+  const master=STATE.dateFilters.scorecard||{mode:'day',day:null,start:null,end:null,month:null,week:null};
+  STATE.dateFilters[tab]=Object.assign({},master);
   return STATE.dateFilters[tab];
 }
 
 // Establece el filtro de fecha de la pestaña activa
+// Si no es Scorecard, marca la pestaña como "override" (deja de heredar)
 function setActiveDateFilter(updates){
   const tab=STATE.activeTab||'scorecard';
   if(!STATE.dateFilters[tab])STATE.dateFilters[tab]={mode:'day',day:null,start:null,end:null,month:null,week:null};
   Object.assign(STATE.dateFilters[tab],updates);
+  
+  // Si NO es scorecard, marcar como override (deja de heredar del master)
+  if(tab!=='scorecard'){
+    STATE.dateFilterOverridden[tab]=true;
+  }else{
+    // Si cambia el master, todas las pestañas que NO han sido overrideadas vuelven a heredar
+    // (Las que sí fueron overrideadas mantienen su valor local)
+  }
+  
   // Sincronizar con el global por compatibilidad
   STATE.dateFilter=STATE.dateFilters[tab];
+}
+
+// Resetea el override de una pestaña: vuelve a heredar del scorecard
+function resetTabFilterToMaster(tab){
+  if(tab&&tab!=='scorecard'){
+    delete STATE.dateFilterOverridden[tab];
+    delete STATE.dateFilters[tab];
+  }
 }
 
 function dateFilterBar(){
@@ -1540,7 +1573,13 @@ function dateFilterBar(){
     </select></div>`:''}
     ${f.mode==='range'?`<div class="field"><label>Desde</label><input type="date" id="dfStart" value="${f.start||''}" onchange="setActiveDateFilter({start:this.value});reconstructCurrentDay();renderActiveTab()"></div>
       <div class="field"><label>Hasta</label><input type="date" id="dfEnd" value="${f.end||''}" onchange="setActiveDateFilter({end:this.value});reconstructCurrentDay();renderActiveTab()"></div>`:''}
-    <div style="font-size:11px;color:var(--muted2);align-self:center;font-family:var(--mono)">${dates.length} día(s) en histórico · <span style="color:var(--accent)">filtro de "${STATE.activeTab||'scorecard'}"</span></div>
+    <div style="font-size:11px;color:var(--muted2);align-self:center;font-family:var(--mono)">
+      ${dates.length} día(s) en histórico
+      ${STATE.activeTab&&STATE.activeTab!=='scorecard'?(STATE.dateFilterOverridden[STATE.activeTab]?
+        ` · <span style="color:#f59e0b">filtro local</span> <a href="#" onclick="resetTabFilterToMaster('${STATE.activeTab}');renderActiveTab();return false" style="color:var(--accent);text-decoration:underline;cursor:pointer">volver al master</a>`:
+        ` · <span style="color:var(--accent)">heredado del Scorecard</span>`):
+        ` · <span style="color:var(--accent)">filtro master</span>`}
+    </div>
   </div>`;
 }
 
@@ -3030,6 +3069,7 @@ window.saveMetas=saveMetas;
 window.fetchAll=fetchAll;
 window.changeDateMode=changeDateMode;
 window.onFilterSearchInput=onFilterSearchInput;
+window.resetTabFilterToMaster=resetTabFilterToMaster;
 window.toggleAdmin=toggleAdmin;
 window.saveCoordManual=saveCoordManual;
 window.toggleQAMonthPicker=toggleQAMonthPicker;
