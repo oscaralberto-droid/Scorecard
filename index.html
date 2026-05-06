@@ -416,7 +416,24 @@ body.admin .admin-only{display:inline-block!important}
   body.printing-report{background:white}
 }
 
+
+
+/* Optimización del informe al exportar a PDF */
+.exporting-pdf{
+  width:1400px!important;
+  background:white!important;
+  padding:20px!important;
+}
+.exporting-pdf .report-section{
+  page-break-inside:avoid;
+  break-inside:avoid;
+}
+.exporting-pdf .report-kpis{
+  grid-template-columns:repeat(5,1fr)!important;
+}
+
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
