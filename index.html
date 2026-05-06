@@ -494,6 +494,7 @@ function resolveAgentKey(fileName){
       }
     }
     if(common===0)continue;
+    if(common<2)continue;  // GUARD: nunca matchear con 1 sola palabra (evita falsos positivos como Erick A Bonilla → Francisco Bonilla)
     
     // Calcular score
     // - Match perfecto (todas las palabras del fileName están en distro): score muy alto
@@ -525,14 +526,10 @@ function resolveAgentKey(fileName){
     // Si están empatados o muy cerca, NO hacer match (ambigüedad)
   }
   
-  // Caso de fileName con 1 sola palabra: solo si es discriminante y único
-  if(!bestMatch&&fileWords.size===1){
-    const word=[...fileWords][0];
-    if(isDiscriminant(word)){
-      const cands=(STATE.distro||[]).filter(ag=>nameWords(ag.agent).has(word));
-      if(cands.length===1)bestMatch=cands[0];
-    }
-  }
+  // ELIMINADO: matching con 1 sola palabra causa falsos positivos
+  // Ej: "Erick A Bonilla" → "Bonilla" es discriminante pero NO debe matchear
+  // con "Francisco Alejandro Bonilla Ayala" porque son personas distintas.
+  // Si solo hay 1 palabra coincidente, NO se hace match (mejor sin match que match incorrecto).
   
   const result=bestMatch?bestMatch.nameKey:firstLast(fileName);
   _matchCache[fileName]=result;
