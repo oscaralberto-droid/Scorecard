@@ -532,7 +532,8 @@ function resolveAgentKey(fileName){
 const extractAgent=str=>{
   if(!str)return null;
   const s=str.toString();
-  const m=s.match(/(?:[A-Z]{1,3}\s+)?IP:\s*\d+\s+(.+?)(?:\s*\(|$)/);
+  // Acepta cualquier prefijo no-espacio antes de "IP:" (ej: "C1", "C2", "C3", "AL", etc.)
+  const m=s.match(/(?:\S+\s+)?IP:\s*\d+\s+(.+?)(?:\s*\(|$)/);
   return m?m[1].trim():null;
 };
 
