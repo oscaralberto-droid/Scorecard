@@ -528,7 +528,7 @@ const CFG = {
     released:{target:6,points:500,dir:'lte',label:'Released Calls %'},
     csat:{target:85,points:400,dir:'gte',label:'Surveys - Satisfaction %'},
     outbound:{target:30,points:300,dir:'lte',label:'Outbound Calls %'},
-    rr_bono:{target:90,points:250,dir:'gte',label:'Surveys - Return Rate %'},
+    rr_bono:{target:90,points:250,dir:'gte',label:'Resolution Rate %'},
     sdr_bono:{target:45,points:200,dir:'gte',label:'Surveys - Delivery Rate %'},
     absent:{target:1,points:150,dir:'lte',label:'Absenteeism %'}
   },
@@ -541,7 +541,7 @@ const CFG = {
     colgadas:{target:6,points:150,dir:'lte',label:'Llamadas Colgadas %'},
     outbound:{target:30,points:200,dir:'lte',label:'Outbound vs Inbound %'},
     qa:{target:85,points:1100,dir:'gte',label:'QA equipo %'},
-    rr:{target:90,points:200,dir:'gte',label:'Survey Return Rate %'},
+    rr:{target:90,points:200,dir:'gte',label:'Resolution Rate %'},
     csat:{target:90,points:300,dir:'gte',label:'CSAT %'}
   },
   // Penalizaciones de coord (por total de tarjetas del equipo: amarillas+rojas)
@@ -1467,8 +1467,13 @@ async function parseEncuestas(file,defaultDate){
 
     const rr=digits[0];
     let rrPct=null;
+    // Resolution Rate (RR):
+    //   1 = Resuelto       → 100%
+    //   2 = No resuelto    →   0%
+    //   3 = En proceso     →  50%  (va camino a resolverse)
     if(rr===1)rrPct=100;
-    else if(rr===2||rr===3)rrPct=0;
+    else if(rr===2)rrPct=0;
+    else if(rr===3)rrPct=50;
     if(rrPct!=null){acc[date][key].rrSum+=rrPct;acc[date][key].rrN++;}
 
     if(digits.length>=2){
@@ -2026,7 +2031,7 @@ function viewAgente(){
         ${metricTile('RR',fmt.pct(r.rr),`Meta ≥${CFG.META_RR}%`,statusFor(r.rr,CFG.META_RR,'gte'))}
         ${metricTile('CSAT',fmt.pct(r.csat),`Meta ≥${CFG.META_CSAT}%`,statusFor(r.csat,CFG.META_CSAT,'gte'))}
         ${metricTile('Survey Delivery',fmt.pct(r.sdr),`Meta ≥${CFG.META_SDR}%`,statusFor(r.sdr,CFG.META_SDR,'gte'))}
-        ${metricTile('Survey Return',fmt.pct(r.srr),`Meta ≥${CFG.META_SRR}%`,statusFor(r.srr,CFG.META_SRR,'gte'))}
+        ${metricTile('Response Rate',fmt.pct(r.srr),`Meta ≥${CFG.META_SRR}%`,statusFor(r.srr,CFG.META_SRR,'gte'))}
         ${metricTile('AHT',fmt.secs(r.aht),`Meta ≤08:30`,statusFor(r.aht,CFG.META_AHT_SEC,'lte'))}
         ${metricTile('P90 < 20min',fmt.pct(r.ahtP90Pct),'Meta ≥90% (% llamadas bajo 20 min)',statusFor(r.ahtP90Pct,90,'gte'))}
         ${metricTile('ACW',fmt.mins(r.acwMin),`Meta ≤02:00`,statusFor(r.acwMin,CFG.META_ACW_MIN,'lte'))}
@@ -2385,7 +2390,7 @@ function viewCoordinador(){
         ${metricTile('Llamadas Colgadas',fmt.pct(m.colgadas),'Meta ≤6% · '+(b.checks.colgadas.met?'+150pts':'+0pts'),statusFor(m.colgadas,6,'lte'))}
         ${metricTile('Outbound vs Inbound',fmt.pct(m.outbound),'Meta ≤30% · '+(b.checks.outbound.met?'+200pts':'+0pts'),statusFor(m.outbound,30,'lte'))}
         ${metricTile('QA equipo',fmt.pct(m.qa),'Meta ≥85% · '+(b.checks.qa.met?'+1100pts':'+0pts'),statusFor(m.qa,85,'gte'))}
-        ${metricTile('Survey Return Rate',fmt.pct(m.rr),'Meta ≥90% · '+(b.checks.rr.met?'+200pts':'+0pts'),statusFor(m.rr,90,'gte'))}
+        ${metricTile('Resolution Rate',fmt.pct(m.rr),'Meta ≥90% · '+(b.checks.rr.met?'+200pts':'+0pts'),statusFor(m.rr,90,'gte'))}
         ${metricTile('CSAT',fmt.pct(m.csat),'Meta ≥90% · '+(b.checks.csat.met?'+300pts':'+0pts'),statusFor(m.csat,90,'gte'))}
       </div>
     </div>
@@ -2944,7 +2949,7 @@ function viewInforme(){
   html+='</div></div>';
 
   html+='<div class="report-section"><h3>🎯 Cumplimiento de metas</h3><div class="report-progress-grid">';
-  html+=progressBar('Survey Return Rate (RR)',avgRR,CFG.META_RR,agentsRR,rrN);
+  html+=progressBar('Resolution Rate (RR)',avgRR,CFG.META_RR,agentsRR,rrN);
   html+=progressBar('Customer Satisfaction (CSAT)',avgCSAT,CFG.META_CSAT,agentsCSAT,csatN);
   html+=progressBar('Quality Assurance (QA)',avgQA,CFG.META_QA,agentsQA,qaN);
   html+='</div></div>';
@@ -3454,7 +3459,7 @@ function viewConfig(){
         <div class="field"><label>Meta CSAT (%)</label><input type="number" id="metaCSAT" value="${CFG.META_CSAT}"></div>
         <div class="field"><label>Meta QA (%)</label><input type="number" id="metaQA" value="${CFG.META_QA}"></div>
         <div class="field"><label>Meta Survey Delivery (%)</label><input type="number" id="metaSDR" value="${CFG.META_SDR}"></div>
-        <div class="field"><label>Meta Survey Return (%)</label><input type="number" id="metaSRR" value="${CFG.META_SRR}"></div>
+        <div class="field"><label>Meta Response Rate SRR (%)</label><input type="number" id="metaSRR" value="${CFG.META_SRR}"></div>
         <div class="field"><label>Meta AHT (segundos)</label><input type="number" id="metaAHT" value="${CFG.META_AHT_SEC}"></div>
         <div class="field"><label>Meta ACW (minutos)</label><input type="number" id="metaACW" value="${CFG.META_ACW_MIN}" step="0.5"></div>
         <div class="field"><label>Meta Hold (minutos)</label><input type="number" id="metaHOLD" value="${CFG.META_HOLD_MIN}" step="0.5"></div>
