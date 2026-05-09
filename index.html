@@ -1336,6 +1336,8 @@ function reconstructCurrentDay(){
   for(const [k,v] of Object.entries(byAgent)){
     if(v.surveysSent||v.surveysAnswered){
       STATE.encuestas[k]={fullName:v.fullName,sent:v.surveysSent,answered:v.surveysAnswered,
+        sentIn:v.surveysSentIn||0,sentOut:v.surveysSentOut||0,
+        ansIn:v.surveysAnsIn||0,ansOut:v.surveysAnsOut||0,
         rrSum:v.rrPctSum,rrN:v.rrN,csatSum:v.csatPctSum,csatN:v.csatN};
     }
     if(v.callsAt){
@@ -1361,7 +1363,9 @@ function reconstructCurrentDay(){
 
 function emptyAccumulator(){
   return{fullName:'',
-    surveysSent:0,surveysAnswered:0,rrPctSum:0,rrN:0,csatPctSum:0,csatN:0,
+    surveysSent:0,surveysSentIn:0,surveysSentOut:0,
+    surveysAnswered:0,surveysAnsIn:0,surveysAnsOut:0,
+    rrPctSum:0,rrN:0,csatPctSum:0,csatN:0,
     callsAt:0,callsIn:0,callsOut:0,ahtSecSum:0,ahtN:0,released:0,totalEntrantes:0,
     acwMinSum:0,acwN:0,holdMinSum:0,holdN:0,
     breakSum:0,breakDays:0,breakMaxDay:0,banoSum:0,banoDays:0,banoMaxDay:0,
@@ -1371,6 +1375,10 @@ function emptyAccumulator(){
 function accumulate(acc,h){
   if(h.fullName)acc.fullName=h.fullName;
   acc.surveysSent+=(+h.surveysSent||0);
+  acc.surveysSentIn+=(+h.surveysSentIn||0);
+  acc.surveysSentOut+=(+h.surveysSentOut||0);
+  acc.surveysAnsIn+=(+h.surveysAnsIn||0);
+  acc.surveysAnsOut+=(+h.surveysAnsOut||0);
   acc.surveysAnswered+=(+h.surveysAnswered||0);
   acc.rrPctSum+=(+h.rrPctSum||0);acc.rrN+=(+h.rrN||0);
   acc.csatPctSum+=(+h.csatPctSum||0);acc.csatN+=(+h.csatN||0);
@@ -1441,26 +1449,36 @@ async function parseEncuestas(file,defaultDate){
     const date=parseDate(r[iFecha])||defaultDate;
     if(!date)continue;
     
+    // Detectar si es ENTRANTE (agente en dest) o SALIENTE (agente en llamante)
     let agName=null;
+    let surveyType=null; // 'in' o 'out'
     const dest=r[iDest];
-    if(dest){agName=extractAgent(dest);}
+    if(dest){
+      agName=extractAgent(dest);
+      if(agName)surveyType='in';
+    }
     if(!agName&&iLlamante>=0){
       const ll=(r[iLlamante]||'').toString();
       if(/[a-zA-Z]/.test(ll)&&!/^\+?\d[\d\s]*$/.test(ll)){
         agName=extractAgent(ll)||ll.trim();
+        if(agName)surveyType='out';
       }
     }
     if(!agName)continue;
     const key=resolveAgentKey(agName);
     if(!acc[date])acc[date]={};
-    if(!acc[date][key])acc[date][key]={fullName:agName,sent:0,answered:0,rrSum:0,rrN:0,csatSum:0,csatN:0};
+    if(!acc[date][key])acc[date][key]={fullName:agName,sent:0,sentIn:0,sentOut:0,answered:0,ansIn:0,ansOut:0,rrSum:0,rrN:0,csatSum:0,csatN:0};
     acc[date][key].sent++;
+    if(surveyType==='in')acc[date][key].sentIn++;
+    else if(surveyType==='out')acc[date][key].sentOut++;
 
     const p=r[iPuls];
     if(p==null||p==='')continue;
     const s=p.toString().trim();
     if(!s)continue;
     acc[date][key].answered++;
+    if(surveyType==='in')acc[date][key].ansIn++;
+    else if(surveyType==='out')acc[date][key].ansOut++;
 
     const digits=s.split(/[;,\s\-_/]+/).filter(x=>/^\d+$/.test(x)).map(x=>parseInt(x));
     if(!digits.length)continue;
@@ -1479,8 +1497,12 @@ async function parseEncuestas(file,defaultDate){
     if(digits.length>=2){
       const csat=digits[digits.length-1];
       let csatPct=null;
-      if(csat>=8)csatPct=100;
-      else if(csat>=6)csatPct=50;
+      // CSAT scoring (escala numérica del cliente):
+      //   1 a 4  → 0%   (insatisfecho)
+      //   5 a 6  → 50%  (neutral)
+      //   7+     → 100% (satisfecho)
+      if(csat>=7)csatPct=100;
+      else if(csat>=5)csatPct=50;
       else if(csat>=1)csatPct=0;
       if(csatPct!=null){acc[date][key].csatSum+=csatPct;acc[date][key].csatN++;}
     }
@@ -1704,6 +1726,10 @@ function buildScorecard(){
       servComp:serv?serv.completed:0,
       servCanc:serv?serv.canceled:0,
       surveysSent:enc?enc.sent:0,
+      surveysSentIn:enc?enc.sentIn||0:0,
+      surveysSentOut:enc?enc.sentOut||0:0,
+      surveysAnsIn:enc?enc.ansIn||0:0,
+      surveysAnsOut:enc?enc.ansOut||0:0,
       surveysAnswered:enc?enc.answered:0
     });
   }
@@ -1949,6 +1975,8 @@ function viewScorecard(){
           <th class="col-num">CSAT</th>
           <th class="col-num">SDR</th>
           <th class="col-num">SRR</th>
+          <th class="col-num" title="Encuestas enviadas: total (entrantes/salientes)">ENVIADAS</th>
+          <th class="col-num" title="Encuestas respondidas">RESP</th>
           <th class="col-num">AHT</th>
           <th class="col-num" title="P90: % de llamadas bajo 20 min">P90</th>
           <th class="col-num">ACW</th>
@@ -1971,6 +1999,8 @@ function viewScorecard(){
           <td class="col-num">${statusCell(r.csat,CFG.META_CSAT,'gte',v=>fmt.pct(v))}</td>
           <td class="col-num">${statusCell(r.sdr,CFG.META_SDR,'gte',v=>fmt.pct(v))}</td>
           <td class="col-num">${statusCell(r.srr,CFG.META_SRR,'gte',v=>fmt.pct(v))}</td>
+          <td class="col-num" title="Total: ${r.surveysSent||0} · ${r.surveysSentIn||0} entrantes / ${r.surveysSentOut||0} salientes"><strong>${r.surveysSent||0}</strong> <span class="muted" style="font-size:11px">(${r.surveysSentIn||0}/${r.surveysSentOut||0})</span></td>
+          <td class="col-num"><strong>${r.surveysAnswered||0}</strong></td>
           <td class="col-num">${statusCell(r.aht,CFG.META_AHT_SEC,'lte',v=>fmt.secs(v))}</td>
           <td class="col-num">${statusCell(r.ahtP90Pct,90,'gte',v=>fmt.pct(v))}</td>
           <td class="col-num">${statusCell(r.acwMin,CFG.META_ACW_MIN,'lte',v=>fmt.mins(v))}</td>
@@ -3226,6 +3256,8 @@ async function processUploads(){
           const a=ensure(date,k);
           a.fullName=v.fullName;
           a.surveysSent=v.sent;a.surveysAnswered=v.answered;
+          a.surveysSentIn=v.sentIn||0;a.surveysSentOut=v.sentOut||0;
+          a.surveysAnsIn=v.ansIn||0;a.surveysAnsOut=v.ansOut||0;
           a.rrPctSum=v.rrSum;a.rrN=v.rrN;
           a.csatPctSum=v.csatSum;a.csatN=v.csatN;
         }
@@ -3350,6 +3382,8 @@ async function processUploads(){
           allRecords.push({
             date,nameKey:k,fullName:v.fullName||k,
             surveysSent:v.surveysSent||0,surveysAnswered:v.surveysAnswered||0,
+            surveysSentIn:v.surveysSentIn||0,surveysSentOut:v.surveysSentOut||0,
+            surveysAnsIn:v.surveysAnsIn||0,surveysAnsOut:v.surveysAnsOut||0,
             rrPctSum:v.rrPctSum||0,rrN:v.rrN||0,
             csatPctSum:v.csatPctSum||0,csatN:v.csatN||0,
             callsAt:v.callsAt||0,callsIn:v.callsIn||0,callsOut:v.callsOut||0,
