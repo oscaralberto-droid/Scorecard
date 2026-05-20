@@ -533,14 +533,14 @@ const CFG = {
     outbound:{target:30,points:300,dir:'lte',label:'Outbound Calls %'},
     rr_bono:{target:90,points:250,dir:'gte',label:'Resolution Rate %'},
     sdr_bono:{target:45,points:200,dir:'gte',label:'Surveys - Delivery Rate %'},
-    absent:{target:1,points:150,dir:'lte',label:'Absenteeism %'}
+    absent:{target:4,points:150,dir:'lte',label:'Absenteeism %'}
   },
   PEN:{procedural:600,serious:1300,absences:500},
   
   // Bonos de COORDINADORES (todo o nada por métrica)
   COORD_BONO:{
     aht_p90:{target:90,points:900,dir:'gte',label:'AHT P90 < 20 min %'},
-    ausentismo:{target:5,points:150,dir:'lte',label:'Ausentismo %'},
+    ausentismo:{target:4,points:150,dir:'lte',label:'Ausentismo %'},
     colgadas:{target:6,points:150,dir:'lte',label:'Llamadas Colgadas %'},
     outbound:{target:30,points:200,dir:'lte',label:'Outbound vs Inbound %'},
     qa:{target:85,points:1100,dir:'gte',label:'QA equipo %'},
@@ -1872,7 +1872,11 @@ function calcBono(row){
   checks.sdr_bono={val:row.sdr,target:CFG.BONO.sdr_bono.target,met:row.sdr!=null&&row.sdr>=CFG.BONO.sdr_bono.target,points:CFG.BONO.sdr_bono.points,label:CFG.BONO.sdr_bono.label,dir:'gte'};
   
   const pen=STATE.manualPenalties[row.nameKey]||{};
-  const absVal=pen.absenteeism!=null?+pen.absenteeism:null;
+  // Ausentismo del agente: leer primero de la Sheet automatica, fallback al manual
+  let absVal=null;
+  const _monthName=getActiveMonthName();
+  if(_monthName)absVal=getAusentismoForAgent(row.nameKey,_monthName);
+  if(absVal==null&&pen.absenteeism!=null)absVal=+pen.absenteeism;
   checks.absent={val:absVal,target:CFG.BONO.absent.target,met:absVal!=null&&absVal<=CFG.BONO.absent.target,points:CFG.BONO.absent.points,label:CFG.BONO.absent.label,dir:'lte'};
 
   let earnedPoints=0;
