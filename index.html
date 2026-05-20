@@ -538,6 +538,10 @@ const CFG = {
   },
   PEN:{procedural:600,serious:1300,absences:500},
   
+  // Coordinadores con meta de Outbound distinta (turno con mas salientes naturalmente)
+  // Sus agentes y ellos mismos usan meta 35% en lugar de 30%
+  COORDS_OUTBOUND_35:['Kenneth Gonzalez','German Bernal'],
+  
   // Bonos de COORDINADORES (todo o nada por métrica)
   COORD_BONO:{
     aht_p90:{target:90,points:900,dir:'gte',label:'AHT P90 < 20 min %'},
@@ -1896,12 +1900,19 @@ function buildScorecard(){
   return out;
 }
 
+// Devuelve la meta de outbound segun el coord (35% para coords del turno especial, 30% el resto)
+function getOutboundTarget(coordName){
+  if(coordName&&CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(coordName))return 35;
+  return CFG.BONO.outbound.target;
+}
+
 function calcBono(row){
   const checks={};
   checks.quality={val:row.qaScore,target:CFG.BONO.quality.target,met:row.qaScore!=null&&row.qaScore>=CFG.BONO.quality.target,points:CFG.BONO.quality.points,label:CFG.BONO.quality.label,dir:'gte'};
   checks.released={val:row.releasedPct,target:CFG.BONO.released.target,met:row.releasedPct!=null&&row.releasedPct<=CFG.BONO.released.target,points:CFG.BONO.released.points,label:CFG.BONO.released.label,dir:'lte'};
   checks.csat={val:row.csat,target:CFG.BONO.csat.target,met:row.csat!=null&&row.csat>=CFG.BONO.csat.target,points:CFG.BONO.csat.points,label:CFG.BONO.csat.label,dir:'gte'};
-  checks.outbound={val:row.outboundPct,target:CFG.BONO.outbound.target,met:row.outboundPct!=null&&row.outboundPct<=CFG.BONO.outbound.target,points:CFG.BONO.outbound.points,label:CFG.BONO.outbound.label,dir:'lte'};
+  const _outboundTarget=getOutboundTarget(row.coord);
+  checks.outbound={val:row.outboundPct,target:_outboundTarget,met:row.outboundPct!=null&&row.outboundPct<=_outboundTarget,points:CFG.BONO.outbound.points,label:CFG.BONO.outbound.label,dir:'lte'};
   checks.rr_bono={val:row.rr,target:CFG.BONO.rr_bono.target,met:row.rr!=null&&row.rr>=CFG.BONO.rr_bono.target,points:CFG.BONO.rr_bono.points,label:CFG.BONO.rr_bono.label,dir:'gte'};
   checks.srr_bono={val:row.srr,target:CFG.BONO.srr_bono.target,met:row.srr!=null&&row.srr>=CFG.BONO.srr_bono.target,points:CFG.BONO.srr_bono.points,label:CFG.BONO.srr_bono.label,dir:'gte'};
   checks.sdr_bono={val:row.sdr,target:CFG.BONO.sdr_bono.target,met:row.sdr!=null&&row.sdr>=CFG.BONO.sdr_bono.target,points:CFG.BONO.sdr_bono.points,label:CFG.BONO.sdr_bono.label,dir:'gte'};
@@ -2174,7 +2185,7 @@ function viewScorecard(){
           <td class="col-num">${statusCell(r.banoMin,CFG.META_BANO_MIN,'lte',v=>v.toFixed(1)+' m')}</td>
           <td class="col-num">${statusCell(r.qaScore,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
           <td class="col-num">${statusCell(r.releasedPct,6,'lte',v=>fmt.pct(v))}</td>
-          <td class="col-num">${statusCell(r.outboundPct,30,'lte',v=>fmt.pct(v))}</td>
+          <td class="col-num">${statusCell(r.outboundPct,getOutboundTarget(r.coord),'lte',v=>fmt.pct(v))}</td>
           <td class="col-num">${r.quejasTotal>0?`<span class="b ${r.quejasRed>0?'bad':'warn'}">${r.quejasYellow}A · ${r.quejasRed}R</span>`:'<span class="muted">—</span>'}</td>
           <td class="col-num">${r.servTotal||'<span class="muted">—</span>'}</td>
         </tr>`).join('')}
@@ -2235,7 +2246,7 @@ function viewAgente(){
         ${metricTile('Baño',r.banoMin!=null?r.banoMin.toFixed(1)+' min':'—',`Meta ≤10 min/día`,statusFor(r.banoMin,CFG.META_BANO_MIN,'lte'))}
         ${metricTile('QA',fmt.pct(r.qaScore),`Meta ≥${CFG.META_QA}%${r.qaEvals?' · '+r.qaEvals+' eval':''}`,statusFor(r.qaScore,CFG.META_QA,'gte'))}
         ${metricTile('Released',fmt.pct(r.releasedPct),`Meta ≤6%`,statusFor(r.releasedPct,6,'lte'))}
-        ${metricTile('Outbound',fmt.pct(r.outboundPct),`Meta ≤30%`,statusFor(r.outboundPct,30,'lte'))}
+        ${(()=>{const _t=getOutboundTarget(r.coord);return metricTile('Outbound',fmt.pct(r.outboundPct),`Meta ≤${_t}%`+(_t===35?' · turno especial':''),statusFor(r.outboundPct,_t,'lte'));})()}
       </div>
     </div>
 
@@ -2506,7 +2517,7 @@ function calcCoordBono(coordName,coordAgents){
     aht_p90:{val:m.ahtP90,target:CFG.COORD_BONO.aht_p90.target,met:m.ahtP90!=null&&m.ahtP90>=CFG.COORD_BONO.aht_p90.target,points:CFG.COORD_BONO.aht_p90.points,label:CFG.COORD_BONO.aht_p90.label,dir:'gte'},
     ausentismo:{val:ausentismo,target:CFG.COORD_BONO.ausentismo.target,met:ausentismo!=null&&ausentismo<=CFG.COORD_BONO.ausentismo.target,points:CFG.COORD_BONO.ausentismo.points,label:CFG.COORD_BONO.ausentismo.label,dir:'lte'},
     colgadas:{val:m.colgadas,target:CFG.COORD_BONO.colgadas.target,met:m.colgadas!=null&&m.colgadas<=CFG.COORD_BONO.colgadas.target,points:CFG.COORD_BONO.colgadas.points,label:CFG.COORD_BONO.colgadas.label,dir:'lte'},
-    outbound:{val:m.outbound,target:CFG.COORD_BONO.outbound.target,met:m.outbound!=null&&m.outbound<=CFG.COORD_BONO.outbound.target,points:CFG.COORD_BONO.outbound.points,label:CFG.COORD_BONO.outbound.label,dir:'lte'},
+    outbound:{val:m.outbound,target:(CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(coordName)?35:CFG.COORD_BONO.outbound.target),met:m.outbound!=null&&m.outbound<=(CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(coordName)?35:CFG.COORD_BONO.outbound.target),points:CFG.COORD_BONO.outbound.points,label:CFG.COORD_BONO.outbound.label,dir:'lte'},
     qa:{val:m.qa,target:CFG.COORD_BONO.qa.target,met:m.qa!=null&&m.qa>=CFG.COORD_BONO.qa.target,points:CFG.COORD_BONO.qa.points,label:CFG.COORD_BONO.qa.label,dir:'gte'},
     srr:{val:m.srr,target:CFG.COORD_BONO.srr.target,met:m.srr!=null&&m.srr>=CFG.COORD_BONO.srr.target,points:CFG.COORD_BONO.srr.points,label:CFG.COORD_BONO.srr.label,dir:'gte'},
     csat:{val:m.csat,target:CFG.COORD_BONO.csat.target,met:m.csat!=null&&m.csat>=CFG.COORD_BONO.csat.target,points:CFG.COORD_BONO.csat.points,label:CFG.COORD_BONO.csat.label,dir:'gte'}
@@ -2614,7 +2625,7 @@ function viewCoordinador(){
             <td class="col-num">${statusCell(m.ahtP90,90,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${b.ausentismo!=null?statusCell(b.ausentismo,5,'lte',v=>fmt.pct(v)):'<span class="muted">—</span>'}</td>
             <td class="col-num">${statusCell(m.colgadas,6,'lte',v=>fmt.pct(v))}</td>
-            <td class="col-num">${statusCell(m.outbound,30,'lte',v=>fmt.pct(v))}</td>
+            <td class="col-num" title="${(CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(c.coord))?'Meta ≤35% (turno especial)':'Meta ≤30%'}">${statusCell(m.outbound,(CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(c.coord))?35:30,'lte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(m.qa,85,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num" title="Resolution Rate">${statusCell(m.rr,75,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num" title="Survey Return Rate (bono del coord)">${statusCell(m.srr,75,'gte',v=>fmt.pct(v))}</td>
@@ -2645,7 +2656,7 @@ function viewCoordinador(){
         ${metricTile('AHT P90 < 20min',fmt.pct(m.ahtP90),'Meta ≥90% · '+(b.checks.aht_p90.met?'+900pts':'+0pts'),statusFor(m.ahtP90,90,'gte'))}
         ${metricTile('Ausentismo',b.ausentismo!=null?fmt.pct(b.ausentismo):'—','Meta ≤5% · '+(b.checks.ausentismo.met?'+150pts':'+0pts'),b.ausentismo!=null?statusFor(b.ausentismo,5,'lte'):'neutral')}
         ${metricTile('Llamadas Colgadas',fmt.pct(m.colgadas),'Meta ≤6% · '+(b.checks.colgadas.met?'+150pts':'+0pts'),statusFor(m.colgadas,6,'lte'))}
-        ${metricTile('Outbound vs Inbound',fmt.pct(m.outbound),'Meta ≤30% · '+(b.checks.outbound.met?'+200pts':'+0pts'),statusFor(m.outbound,30,'lte'))}
+        ${(()=>{const _t=(CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(c.coord))?35:30;return metricTile('Outbound vs Inbound',fmt.pct(m.outbound),`Meta ≤${_t}% · `+(b.checks.outbound.met?'+200pts':'+0pts')+(_t===35?' · turno especial':''),statusFor(m.outbound,_t,'lte'));})()}
         ${metricTile('QA equipo',fmt.pct(m.qa),'Meta ≥85% · '+(b.checks.qa.met?'+1100pts':'+0pts'),statusFor(m.qa,85,'gte'))}
         ${metricTile('Survey Return Rate',fmt.pct(m.srr),'Meta ≥75% · '+(b.checks.srr.met?'+200pts':'+0pts'),statusFor(m.srr,75,'gte'))}
         ${metricTile('CSAT',fmt.pct(m.csat),'Meta ≥90% · '+(b.checks.csat.met?'+300pts':'+0pts'),statusFor(m.csat,90,'gte'))}
@@ -2700,7 +2711,7 @@ function viewCoordinador(){
             <td class="col-num">${statusCell(r.ahtP90Pct,90,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(r.qaScore,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(r.releasedPct,6,'lte',v=>fmt.pct(v))}</td>
-            <td class="col-num">${statusCell(r.outboundPct,30,'lte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(r.outboundPct,getOutboundTarget(r.coord),'lte',v=>fmt.pct(v))}</td>
             <td class="col-num">${r.quejasTotal||'<span class="muted">—</span>'}</td>
             <td class="col-num"><span class="tier-badge tier-${ab.tier}">${fmt.money(ab.bonus)}</span></td>
           </tr>`;
