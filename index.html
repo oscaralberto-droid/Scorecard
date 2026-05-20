@@ -531,7 +531,7 @@ const CFG = {
     released:{target:6,points:500,dir:'lte',label:'Released Calls %'},
     csat:{target:85,points:400,dir:'gte',label:'Surveys - Satisfaction %'},
     outbound:{target:30,points:300,dir:'lte',label:'Outbound Calls %'},
-    rr_bono:{target:90,points:250,dir:'gte',label:'Resolution Rate %'},
+    rr_bono:{target:75,points:250,dir:'gte',label:'Resolution Rate %'},
     sdr_bono:{target:45,points:200,dir:'gte',label:'Surveys - Delivery Rate %'},
     srr_bono:{target:75,points:100,dir:'gte',label:'Survey Return Rate %'},
     absent:{target:4,points:150,dir:'lte',label:'Absenteeism %'}
@@ -2935,9 +2935,10 @@ function viewBono(){
           <th class="col-num" title="Released ≤6%">Rel%</th>
           <th class="col-num" title="CSAT ≥85%">CSAT</th>
           <th class="col-num" title="Outbound ≤30%">Out%</th>
-          <th class="col-num" title="RR ≥90%">RR</th>
-          <th class="col-num" title="SDR ≥45%">SDR</th>
-          <th class="col-num" title="Absent ≤1%">Ab%</th>
+          <th class="col-num" title="Resolution Rate ≥75%">RR</th>
+          <th class="col-num" title="Survey Return Rate ≥75%">SRR</th>
+          <th class="col-num" title="Survey Delivery Rate ≥45%">SDR</th>
+          <th class="col-num" title="Absenteeism ≤4%">Ab%</th>
           <th class="col-num">Earned</th>
           <th class="col-num">Pen.</th>
           <th class="col-num">Adjusted</th>
@@ -2956,6 +2957,7 @@ function viewBono(){
             <td class="col-num">${ck('csat')}</td>
             <td class="col-num">${ck('outbound')}</td>
             <td class="col-num">${ck('rr_bono')}</td>
+            <td class="col-num">${ck('srr_bono')}</td>
             <td class="col-num">${ck('sdr_bono')}</td>
             <td class="col-num">${ck('absent')}</td>
             <td class="col-num">${fmt.num(b.earnedPoints)}</td>
