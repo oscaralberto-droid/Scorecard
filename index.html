@@ -2656,7 +2656,7 @@ function viewCoordinador(){
         ${metricTile('AHT P90 < 20min',fmt.pct(m.ahtP90),'Meta ≥90% · '+(b.checks.aht_p90.met?'+900pts':'+0pts'),statusFor(m.ahtP90,90,'gte'))}
         ${metricTile('Ausentismo',b.ausentismo!=null?fmt.pct(b.ausentismo):'—','Meta ≤5% · '+(b.checks.ausentismo.met?'+150pts':'+0pts'),b.ausentismo!=null?statusFor(b.ausentismo,5,'lte'):'neutral')}
         ${metricTile('Llamadas Colgadas',fmt.pct(m.colgadas),'Meta ≤6% · '+(b.checks.colgadas.met?'+150pts':'+0pts'),statusFor(m.colgadas,6,'lte'))}
-        ${(()=>{const _t=(CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(c.coord))?35:30;return metricTile('Outbound vs Inbound',fmt.pct(m.outbound),`Meta ≤${_t}% · `+(b.checks.outbound.met?'+200pts':'+0pts')+(_t===35?' · turno especial':''),statusFor(m.outbound,_t,'lte'));})()}
+        ${(()=>{const _t=(CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(selData.coord))?35:30;return metricTile('Outbound vs Inbound',fmt.pct(m.outbound),`Meta ≤${_t}% · `+(b.checks.outbound.met?'+200pts':'+0pts')+(_t===35?' · turno especial':''),statusFor(m.outbound,_t,'lte'));})()}
         ${metricTile('QA equipo',fmt.pct(m.qa),'Meta ≥85% · '+(b.checks.qa.met?'+1100pts':'+0pts'),statusFor(m.qa,85,'gte'))}
         ${metricTile('Survey Return Rate',fmt.pct(m.srr),'Meta ≥75% · '+(b.checks.srr.met?'+200pts':'+0pts'),statusFor(m.srr,75,'gte'))}
         ${metricTile('CSAT',fmt.pct(m.csat),'Meta ≥90% · '+(b.checks.csat.met?'+300pts':'+0pts'),statusFor(m.csat,90,'gte'))}
