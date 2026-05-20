@@ -2659,7 +2659,7 @@ function viewCoordinador(){
       <div class="grid-4">
         <div class="field"><label>Ausentismo %</label><input type="number" id="coordAusentismo" value="${manual.ausentismo!=null?manual.ausentismo:''}" step="0.01" placeholder="—"></div>
         <div class="field"><label>Quejas directas EXTRA (-100 c/u)</label><input type="number" id="coordQuejasDirectas" value="${manual.quejasDirectas||0}" min="0" title="Quejas directas adicionales. Las que vienen del archivo de apelaciones se cuentan automaticamente."></div>
-        <div class="field"><label>Quejas directas del archivo</label><div class="readonly-display" style="padding:8px 12px;background:var(--bg-cream);border:1px dashed var(--border);border-radius:8px;color:var(--muted)">${bono.quejasDirectasAuto||0} detectadas automaticamente</div></div>
+        <div class="field"><label>Quejas directas del archivo</label><div class="readonly-display" style="padding:8px 12px;background:var(--bg-cream);border:1px dashed var(--border);border-radius:8px;color:var(--muted)">${b.quejasDirectasAuto||0} detectadas automaticamente</div></div>
         <div class="field"><label>Green cards (+50 c/u)</label><input type="number" id="coordGreenCards" value="${manual.greenCards||0}" min="0"></div>
         <div class="field"><label>Buen desempeño (pts)</label><input type="number" id="coordBuenDesempeno" value="${manual.buenDesempeno||0}"></div>
       </div>
