@@ -517,7 +517,7 @@ const CFG = {
 
   // Metas scorecard
   META_RR:75, META_CSAT:85,
-  META_SDR:90, META_SRR:65,
+  META_SDR:90, META_SRR:70,
   META_AHT_SEC:510,    // 8:30 = 510 seg
   META_ACW_MIN:2,      // 2:00
   META_HOLD_MIN:2,
@@ -527,12 +527,13 @@ const CFG = {
 
   // Bonificaciones (todo o nada)
   BONO:{
-    quality:{target:85,points:1200,dir:'gte',label:'Quality %'},
+    quality:{target:85,points:1100,dir:'gte',label:'Quality %'},
     released:{target:6,points:500,dir:'lte',label:'Released Calls %'},
     csat:{target:85,points:400,dir:'gte',label:'Surveys - Satisfaction %'},
     outbound:{target:30,points:300,dir:'lte',label:'Outbound Calls %'},
     rr_bono:{target:90,points:250,dir:'gte',label:'Resolution Rate %'},
     sdr_bono:{target:45,points:200,dir:'gte',label:'Surveys - Delivery Rate %'},
+    srr_bono:{target:75,points:100,dir:'gte',label:'Survey Return Rate %'},
     absent:{target:4,points:150,dir:'lte',label:'Absenteeism %'}
   },
   PEN:{procedural:600,serious:1300,absences:500},
@@ -544,7 +545,7 @@ const CFG = {
     colgadas:{target:6,points:150,dir:'lte',label:'Llamadas Colgadas %'},
     outbound:{target:30,points:200,dir:'lte',label:'Outbound vs Inbound %'},
     qa:{target:85,points:1100,dir:'gte',label:'QA equipo %'},
-    rr:{target:90,points:200,dir:'gte',label:'Resolution Rate %'},
+    srr:{target:75,points:200,dir:'gte',label:'Survey Return Rate %'},
     csat:{target:90,points:300,dir:'gte',label:'CSAT %'}
   },
   // Penalizaciones de coord (por total de tarjetas del equipo: amarillas+rojas)
@@ -1902,6 +1903,7 @@ function calcBono(row){
   checks.csat={val:row.csat,target:CFG.BONO.csat.target,met:row.csat!=null&&row.csat>=CFG.BONO.csat.target,points:CFG.BONO.csat.points,label:CFG.BONO.csat.label,dir:'gte'};
   checks.outbound={val:row.outboundPct,target:CFG.BONO.outbound.target,met:row.outboundPct!=null&&row.outboundPct<=CFG.BONO.outbound.target,points:CFG.BONO.outbound.points,label:CFG.BONO.outbound.label,dir:'lte'};
   checks.rr_bono={val:row.rr,target:CFG.BONO.rr_bono.target,met:row.rr!=null&&row.rr>=CFG.BONO.rr_bono.target,points:CFG.BONO.rr_bono.points,label:CFG.BONO.rr_bono.label,dir:'gte'};
+  checks.srr_bono={val:row.srr,target:CFG.BONO.srr_bono.target,met:row.srr!=null&&row.srr>=CFG.BONO.srr_bono.target,points:CFG.BONO.srr_bono.points,label:CFG.BONO.srr_bono.label,dir:'gte'};
   checks.sdr_bono={val:row.sdr,target:CFG.BONO.sdr_bono.target,met:row.sdr!=null&&row.sdr>=CFG.BONO.sdr_bono.target,points:CFG.BONO.sdr_bono.points,label:CFG.BONO.sdr_bono.label,dir:'gte'};
   
   const pen=STATE.manualPenalties[row.nameKey]||{};
@@ -2369,6 +2371,7 @@ function calcCoordMetrics(coordAgents,coordName){
   let totalLlamadasAt=0,totalEntrantes=0;
   let totalSalientes=0;
   let rrSum=0,rrN=0,csatSum=0,csatN=0,qaSum=0,qaN=0;
+  let srrSum=0,srrN=0;
   let releasedPctSum=0,releasedPctN=0;
   let outboundPctSum=0,outboundPctN=0;
   
@@ -2378,6 +2381,7 @@ function calcCoordMetrics(coordAgents,coordName){
     if(a.callsOut)totalSalientes+=a.callsOut;
     
     if(a.rr!=null){rrSum+=a.rr;rrN++;}
+    if(a.srr!=null){srrSum+=a.srr;srrN++;}
     if(a.csat!=null){csatSum+=a.csat;csatN++;}
     if(a.qaScore!=null){qaSum+=a.qaScore;qaN++;}
     if(a.releasedPct!=null){releasedPctSum+=a.releasedPct;releasedPctN++;}
@@ -2411,6 +2415,7 @@ function calcCoordMetrics(coordAgents,coordName){
     outbound:outboundPctN?outboundPctSum/outboundPctN:null,
     qa:qaN?qaSum/qaN:null,
     rr:rrN?rrSum/rrN:null,
+    srr:srrN?srrSum/srrN:null,
     csat:csatN?csatSum/csatN:null,
     totalLlamadas:totalLlamadasAt,
     totalEntrantes,totalSalientes
@@ -2503,7 +2508,7 @@ function calcCoordBono(coordName,coordAgents){
     colgadas:{val:m.colgadas,target:CFG.COORD_BONO.colgadas.target,met:m.colgadas!=null&&m.colgadas<=CFG.COORD_BONO.colgadas.target,points:CFG.COORD_BONO.colgadas.points,label:CFG.COORD_BONO.colgadas.label,dir:'lte'},
     outbound:{val:m.outbound,target:CFG.COORD_BONO.outbound.target,met:m.outbound!=null&&m.outbound<=CFG.COORD_BONO.outbound.target,points:CFG.COORD_BONO.outbound.points,label:CFG.COORD_BONO.outbound.label,dir:'lte'},
     qa:{val:m.qa,target:CFG.COORD_BONO.qa.target,met:m.qa!=null&&m.qa>=CFG.COORD_BONO.qa.target,points:CFG.COORD_BONO.qa.points,label:CFG.COORD_BONO.qa.label,dir:'gte'},
-    rr:{val:m.rr,target:CFG.COORD_BONO.rr.target,met:m.rr!=null&&m.rr>=CFG.COORD_BONO.rr.target,points:CFG.COORD_BONO.rr.points,label:CFG.COORD_BONO.rr.label,dir:'gte'},
+    srr:{val:m.srr,target:CFG.COORD_BONO.srr.target,met:m.srr!=null&&m.srr>=CFG.COORD_BONO.srr.target,points:CFG.COORD_BONO.srr.points,label:CFG.COORD_BONO.srr.label,dir:'gte'},
     csat:{val:m.csat,target:CFG.COORD_BONO.csat.target,met:m.csat!=null&&m.csat>=CFG.COORD_BONO.csat.target,points:CFG.COORD_BONO.csat.points,label:CFG.COORD_BONO.csat.label,dir:'gte'}
   };
   
@@ -2590,7 +2595,8 @@ function viewCoordinador(){
           <th class="col-num" title="Llamadas Colgadas">Colg.</th>
           <th class="col-num" title="Outbound vs Inbound">Out%</th>
           <th class="col-num">QA</th>
-          <th class="col-num">RR</th>
+          <th class="col-num" title="Resolution Rate · meta ≥75%">RR</th>
+          <th class="col-num" title="Survey Return Rate · meta ≥75% · cuenta para bono">SRR</th>
           <th class="col-num">CSAT</th>
           <th class="col-num" title="Tarjetas del equipo (deduplicadas por queja)">Tarjetas</th>
           <th class="col-num" title="Quejas directas al coordinador (-100pts c/u)">Directas</th>
@@ -2610,7 +2616,8 @@ function viewCoordinador(){
             <td class="col-num">${statusCell(m.colgadas,6,'lte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(m.outbound,30,'lte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(m.qa,85,'gte',v=>fmt.pct(v))}</td>
-            <td class="col-num">${statusCell(m.rr,90,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num" title="Resolution Rate">${statusCell(m.rr,75,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num" title="Survey Return Rate (bono del coord)">${statusCell(m.srr,75,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(m.csat,90,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${b.totalCards>0?`<span class="b ${b.totalCards>=12?'bad':b.totalCards>=6?'warn':'neutral'}">${b.amarillas}A · ${b.rojas}R</span>`:'<span class="muted">—</span>'}</td>
             <td class="col-num" title="${b.quejasDirectasTotal>0?`${b.quejasDirectasAuto||0} del archivo + ${b.quejasDirectasManual||0} extra · -${(b.quejasDirectasTotal||0)*100} pts`:'Sin quejas directas'}">${b.quejasDirectasTotal>0?`<span class="b bad">${b.quejasDirectasTotal}</span>`:'<span class="muted">—</span>'}</td>
@@ -2640,7 +2647,7 @@ function viewCoordinador(){
         ${metricTile('Llamadas Colgadas',fmt.pct(m.colgadas),'Meta ≤6% · '+(b.checks.colgadas.met?'+150pts':'+0pts'),statusFor(m.colgadas,6,'lte'))}
         ${metricTile('Outbound vs Inbound',fmt.pct(m.outbound),'Meta ≤30% · '+(b.checks.outbound.met?'+200pts':'+0pts'),statusFor(m.outbound,30,'lte'))}
         ${metricTile('QA equipo',fmt.pct(m.qa),'Meta ≥85% · '+(b.checks.qa.met?'+1100pts':'+0pts'),statusFor(m.qa,85,'gte'))}
-        ${metricTile('Resolution Rate',fmt.pct(m.rr),'Meta ≥90% · '+(b.checks.rr.met?'+200pts':'+0pts'),statusFor(m.rr,90,'gte'))}
+        ${metricTile('Survey Return Rate',fmt.pct(m.srr),'Meta ≥75% · '+(b.checks.srr.met?'+200pts':'+0pts'),statusFor(m.srr,75,'gte'))}
         ${metricTile('CSAT',fmt.pct(m.csat),'Meta ≥90% · '+(b.checks.csat.met?'+300pts':'+0pts'),statusFor(m.csat,90,'gte'))}
       </div>
     </div>
