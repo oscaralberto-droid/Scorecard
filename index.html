@@ -1121,6 +1121,7 @@ async function fetchQuejas(){
     const iTarjeta=idx('Tarjeta a aplicar');
     const iFecha=idx('Fecha de la queja');
     const iCoord=idx('Coordinador');
+    const iMesAplica=idx('Mes a aplicar');
 
     const rows=[];
     for(let i=1;i<csv.length;i++){
@@ -1133,8 +1134,22 @@ async function fetchQuejas(){
       const t=tarjeta.toLowerCase().replace(/\s/g,'');
       if(t==='noaplica'||t==='n/a'||t==='no'||t==='na')continue;
       const agentes=agente.split(/\s+y\s+|,/).map(s=>s.trim()).filter(s=>s);
+      // quejaId unico: identifica una misma queja aunque tenga varios involucrados
+      // Lo construimos con la fila de origen para evitar colisiones
+      const quejaId=`${fecha}|${t}|row${i}`;
+      // Leer y normalizar el mes a aplicar (sin acentos, minusculas, sin espacios extra)
+      let mesAplica='';
+      if(iMesAplica>=0){
+        const raw=(r[iMesAplica]||'').toString().trim().toLowerCase();
+        // Normalizar acentos y quedarse solo con el nombre del mes
+        const norm=raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        for(const m of meses){
+          if(norm.includes(m)){mesAplica=m;break;}
+        }
+      }
       for(const a of agentes){
-        rows.push({agent:a,fecha,tarjeta,coord,nameKey:resolveAgentKey(a)});
+        rows.push({agent:a,fecha,tarjeta,coord,quejaId,mesAplica,nameKey:resolveAgentKey(a)});
       }
     }
     STATE.quejas=rows;
@@ -1821,7 +1836,16 @@ function buildScorecard(){
     const aux=STATE.auxiliares[k];
     const qa=STATE.qa[k];
     const serv=STATE.servicios[k];
-    const quejasAg=STATE.quejas.filter(q=>q.nameKey===k);
+    // Filtrar quejas: solo las del mes activo (si hay filtro mensual)
+    const _activeMonthQ=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
+    const quejasAg=STATE.quejas.filter(q=>{
+      if(q.nameKey!==k)return false;
+      // Si la queja no tiene mesAplica, la incluimos (sin filtro)
+      if(!q.mesAplica)return true;
+      // Si no hay mes activo, mostrar todas (es vista global)
+      if(!_activeMonthQ)return true;
+      return q.mesAplica===_activeMonthQ;
+    });
 
     const rr=enc&&enc.rrN?enc.rrSum/enc.rrN:null;
     const csat=enc&&enc.csatN?enc.csatSum/enc.csatN:null;
@@ -2421,13 +2445,32 @@ function calcCoordBono(coordName,coordAgents){
   const greenCards=+(manual.greenCards||0);
   const buenDesempeno=+(manual.buenDesempeno||0);
   
-  // Tarjetas del equipo: sumar amarillas y rojas de cada agente
+  // Tarjetas del equipo: deduplicar por quejaId
+  // Si una queja involucra a varios agentes del mismo equipo, cuenta como 1
+  const agentKeys=new Set(coordAgents.map(a=>a.nameKey));
+  // Filtrar por mes activo (igual que en el agente individual)
+  const _activeMonthC=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
+  const quejasDelEquipo=(STATE.quejas||[]).filter(q=>{
+    if(!agentKeys.has(q.nameKey))return false;
+    if(!q.mesAplica)return true;
+    if(!_activeMonthC)return true;
+    return q.mesAplica===_activeMonthC;
+  });
+  // Deduplicar por quejaId, manteniendo el tipo de tarjeta
+  const quejasUnicas=new Map();  // quejaId -> tarjeta
+  for(const q of quejasDelEquipo){
+    if(!quejasUnicas.has(q.quejaId))quejasUnicas.set(q.quejaId,q.tarjeta||'');
+  }
   let amarillas=0,rojas=0;
-  for(const a of coordAgents){
-    amarillas+=(a.quejasYellow||0);
-    rojas+=(a.quejasRed||0);
+  for(const t of quejasUnicas.values()){
+    const tl=(t||'').toLowerCase();
+    if(tl.includes('amarill'))amarillas++;
+    else if(tl.includes('roj'))rojas++;
   }
   const totalCards=amarillas+rojas;
+  // Para debug/tooltip: cuantos registros vs cuantas quejas unicas
+  const _quejasRegistros=quejasDelEquipo.length;
+  const _quejasUnicasCount=quejasUnicas.size;
   
   // Calcular puntos por métrica
   const checks={
@@ -2474,6 +2517,7 @@ function calcCoordBono(coordName,coordAgents){
     metrics:m,checks,
     earnedPoints,cardPenalty,zeroOut,
     amarillas,rojas,totalCards,
+    _quejasRegistros,_quejasUnicasCount,
     quejasDirectas,greenCards,buenDesempeno,
     finalPoints:preliminaryPoints,
     tier,bonus,ausentismo
