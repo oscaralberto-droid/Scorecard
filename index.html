@@ -451,6 +451,7 @@ body.admin .admin-only{display:inline-block!important}
       <div class="sync-pill" id="syncQA" title="QA en tiempo real" style="cursor:pointer" onclick="toggleQAMonthPicker()"><div class="dot"></div><span>QA</span></div>
       <select id="qaMonthSelect" style="display:none;font-size:11px;font-family:var(--mono);padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--s1);color:var(--text)" onchange="changeQAMonth(this.value)"></select>
       <div class="sync-pill" id="syncQuejas" title="Quejas en tiempo real"><div class="dot"></div><span>Quejas</span></div>
+      <div class="sync-pill" id="syncAusentismo" title="Ausentismo mensual"><div class="dot"></div><span>Ausen.</span></div>
       <div class="sync-pill" id="syncBackend" title="Histórico (backend)"><div class="dot"></div><span>Backend</span></div>
       <div class="sync-pill" id="lastUpdate"><span class="muted">—</span></div>
       <div class="sync-pill admin-pill" id="adminPill" onclick="toggleAdmin()" title="Modo administrador">
@@ -502,6 +503,8 @@ const CFG = {
   DISTRO_SHEET:'1c752kRpIb3oIBAGkSS-GJ0lpkDg6ICQK7HIOlO5cfaU',
   DISTRO_TAB:'Schedules',
   QUEJAS_SHEET:'1Ll3FhAGF6KeH_I0SYn77mwIDm-MdKARcMGPdC5jYHIU',
+  AUSENTISMO_SHEET:'1CBmg8H4JjzrMg3aZKhFcIuf357Vhaw-7c7U_dSrI2Ng',
+  AUSENTISMO_TAB:'',
   QUEJAS_TAB:'',
 
   // Backend (Apps Script para histórico) - el usuario pegará la URL aquí
@@ -574,7 +577,8 @@ const CFG = {
 const STATE = {
   distro:[],            // [{agent,coord,senior,cluster,type,extension,nameKey}]
   qa:{},                // {nameKey: {fullName,score,evals}}
-  quejas:[],            // [{agent,fecha,tarjeta,nameKey}]
+  quejas:[],
+  ausentismo:{},  // { nameKey: { agentName, coord, pct, monthKey } }            // [{agent,fecha,tarjeta,nameKey}]
   encuestas:{},         // por agente {nameKey: {fullName,sent,answered,rrSum,rrN,csatSum,csatN}}
   llamadas:{},          // {nameKey: {atendidasIn,atendidasOut,ahtSum,ahtN,released,totalEntrantes}}
   auxiliares:{},        // {nameKey: {acwSum,acwN,holdSum,holdN,breakAvg,banoAvg,breakMaxDay,banoMaxDay}}
@@ -1144,6 +1148,128 @@ async function fetchQuejas(){
   }
   STATE.loading.quejas=false;
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUSENTISMO: Lectura desde Sheet provisional (cambiar a Apps Script despues)
+// Detecta automaticamente la columna del mes activo en el filtro
+// ═══════════════════════════════════════════════════════════════════════════
+async function fetchAusentismo(){
+  setSync('Ausentismo','sync','Ausentismo...');
+  STATE.loading.ausentismo=true;
+  try{
+    const csv=await fetchSheetCSV(CFG.AUSENTISMO_SHEET,CFG.AUSENTISMO_TAB);
+    if(!csv.length){STATE.ausentismo={};return;}
+    const header=csv[0].map(h=>(h||'').trim());
+
+    // Identificar columnas fijas
+    const idx=name=>header.findIndex(h=>h.toLowerCase().includes(name.toLowerCase()));
+    const iAgente=idx('Agente');
+    const iCoord=idx('Coordinador');
+    const iSenior=idx('VAR');
+
+    if(iAgente<0){
+      console.warn('Ausentismo: no se encontro columna Agente');
+      setSync('Ausentismo','err','Sin col Agente');
+      return;
+    }
+
+    // Identificar TODAS las columnas de "Ausentismo {mes}"
+    // Las guardamos por nombre del mes para que la vista pueda elegir
+    const meses=['enero','febrero','marzo','abril','mayo','junio',
+                 'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const monthCols={};  // { 'abril': colIndex, 'mayo': colIndex, ... }
+    for(let i=0;i<header.length;i++){
+      const h=header[i].toLowerCase();
+      if(!h.includes('ausentismo'))continue;
+      for(const m of meses){
+        if(h.includes(m)){
+          monthCols[m]=i;
+          break;
+        }
+      }
+    }
+
+    if(Object.keys(monthCols).length===0){
+      console.warn('Ausentismo: no se encontraron columnas de mes');
+      setSync('Ausentismo','err','Sin cols mes');
+      return;
+    }
+
+    // Parsear filas
+    const data={};  // { nameKey: { name, coord, senior, byMonth: {abril: 0, mayo: 0} } }
+    for(let i=1;i<csv.length;i++){
+      const r=csv[i];if(!r||r.every(c=>!c||!c.trim()))continue;
+      const agente=(r[iAgente]||'').trim();
+      if(!agente)continue;
+      const coord=iCoord>=0?(r[iCoord]||'').trim():'';
+      const senior=iSenior>=0?(r[iSenior]||'').trim():'';
+      const nameKey=resolveAgentKey(agente);
+      if(!data[nameKey]){
+        data[nameKey]={name:agente,coord:coord,senior:senior,byMonth:{}};
+      }
+      // Leer cada mes disponible
+      for(const [mes,colIdx] of Object.entries(monthCols)){
+        const raw=(r[colIdx]||'').toString().trim();
+        if(!raw)continue;
+        // Normalizar: "0,00%" -> 0.00, "12,5%" -> 12.5
+        let s=raw.replace('%','').trim();
+        s=s.replace(',','.');
+        const num=parseFloat(s);
+        if(!isNaN(num))data[nameKey].byMonth[mes]=num;
+      }
+    }
+    STATE.ausentismo=data;
+    STATE.ausentismoMonthsAvailable=Object.keys(monthCols);
+    setSync('Ausentismo','live',`Ausentismo · ${Object.keys(data).length}`);
+    STATE.lastSync.ausentismo=Date.now();
+    setLastUpdate();
+    renderActiveTab();
+  }catch(e){
+    console.error('Ausentismo error',e);
+    setSync('Ausentismo','err','Ausentismo error');
+  }
+  STATE.loading.ausentismo=false;
+}
+
+// Helper: obtener el % de ausentismo del agente para el mes activo del filtro
+// Devuelve null si no hay dato para ese mes
+function getAusentismoForAgent(nameKey, monthName){
+  const data=STATE.ausentismo&&STATE.ausentismo[nameKey];
+  if(!data)return null;
+  const m=(monthName||'').toLowerCase();
+  if(data.byMonth&&data.byMonth[m]!=null)return data.byMonth[m];
+  return null;
+}
+
+// Helper: dado un filtro activo (mode=day/month/range/week), retorna el nombre del mes
+function getActiveMonthName(){
+  const f=getActiveDateFilter();
+  const meses=['enero','febrero','marzo','abril','mayo','junio',
+               'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  let d=null;
+  if(f.mode==='month'&&f.month){
+    // f.month formato "YYYY-MM"
+    const parts=f.month.split('-');
+    if(parts.length===2){
+      const monthIdx=parseInt(parts[1])-1;
+      if(monthIdx>=0&&monthIdx<12)return meses[monthIdx];
+    }
+  }else if(f.mode==='day'&&f.day){
+    d=new Date(f.day+'T00:00:00');
+  }else if(f.mode==='range'&&f.start){
+    d=new Date(f.start+'T00:00:00');
+  }else if(f.mode==='week'&&f.week){
+    d=new Date(f.week+'T00:00:00');
+  }
+  if(d&&!isNaN(d))return meses[d.getMonth()];
+  // Fallback: mes mas reciente disponible en la sheet
+  if(STATE.ausentismoMonthsAvailable&&STATE.ausentismoMonthsAvailable.length){
+    return STATE.ausentismoMonthsAvailable[STATE.ausentismoMonthsAvailable.length-1];
+  }
+  return null;
+}
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // BACKEND: Google Sheets via Apps Script
@@ -2079,7 +2205,8 @@ function viewAgente(){
         <div class="section-title">Volumen</div>
         <div class="metric-grid">
           ${metricTile('Llamadas atendidas',fmt.num(r.callsAt),`${r.callsIn} entrantes / ${r.callsOut} salientes`,'neutral')}
-          ${metricTile('Encuestas enviadas',fmt.num(r.surveysSent),`${r.surveysAnswered} respondidas`,'neutral')}
+          ${metricTile('Encuestas enviadas',fmt.num(r.surveysSent),`${r.surveysAnswered} respondidas · ${r.surveysSentIn||0}in/${r.surveysSentOut||0}out`,'neutral')}
+          ${(()=>{const _m=getActiveMonthName();const _a=_m?getAusentismoForAgent(r.nameKey,_m):null;return metricTile('Ausentismo',_a!=null?_a.toFixed(2)+'%':'—',_m?`Mes: ${_m}`:'Sin mes activo',_a==null?'neutral':_a<=1?'ok':_a<=3?'warn':'bad');})()}
           ${metricTile('Servicios solicitados',fmt.num(r.servTotal),`${r.servComp} comp · ${r.servCanc} canc`,'neutral')}
           ${metricTile('Quejas',`${r.quejasYellow}A + ${r.quejasRed}R`,`${r.quejasTotal} total`,r.quejasRed>0?'bad':r.quejasYellow>0?'warn':'ok')}
         </div>
@@ -2271,7 +2398,21 @@ function filterCoordDailyByDate(rows,coordName){
 function calcCoordBono(coordName,coordAgents){
   const m=calcCoordMetrics(coordAgents,coordName);
   const manual=STATE.coordManual[coordName]||{};
-  const ausentismo=manual.ausentismo!=null?+manual.ausentismo:null;
+  
+  // Ausentismo: calcular automaticamente desde la Sheet de ausencias (promedio del equipo)
+  // Si no hay datos en la sheet, usar el valor manual como fallback
+  let ausentismo=null;
+  const monthName=getActiveMonthName();
+  if(monthName&&STATE.ausentismo&&Object.keys(STATE.ausentismo).length){
+    let sum=0,n=0;
+    for(const ag of coordAgents){
+      const pct=getAusentismoForAgent(ag.nameKey,monthName);
+      if(pct!=null){sum+=pct;n++;}
+    }
+    if(n>0)ausentismo=sum/n;
+  }
+  // Fallback: si no hay datos automaticos, usar el ingreso manual
+  if(ausentismo==null&&manual.ausentismo!=null)ausentismo=+manual.ausentismo;
   const quejasDirectas=+(manual.quejasDirectas||0);
   const greenCards=+(manual.greenCards||0);
   const buenDesempeno=+(manual.buenDesempeno||0);
@@ -3480,6 +3621,8 @@ function viewConfig(){
       <div class="field"><label>Distro Sheet ID</label><input type="text" id="cfgDistroId" value="${CFG.DISTRO_SHEET}"></div>
       <div class="field"><label>Distro Tab Name</label><input type="text" id="cfgDistroTab" value="${CFG.DISTRO_TAB}"></div>
       <div class="field"><label>Quejas Sheet ID</label><input type="text" id="cfgQuejasId" value="${CFG.QUEJAS_SHEET}"></div>
+      <div class="field"><label>Ausentismo Sheet ID (provisional)</label><input type="text" id="cfgAusentismoId" value="${CFG.AUSENTISMO_SHEET}"></div>
+      <div class="field"><label>Ausentismo Tab Name (opcional)</label><input type="text" id="cfgAusentismoTab" value="${CFG.AUSENTISMO_TAB||''}"></div>
       <div class="field"><label>Backend URL (Apps Script para histórico)</label><input type="url" id="cfgBackend" value="${CFG.BACKEND_URL}" placeholder="https://script.google.com/..."></div>
       <div class="field"><label>PIN para subir archivos</label><input type="password" id="cfgPin" value="${CFG.UPLOAD_PIN}"></div>
       <div style="margin-top:12px"><button class="btn primary" onclick="saveConfig()">Guardar configuración</button>
@@ -3554,11 +3697,13 @@ function saveConfig(){
   CFG.DISTRO_SHEET=$('cfgDistroId').value;
   CFG.DISTRO_TAB=$('cfgDistroTab').value;
   CFG.QUEJAS_SHEET=$('cfgQuejasId').value;
+  CFG.AUSENTISMO_SHEET=$('cfgAusentismoId').value;
+  CFG.AUSENTISMO_TAB=$('cfgAusentismoTab').value;
   CFG.BACKEND_URL=$('cfgBackend').value;
   CFG.UPLOAD_PIN=$('cfgPin').value;
   // Persistir en localStorage para esta navegador (PIN no, por seguridad)
   try{
-    const cfg={QA_URL:CFG.QA_URL,DISTRO_SHEET:CFG.DISTRO_SHEET,DISTRO_TAB:CFG.DISTRO_TAB,QUEJAS_SHEET:CFG.QUEJAS_SHEET,BACKEND_URL:CFG.BACKEND_URL};
+    const cfg={QA_URL:CFG.QA_URL,DISTRO_SHEET:CFG.DISTRO_SHEET,DISTRO_TAB:CFG.DISTRO_TAB,QUEJAS_SHEET:CFG.QUEJAS_SHEET,AUSENTISMO_SHEET:CFG.AUSENTISMO_SHEET,AUSENTISMO_TAB:CFG.AUSENTISMO_TAB,BACKEND_URL:CFG.BACKEND_URL};
     localStorage.setItem('rmCfg',JSON.stringify(cfg));
   }catch(e){}
   showBanner('success','Configuración guardada en este navegador');
@@ -3705,7 +3850,7 @@ function changeQAMonth(ym){
 // INIT & EVENT LISTENERS
 // ═══════════════════════════════════════════════════════════════════════════
 async function fetchAll(){
-  await Promise.all([fetchDistro(),fetchQA(),fetchQuejas(),fetchBackendHistory()]);
+  await Promise.all([fetchDistro(),fetchQA(),fetchQuejas(),fetchAusentismo(),fetchBackendHistory()]);
 }
 
 function setupTabs(){
