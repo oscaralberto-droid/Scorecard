@@ -2592,7 +2592,8 @@ function viewCoordinador(){
           <th class="col-num">QA</th>
           <th class="col-num">RR</th>
           <th class="col-num">CSAT</th>
-          <th class="col-num">Tarjetas</th>
+          <th class="col-num" title="Tarjetas del equipo (deduplicadas por queja)">Tarjetas</th>
+          <th class="col-num" title="Quejas directas al coordinador (-100pts c/u)">Directas</th>
           <th class="col-num">Pts</th>
           <th class="col-num">Bono</th>
         </tr></thead>
@@ -2612,6 +2613,7 @@ function viewCoordinador(){
             <td class="col-num">${statusCell(m.rr,90,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(m.csat,90,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${b.totalCards>0?`<span class="b ${b.totalCards>=12?'bad':b.totalCards>=6?'warn':'neutral'}">${b.amarillas}A · ${b.rojas}R</span>`:'<span class="muted">—</span>'}</td>
+            <td class="col-num" title="${b.quejasDirectasTotal>0?`${b.quejasDirectasAuto||0} del archivo + ${b.quejasDirectasManual||0} extra · -${(b.quejasDirectasTotal||0)*100} pts`:'Sin quejas directas'}">${b.quejasDirectasTotal>0?`<span class="b bad">${b.quejasDirectasTotal}</span>`:'<span class="muted">—</span>'}</td>
             <td class="col-num"><strong>${fmt.num(b.finalPoints)}</strong></td>
             <td class="col-num"><span class="tier-badge tier-${Math.max(0,b.tier)}">${b.bonus<0?'-$'+Math.abs(b.bonus):fmt.money(b.bonus)}</span></td>
           </tr>`;
@@ -2640,7 +2642,6 @@ function viewCoordinador(){
         ${metricTile('QA equipo',fmt.pct(m.qa),'Meta ≥85% · '+(b.checks.qa.met?'+1100pts':'+0pts'),statusFor(m.qa,85,'gte'))}
         ${metricTile('Resolution Rate',fmt.pct(m.rr),'Meta ≥90% · '+(b.checks.rr.met?'+200pts':'+0pts'),statusFor(m.rr,90,'gte'))}
         ${metricTile('CSAT',fmt.pct(m.csat),'Meta ≥90% · '+(b.checks.csat.met?'+300pts':'+0pts'),statusFor(m.csat,90,'gte'))}
-        ${metricTile('Quejas directas',`${b.quejasDirectasTotal||0}`,b.quejasDirectasTotal>0?`-${(b.quejasDirectasTotal||0)*100} pts · ${b.quejasDirectasAuto||0} del archivo + ${b.quejasDirectasManual||0} extra`:'Sin quejas directas',b.quejasDirectasTotal>0?'bad':'ok')}
       </div>
     </div>
     
