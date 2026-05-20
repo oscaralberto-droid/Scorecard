@@ -1130,10 +1130,11 @@ async function fetchQuejas(){
       const tarjeta=(r[iTarjeta]||'').trim();
       const fecha=(r[iFecha]||'').trim();
       const coord=iCoord>=0?(r[iCoord]||'').trim():'';
-      if(!agente||!tarjeta)continue;
+      if(!tarjeta)continue;
+      if(!agente&&!coord)continue;  // necesita al menos uno
       const t=tarjeta.toLowerCase().replace(/\s/g,'');
       if(t==='noaplica'||t==='n/a'||t==='no'||t==='na')continue;
-      const agentes=agente.split(/\s+y\s+|,/).map(s=>s.trim()).filter(s=>s);
+      const agentes=agente?agente.split(/\s+y\s+|,/).map(s=>s.trim()).filter(s=>s):[];
       // quejaId unico: identifica una misma queja aunque tenga varios involucrados
       // Lo construimos con la fila de origen para evitar colisiones
       const quejaId=`${fecha}|${t}|row${i}`;
@@ -1148,8 +1149,16 @@ async function fetchQuejas(){
           if(norm.includes(m)){mesAplica=m;break;}
         }
       }
-      for(const a of agentes){
-        rows.push({agent:a,fecha,tarjeta,coord,quejaId,mesAplica,nameKey:resolveAgentKey(a)});
+      if(agentes.length>0){
+        // Queja contra agente(s)
+        for(const a of agentes){
+          rows.push({agent:a,fecha,tarjeta,coord,quejaId,mesAplica,
+            isCoordOnly:false,nameKey:resolveAgentKey(a)});
+        }
+      }else if(coord){
+        // Queja directa al coord (sin agente)
+        rows.push({agent:'',fecha,tarjeta,coord,quejaId,mesAplica,
+          isCoordOnly:true,nameKey:''});
       }
     }
     STATE.quejas=rows;
@@ -2472,6 +2481,21 @@ function calcCoordBono(coordName,coordAgents){
   const _quejasRegistros=quejasDelEquipo.length;
   const _quejasUnicasCount=quejasUnicas.size;
   
+  // Quejas directas al coord (del archivo, sin agente involucrado)
+  // Se identifican con isCoordOnly y se filtran por coord + mes activo
+  const _coordKey=(coordName||'').toString().trim().toLowerCase();
+  const quejasCoordDirectas=(STATE.quejas||[]).filter(q=>{
+    if(!q.isCoordOnly)return false;
+    if((q.coord||'').toString().trim().toLowerCase()!==_coordKey)return false;
+    if(!q.mesAplica)return true;
+    if(!_activeMonthC)return true;
+    return q.mesAplica===_activeMonthC;
+  });
+  // Deduplicar por quejaId (por si hay dos coords en la misma queja, raro pero por consistencia)
+  const _coordQuejasUnicas=new Set();
+  for(const q of quejasCoordDirectas)_coordQuejasUnicas.add(q.quejaId);
+  const _quejasDirectasAuto=_coordQuejasUnicas.size;
+  
   // Calcular puntos por métrica
   const checks={
     aht_p90:{val:m.ahtP90,target:CFG.COORD_BONO.aht_p90.target,met:m.ahtP90!=null&&m.ahtP90>=CFG.COORD_BONO.aht_p90.target,points:CFG.COORD_BONO.aht_p90.points,label:CFG.COORD_BONO.aht_p90.label,dir:'gte'},
@@ -2498,8 +2522,10 @@ function calcCoordBono(coordName,coordAgents){
   }
   
   let preliminaryPoints=zeroOut?0:earnedPoints-cardPenalty;
+  // Quejas directas: suma de las del archivo (auto) + las manuales (override/extras)
+  const _totalQuejasDirectas=quejasDirectas+_quejasDirectasAuto;
   // Restar quejas directas (cada queja -100 por defecto, configurable)
-  preliminaryPoints-=(quejasDirectas*100);
+  preliminaryPoints-=(_totalQuejasDirectas*100);
   // Sumar green cards (+50 cada una por defecto)
   preliminaryPoints+=(greenCards*50);
   // Sumar buen desempeño (manual)
@@ -2517,6 +2543,9 @@ function calcCoordBono(coordName,coordAgents){
     metrics:m,checks,
     earnedPoints,cardPenalty,zeroOut,
     amarillas,rojas,totalCards,
+    quejasDirectasManual:quejasDirectas,
+    quejasDirectasAuto:_quejasDirectasAuto,
+    quejasDirectasTotal:_totalQuejasDirectas,
     _quejasRegistros,_quejasUnicasCount,
     quejasDirectas,greenCards,buenDesempeno,
     finalPoints:preliminaryPoints,
@@ -2629,7 +2658,8 @@ function viewCoordinador(){
       <p class="section-sub">Estos campos los ingresas manualmente y afectan el cálculo del bono. Click en guardar para aplicar.</p>
       <div class="grid-4">
         <div class="field"><label>Ausentismo %</label><input type="number" id="coordAusentismo" value="${manual.ausentismo!=null?manual.ausentismo:''}" step="0.01" placeholder="—"></div>
-        <div class="field"><label>Quejas directas (-100 c/u)</label><input type="number" id="coordQuejasDirectas" value="${manual.quejasDirectas||0}" min="0"></div>
+        <div class="field"><label>Quejas directas EXTRA (-100 c/u)</label><input type="number" id="coordQuejasDirectas" value="${manual.quejasDirectas||0}" min="0" title="Quejas directas adicionales. Las que vienen del archivo de apelaciones se cuentan automaticamente."></div>
+        <div class="field"><label>Quejas directas del archivo</label><div class="readonly-display" style="padding:8px 12px;background:var(--bg-cream);border:1px dashed var(--border);border-radius:8px;color:var(--muted)">${bono.quejasDirectasAuto||0} detectadas automaticamente</div></div>
         <div class="field"><label>Green cards (+50 c/u)</label><input type="number" id="coordGreenCards" value="${manual.greenCards||0}" min="0"></div>
         <div class="field"><label>Buen desempeño (pts)</label><input type="number" id="coordBuenDesempeno" value="${manual.buenDesempeno||0}"></div>
       </div>
