@@ -542,6 +542,16 @@ const CFG = {
   // Sus agentes y ellos mismos usan meta 35% en lugar de 30%
   COORDS_OUTBOUND_35:['Kenneth Gonzalez','German Bernal'],
   
+  // Penalizaciones del coord segun columna 'Resultado' del archivo de apelaciones
+  // Mapeo: penType -> {label, points (positivo o negativo)}
+  COORD_PEN_TYPES:{
+    redencion:  {label:'Redencion',                   points:+1000},
+    procedural: {label:'Falta en procedimiento',      points: -600},
+    serious:    {label:'Falta grave',                 points:-1300},
+    absence:    {label:'Ausencia injustificada',      points: -500},
+    attitude:   {label:'Actitud neutra/negativa',     points: -500}
+  },
+  
   // Bonos de COORDINADORES (todo o nada por métrica)
   COORD_BONO:{
     aht_p90:{target:90,points:900,dir:'gte',label:'AHT P90 < 20 min %'},
@@ -1127,6 +1137,7 @@ async function fetchQuejas(){
     const iFecha=idx('Fecha de la queja');
     const iCoord=idx('Coordinador');
     const iMesAplica=idx('Mes a aplicar');
+    const iResultado=idx('Resultado');
 
     const rows=[];
     for(let i=1;i<csv.length;i++){
@@ -1154,15 +1165,28 @@ async function fetchQuejas(){
           if(norm.includes(m)){mesAplica=m;break;}
         }
       }
+      // Leer columna Resultado y detectar tipo de penalizacion
+      let resultado='';
+      let penType=null;  // 'redencion'|'procedural'|'serious'|'absence'|'attitude'|null
+      if(iResultado>=0){
+        resultado=(r[iResultado]||'').toString().trim();
+        const rl=resultado.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        if(rl.includes('redenc')||rl.includes('redime'))penType='redencion';
+        else if(rl.includes('grave'))penType='serious';
+        else if(rl.includes('procedim'))penType='procedural';
+        else if(rl.includes('ausencia')||rl.includes('injustif'))penType='absence';
+        else if(rl.includes('actitud'))penType='attitude';
+      }
+      
       if(agentes.length>0){
         // Queja contra agente(s)
         for(const a of agentes){
-          rows.push({agent:a,fecha,tarjeta,coord,quejaId,mesAplica,
+          rows.push({agent:a,fecha,tarjeta,coord,quejaId,mesAplica,resultado,penType,
             isCoordOnly:false,nameKey:resolveAgentKey(a)});
         }
       }else if(coord){
         // Queja directa al coord (sin agente)
-        rows.push({agent:'',fecha,tarjeta,coord,quejaId,mesAplica,
+        rows.push({agent:'',fecha,tarjeta,coord,quejaId,mesAplica,resultado,penType,
           isCoordOnly:true,nameKey:''});
       }
     }
@@ -2512,6 +2536,24 @@ function calcCoordBono(coordName,coordAgents){
   for(const q of quejasCoordDirectas)_coordQuejasUnicas.add(q.quejaId);
   const _quejasDirectasAuto=_coordQuejasUnicas.size;
   
+  // Desglose por tipo de penalizacion (basado en columna Resultado del archivo)
+  // Solo cuenta quejas unicas (deduplicadas por quejaId)
+  const _seenIds=new Set();
+  const penBreakdown={redencion:0,procedural:0,serious:0,absence:0,attitude:0,other:0};
+  let penPointsAuto=0;
+  for(const q of quejasCoordDirectas){
+    if(_seenIds.has(q.quejaId))continue;
+    _seenIds.add(q.quejaId);
+    const t=q.penType;
+    if(t&&CFG.COORD_PEN_TYPES[t]){
+      penBreakdown[t]++;
+      penPointsAuto+=CFG.COORD_PEN_TYPES[t].points;
+    }else{
+      penBreakdown.other++;
+      // sin tipo identificado: no aplica penalizacion (informativo)
+    }
+  }
+  
   // Calcular puntos por métrica
   const checks={
     aht_p90:{val:m.ahtP90,target:CFG.COORD_BONO.aht_p90.target,met:m.ahtP90!=null&&m.ahtP90>=CFG.COORD_BONO.aht_p90.target,points:CFG.COORD_BONO.aht_p90.points,label:CFG.COORD_BONO.aht_p90.label,dir:'gte'},
@@ -2538,10 +2580,13 @@ function calcCoordBono(coordName,coordAgents){
   }
   
   let preliminaryPoints=zeroOut?0:earnedPoints-cardPenalty;
-  // Quejas directas: suma de las del archivo (auto) + las manuales (override/extras)
+  // Aplicar penalizaciones por tipo (del archivo, automaticas)
+  // penPointsAuto ya incluye signos: redencion suma, demas restan
+  preliminaryPoints+=penPointsAuto;
+  // Sumar manual extra (legacy: cada queja directa manual = -100pts)
+  preliminaryPoints-=(quejasDirectas*100);
+  // Para compatibilidad con la UI existente
   const _totalQuejasDirectas=quejasDirectas+_quejasDirectasAuto;
-  // Restar quejas directas (cada queja -100 por defecto, configurable)
-  preliminaryPoints-=(_totalQuejasDirectas*100);
   // Sumar green cards (+50 cada una por defecto)
   preliminaryPoints+=(greenCards*50);
   // Sumar buen desempeño (manual)
@@ -2562,6 +2607,7 @@ function calcCoordBono(coordName,coordAgents){
     quejasDirectasManual:quejasDirectas,
     quejasDirectasAuto:_quejasDirectasAuto,
     quejasDirectasTotal:_totalQuejasDirectas,
+    penBreakdown,penPointsAuto,
     _quejasRegistros,_quejasUnicasCount,
     quejasDirectas,greenCards,buenDesempeno,
     finalPoints:preliminaryPoints,
@@ -2610,7 +2656,7 @@ function viewCoordinador(){
           <th class="col-num" title="Survey Return Rate · meta ≥75% · cuenta para bono">SRR</th>
           <th class="col-num">CSAT</th>
           <th class="col-num" title="Tarjetas del equipo (deduplicadas por queja)">Tarjetas</th>
-          <th class="col-num" title="Quejas directas al coordinador (-100pts c/u)">Directas</th>
+          <th class="col-num" title="Penalizaciones del coord segun columna Resultado del archivo">Penaliz.</th>
           <th class="col-num">Pts</th>
           <th class="col-num">Bono</th>
         </tr></thead>
@@ -2631,7 +2677,7 @@ function viewCoordinador(){
             <td class="col-num" title="Survey Return Rate (bono del coord)">${statusCell(m.srr,75,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(m.csat,90,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${b.totalCards>0?`<span class="b ${b.totalCards>=12?'bad':b.totalCards>=6?'warn':'neutral'}">${b.amarillas}A · ${b.rojas}R</span>`:'<span class="muted">—</span>'}</td>
-            <td class="col-num" title="${b.quejasDirectasTotal>0?`${b.quejasDirectasAuto||0} del archivo + ${b.quejasDirectasManual||0} extra · -${(b.quejasDirectasTotal||0)*100} pts`:'Sin quejas directas'}">${b.quejasDirectasTotal>0?`<span class="b bad">${b.quejasDirectasTotal}</span>`:'<span class="muted">—</span>'}</td>
+            <td class="col-num" title="${b.penPointsAuto!==0||b.quejasDirectasManual>0?Object.entries(b.penBreakdown||{}).filter(([k,v])=>v>0).map(([k,v])=>`${v}× ${CFG.COORD_PEN_TYPES[k]?CFG.COORD_PEN_TYPES[k].label:k}`).join(' · '):'Sin penalizaciones'}">${(()=>{const total=(b.penPointsAuto||0)-(b.quejasDirectasManual||0)*100;if(total===0)return '<span class="muted">—</span>';const cls=total<0?'bad':'ok';const sign=total>0?'+':'';return `<span class="b ${cls}">${sign}${total}</span>`;})()}</td>
             <td class="col-num"><strong>${fmt.num(b.finalPoints)}</strong></td>
             <td class="col-num"><span class="tier-badge tier-${Math.max(0,b.tier)}">${b.bonus<0?'-$'+Math.abs(b.bonus):fmt.money(b.bonus)}</span></td>
           </tr>`;
@@ -2662,6 +2708,31 @@ function viewCoordinador(){
         ${metricTile('CSAT',fmt.pct(m.csat),'Meta ≥90% · '+(b.checks.csat.met?'+300pts':'+0pts'),statusFor(m.csat,90,'gte'))}
       </div>
     </div>
+    
+    ${(()=>{
+      const bd=b.penBreakdown||{};
+      const items=Object.entries(CFG.COORD_PEN_TYPES).map(([k,cfg])=>({k,...cfg,count:bd[k]||0}));
+      const totalPts=b.penPointsAuto||0;
+      return `<div class="card">
+        <div class="section-title">Penalizaciones del archivo</div>
+        <p class="section-sub">Detalle basado en la columna "Resultado" del archivo de apelaciones</p>
+        <table class="data-table" style="margin-top:12px">
+          <thead><tr><th>Tipo</th><th class="col-num">Cantidad</th><th class="col-num">Pts c/u</th><th class="col-num">Total</th></tr></thead>
+          <tbody>
+            ${items.map(it=>`<tr>
+              <td>${it.label}</td>
+              <td class="col-num">${it.count}</td>
+              <td class="col-num" style="color:${it.points>0?'#10b981':'#dc2626'}">${it.points>0?'+':''}${it.points}</td>
+              <td class="col-num"><strong style="color:${it.count*it.points>0?'#10b981':it.count*it.points<0?'#dc2626':'#94a3b8'}">${it.count===0?'—':(it.count*it.points>0?'+':'')+it.count*it.points}</strong></td>
+            </tr>`).join('')}
+            <tr style="border-top:2px solid var(--border);font-weight:bold;background:var(--bg-cream)">
+              <td colspan="3">TOTAL APLICADO</td>
+              <td class="col-num"><strong style="color:${totalPts>0?'#10b981':totalPts<0?'#dc2626':'#94a3b8'};font-size:16px">${totalPts===0?'—':(totalPts>0?'+':'')+totalPts+' pts'}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+    })()}
     
     <div class="card">
       <div class="section-title">Resumen de bonificación</div>
