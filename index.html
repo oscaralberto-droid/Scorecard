@@ -639,7 +639,12 @@ const STATE = {
   
   // P90 de duración de llamadas por coord-día
   // [{date, coordName, p90Sec, totalCalls, callsUnder20Min, ahtP90Pct}]
-  coordDaily:[]
+  coordDaily:[],
+  
+  // Historial de asignaciones agente-coord
+  // [{nameKey, agentName, coord, senior, fechaDesde, fechaHasta, updatedAt}]
+  // fechaDesde inclusiva, fechaHasta exclusiva (vacía=vigente)
+  coordHistory:[]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1117,12 +1122,164 @@ async function fetchDistro(){
     setSync('Distro','live',`Distro · ${agents.length}`);
     STATE.lastSync.distro=Date.now();
     setLastUpdate();
+    
+    // Sincronizar historial de coords (detectar cambios automáticamente)
+    // Esto NO requiere autenticación, es un guardado seguro de cambios
+    syncCoordHistoryWithBackend();
+    
     renderActiveTab();
   }catch(e){
     console.error('Distro error',e);
     setSync('Distro','err','Distro error');
   }
   STATE.loading.distro=false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COORD HISTORY: detectar y registrar cambios de asignación agente-coord
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Envía la distro actual al backend para que detecte cambios contra el snapshot guardado.
+// El backend cierra registros viejos y abre nuevos cuando ve un coord distinto.
+async function syncCoordHistoryWithBackend(){
+  if(!CFG.BACKEND_URL)return;
+  if(!STATE.distro||!STATE.distro.length)return;
+  
+  // Construir snapshot mínimo
+  const snapshot=STATE.distro.map(a=>({
+    nameKey:a.nameKey,
+    agentName:a.agent,
+    coord:a.coord||'',
+    senior:a.senior||''
+  }));
+  
+  // Fecha de hoy en zona horaria de España (Europe/Madrid)
+  // Esto asegura que los cambios se registren con la fecha local de España,
+  // no del navegador del usuario (que puede estar en otra zona horaria)
+  const today=getTodayInSpain();
+  // Fecha de bootstrap: solo se usa la primera vez que se ejecuta (cuando la hoja está vacía).
+  // Sirve para que los archivos retroactivos (ej: enero, febrero) se asignen al coord correcto.
+  const bootstrapDate='2026-01-01';
+  
+  try{
+    const formData=new FormData();
+    formData.append('pin',CFG.UPLOAD_PIN||'');
+    formData.append('payload',JSON.stringify({
+      type:'syncCoordHistory',
+      snapshot:snapshot,
+      today:today,
+      bootstrapDate:bootstrapDate
+    }));
+    const res=await fetch(CFG.BACKEND_URL,{method:'POST',body:formData});
+    const text=await res.text();
+    let j;try{j=JSON.parse(text);}catch(e){j=null;}
+    if(j&&j.ok){
+      if(j.opened>0||j.created>0||j.closed>0){
+        console.log('CoordHistory sync:',
+          `created=${j.created}, opened=${j.opened}, closed=${j.closed}, unchanged=${j.unchanged}`);
+        // Recargar coordHistory del backend para tener el estado actualizado
+        // (en lugar de mantener uno desactualizado en memoria)
+        setTimeout(()=>fetchBackendHistory(),500);
+      }
+    }
+  }catch(e){
+    console.warn('CoordHistory sync error (no critico):',e.message);
+  }
+}
+
+// Resuelve el coord vigente de un agente en una fecha específica.
+// Si no hay historial, hace fallback a la distro actual.
+// dateStr formato YYYY-MM-DD
+function getCoordOnDate(nameKey,dateStr){
+  if(!nameKey)return null;
+  // Buscar en el historial
+  const records=STATE.coordHistory||[];
+  if(records.length>0){
+    // Filtrar registros de este agente cuya fechaDesde <= dateStr y (fechaHasta vacia o > dateStr)
+    let best=null;
+    for(const r of records){
+      if(r.nameKey!==nameKey)continue;
+      const desde=String(r.fechaDesde||'');
+      const hasta=String(r.fechaHasta||'');
+      if(!desde)continue;
+      if(desde>dateStr)continue;
+      if(hasta&&hasta<=dateStr)continue;
+      // Match: este registro estaba vigente en dateStr
+      // Si ya teníamos uno, quedarnos con el más reciente (mayor fechaDesde)
+      if(!best||desde>best.fechaDesde)best=r;
+    }
+    if(best){
+      return {coord:best.coord||'',senior:best.senior||''};
+    }
+  }
+  // Fallback: distro actual
+  const cur=(STATE.distro||[]).find(a=>a.nameKey===nameKey);
+  if(cur)return {coord:cur.coord||'',senior:cur.senior||''};
+  return null;
+}
+
+// Dado un rango [startDate, endDate] (ambos YYYY-MM-DD inclusive), devuelve los
+// segmentos coord-días para un agente. Cada segmento: {coord, senior, fechaDesde, fechaHasta, dias}.
+// Si el agente tuvo 1 solo coord en el rango → 1 segmento.
+// Si cambió, devuelve los segmentos cortados por el rango.
+function getCoordSegmentsForRange(nameKey,startDate,endDate){
+  const records=(STATE.coordHistory||[]).filter(r=>r.nameKey===nameKey&&r.fechaDesde);
+  if(records.length===0){
+    // No hay historial: usar distro actual como segmento único
+    const cur=(STATE.distro||[]).find(a=>a.nameKey===nameKey);
+    if(!cur)return [];
+    return [{coord:cur.coord||'',senior:cur.senior||'',fechaDesde:startDate,fechaHasta:endDate,dias:daysBetween(startDate,endDate)}];
+  }
+  
+  // Ordenar por fechaDesde
+  const sorted=records.slice().sort((a,b)=>String(a.fechaDesde).localeCompare(String(b.fechaDesde)));
+  const segments=[];
+  for(const r of sorted){
+    const desde=String(r.fechaDesde||'');
+    const hasta=String(r.fechaHasta||'');
+    // Recortar al rango pedido
+    const segStart=desde>startDate?desde:startDate;
+    const segEnd=(hasta&&hasta<=endDate)?
+      // hasta es exclusiva → último día activo es hasta-1
+      addDays(hasta,-1):
+      endDate;
+    if(segStart>segEnd)continue;  // sin overlap
+    segments.push({
+      coord:r.coord||'',
+      senior:r.senior||'',
+      fechaDesde:segStart,
+      fechaHasta:segEnd,
+      dias:daysBetween(segStart,segEnd)
+    });
+  }
+  return segments;
+}
+
+// Devuelve la fecha de HOY en zona horaria de España (Europe/Madrid) como YYYY-MM-DD
+// Independiente de la zona horaria del navegador donde se ejecute el dashboard.
+function getTodayInSpain(){
+  // Intl.DateTimeFormat con timeZone permite formatear en una zona específica
+  const fmt=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Europe/Madrid',
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit'
+  });
+  // 'en-CA' devuelve formato YYYY-MM-DD que es lo que queremos
+  return fmt.format(new Date());
+}
+
+// Helpers de fecha
+function daysBetween(a,b){
+  // Días inclusivos entre a y b (ambos YYYY-MM-DD)
+  const da=new Date(a+'T00:00:00');
+  const db=new Date(b+'T00:00:00');
+  return Math.round((db-da)/86400000)+1;
+}
+function addDays(dateStr,n){
+  const d=new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()+n);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
 async function fetchQuejas(){
@@ -1378,6 +1535,10 @@ async function fetchBackendHistory(){
         if(j&&j.ok&&Array.isArray(j.longCalls)){
           STATE.longCallsBackend=j.longCalls;
         }
+        // Cargar historial de asignaciones agente-coord
+        if(j&&j.ok&&Array.isArray(j.coordHistory)){
+          STATE.coordHistory=j.coordHistory;
+        }
         setSync('Backend','live','Backend · '+STATE.history.length);
         STATE.lastSync.backend=Date.now();
         setLastUpdate();
@@ -1504,15 +1665,47 @@ function reconstructCurrentDay(){
   // Filtrar registros según filtro
   const filtered=filterHistoryByDate(STATE.history);
 
-  // Agrupar por agente y promediar
-  const byAgent={};
+  // Agrupar por (nameKey + coordEnEseDia). Si el agente tuvo varios coords en el periodo
+  // del filtro, generará varios buckets. Esto permite ver métricas separadas por coord.
+  const byAgentCoord={};   // 'nameKey|coord' -> acc
+  const agentMeta={};      // nameKey -> {fullName, segmentos:[{coord, dias}]}
   for(const h of filtered){
-    if(!byAgent[h.nameKey])byAgent[h.nameKey]={n:0,...emptyAccumulator()};
-    accumulate(byAgent[h.nameKey],h);
-    byAgent[h.nameKey].n++;
+    const c=getCoordOnDate(h.nameKey, h.date);
+    const coord=c?c.coord:'';
+    const key=h.nameKey+'|'+coord;
+    if(!byAgentCoord[key])byAgentCoord[key]={n:0,coord,...emptyAccumulator()};
+    accumulate(byAgentCoord[key],h);
+    byAgentCoord[key].n++;
+    // Trackear meta del agente
+    if(!agentMeta[h.nameKey])agentMeta[h.nameKey]={fullName:h.fullName||'',coordsVistos:{}};
+    agentMeta[h.nameKey].coordsVistos[coord]=(agentMeta[h.nameKey].coordsVistos[coord]||0)+1;
   }
-  // Reconstruir state.encuestas, llamadas, auxiliares, servicios
+  
+  // Para compatibilidad con código viejo: también reconstruir STATE.encuestas/llamadas/etc
+  // agrupando solo por agente (suma de todos sus coords). Esto sirve para vistas que
+  // todavía no usan el split por coord.
   STATE.encuestas={};STATE.llamadas={};STATE.auxiliares={};STATE.servicios={};
+  const byAgent={};
+  for(const [k,v] of Object.entries(byAgentCoord)){
+    const nameKey=k.split('|')[0];
+    if(!byAgent[nameKey])byAgent[nameKey]={n:0,...emptyAccumulator()};
+    // Sumar
+    const a=byAgent[nameKey];
+    a.fullName=a.fullName||v.fullName;
+    a.surveysSent+=v.surveysSent;a.surveysSentIn+=v.surveysSentIn;a.surveysSentOut+=v.surveysSentOut;
+    a.surveysAnswered+=v.surveysAnswered;a.surveysAnsIn+=v.surveysAnsIn;a.surveysAnsOut+=v.surveysAnsOut;
+    a.rrPctSum+=v.rrPctSum;a.rrN+=v.rrN;a.csatPctSum+=v.csatPctSum;a.csatN+=v.csatN;
+    a.callsAt+=v.callsAt;a.callsIn+=v.callsIn;a.callsOut+=v.callsOut;
+    a.ahtSecSum+=v.ahtSecSum;a.ahtN+=v.ahtN;a.released+=v.released;a.totalEntrantes+=v.totalEntrantes;
+    a.acwMinSum+=v.acwMinSum;a.acwN+=v.acwN;a.holdMinSum+=v.holdMinSum;a.holdN+=v.holdN;
+    a.breakSum+=v.breakSum;a.breakDays+=v.breakDays;
+    a.banoSum+=v.banoSum;a.banoDays+=v.banoDays;
+    a.breakMaxDay=Math.max(a.breakMaxDay,v.breakMaxDay);
+    a.banoMaxDay=Math.max(a.banoMaxDay,v.banoMaxDay);
+    a.servTotal+=v.servTotal;a.servComp+=v.servComp;a.servCanc+=v.servCanc;
+    a.callsUnder20Min+=v.callsUnder20Min;
+    a.n+=v.n;
+  }
   for(const [k,v] of Object.entries(byAgent)){
     if(v.surveysSent||v.surveysAnswered){
       STATE.encuestas[k]={fullName:v.fullName,sent:v.surveysSent,answered:v.surveysAnswered,
@@ -1525,7 +1718,7 @@ function reconstructCurrentDay(){
         atendidasIn:v.callsIn,atendidasOut:v.callsOut,
         ahtSum:v.ahtSecSum,ahtN:v.ahtN,
         released:v.released,totalEntrantes:v.totalEntrantes,
-        callsUnder20Min:v.callsUnder20Min||0};  // P90: bajo 20 min
+        callsUnder20Min:v.callsUnder20Min||0};
     }
     if(v.acwN||v.holdN||v.breakSum||v.banoSum){
       STATE.auxiliares[k]={fullName:v.fullName,
@@ -1539,6 +1732,9 @@ function reconstructCurrentDay(){
       STATE.servicios[k]={fullName:v.fullName,total:v.servTotal,completed:v.servComp,canceled:v.servCanc};
     }
   }
+  
+  // Guardar el desglose por (agente, coord) para que buildScorecard lo use
+  STATE._byAgentCoord=byAgentCoord;
 }
 
 function emptyAccumulator(){
@@ -1868,59 +2064,110 @@ async function parseServicios(file,defaultDate){
 // ═══════════════════════════════════════════════════════════════════════════
 function buildScorecard(){
   const out=[];
+  // Si tenemos el desglose por coord (calculado en reconstructCurrentDay), úsalo.
+  // Cada agente puede generar múltiples filas: una por cada coord vigente en el periodo.
+  const split=STATE._byAgentCoord;
+  
   for(const ag of STATE.distro){
     const k=ag.nameKey;
-    const enc=STATE.encuestas[k];
-    const llam=STATE.llamadas[k];
-    const aux=STATE.auxiliares[k];
     const qa=STATE.qa[k];
-    const serv=STATE.servicios[k];
+    
     // Filtrar quejas: solo las del mes activo (si hay filtro mensual)
     const _activeMonthQ=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
     const quejasAg=STATE.quejas.filter(q=>{
       if(q.nameKey!==k)return false;
-      // Si la queja no tiene mesAplica, la incluimos (sin filtro)
       if(!q.mesAplica)return true;
-      // Si no hay mes activo, mostrar todas (es vista global)
       if(!_activeMonthQ)return true;
       return q.mesAplica===_activeMonthQ;
     });
-
-    const rr=enc&&enc.rrN?enc.rrSum/enc.rrN:null;
-    const csat=enc&&enc.csatN?enc.csatSum/enc.csatN:null;
-    const srr=enc&&enc.sent?(enc.answered/enc.sent)*100:null;
-    const aht=llam&&llam.ahtN?llam.ahtSum/llam.ahtN:null;
-    const callsAt=llam?llam.atendidasIn+llam.atendidasOut:0;
-    // P90: % de llamadas del agente que duraron menos de 20 min
-    const ahtP90Pct=(llam&&llam.ahtN&&llam.callsUnder20Min!=null&&llam.ahtN>0)?(llam.callsUnder20Min/llam.ahtN)*100:null;
-    const outboundPct=callsAt?(llam.atendidasOut/callsAt)*100:null;
-    const releasedPct=llam&&llam.atendidasIn?(llam.released/llam.atendidasIn)*100:null;
-    const sdr=enc&&llam&&llam.atendidasIn?(enc.sent/llam.atendidasIn)*100:null;
-    const acwMin=aux&&aux.acwN?aux.acwSum/aux.acwN:null;
-    const holdMin=aux&&aux.holdN?aux.holdSum/aux.holdN:null;
-    const breakMin=aux?aux.breakAvg:null;
-    const banoMin=aux?aux.banoAvg:null;
-    const qaScore=qa?qa.score:null;
     const quejasYellow=quejasAg.filter(q=>q.tarjeta.toLowerCase().includes('amarill')).length;
     const quejasRed=quejasAg.filter(q=>q.tarjeta.toLowerCase().includes('roj')).length;
-
-    out.push({
-      ...ag,
-      rr,csat,srr,sdr,aht,ahtP90Pct,acwMin,holdMin,breakMin,banoMin,
-      callsAt,callsIn:llam?llam.atendidasIn:0,callsOut:llam?llam.atendidasOut:0,
-      outboundPct,releasedPct,
-      qaScore,qaEvals:qa?qa.evals:0,
-      quejasYellow,quejasRed,quejasTotal:quejasAg.length,
-      servTotal:serv?serv.total:0,
-      servComp:serv?serv.completed:0,
-      servCanc:serv?serv.canceled:0,
-      surveysSent:enc?enc.sent:0,
-      surveysSentIn:enc?enc.sentIn||0:0,
-      surveysSentOut:enc?enc.sentOut||0:0,
-      surveysAnsIn:enc?enc.ansIn||0:0,
-      surveysAnsOut:enc?enc.ansOut||0:0,
-      surveysAnswered:enc?enc.answered:0
-    });
+    
+    // Recolectar los buckets de este agente (por coord)
+    const buckets=[];
+    if(split){
+      for(const [bk,bv] of Object.entries(split)){
+        const parts=bk.split('|');
+        if(parts[0]===k)buckets.push(bv);
+      }
+    }
+    
+    if(buckets.length===0){
+      // Sin datos en el periodo: una sola fila con el coord ACTUAL de la distro
+      out.push({
+        ...ag,
+        rr:null,csat:null,srr:null,sdr:null,aht:null,ahtP90Pct:null,
+        acwMin:null,holdMin:null,breakMin:null,banoMin:null,
+        callsAt:0,callsIn:0,callsOut:0,outboundPct:null,releasedPct:null,
+        qaScore:qa?qa.score:null,qaEvals:qa?qa.evals:0,
+        quejasYellow,quejasRed,quejasTotal:quejasAg.length,
+        servTotal:0,servComp:0,servCanc:0,
+        surveysSent:0,surveysSentIn:0,surveysSentOut:0,surveysAnsIn:0,surveysAnsOut:0,surveysAnswered:0,
+        isCoordSplit:false
+      });
+      continue;
+    }
+    
+    // Determinar si hay split (más de 1 coord con datos)
+    const hasSplit=buckets.length>1;
+    
+    for(const v of buckets){
+      const enc={sent:v.surveysSent,answered:v.surveysAnswered,
+        sentIn:v.surveysSentIn,sentOut:v.surveysSentOut,ansIn:v.surveysAnsIn,ansOut:v.surveysAnsOut,
+        rrSum:v.rrPctSum,rrN:v.rrN,csatSum:v.csatPctSum,csatN:v.csatN};
+      const llam={atendidasIn:v.callsIn,atendidasOut:v.callsOut,
+        ahtSum:v.ahtSecSum,ahtN:v.ahtN,released:v.released,totalEntrantes:v.totalEntrantes,
+        callsUnder20Min:v.callsUnder20Min||0};
+      const rr=enc.rrN?enc.rrSum/enc.rrN:null;
+      const csat=enc.csatN?enc.csatSum/enc.csatN:null;
+      const srr=enc.sent?(enc.answered/enc.sent)*100:null;
+      const aht=llam.ahtN?llam.ahtSum/llam.ahtN:null;
+      const callsAt=llam.atendidasIn+llam.atendidasOut;
+      const ahtP90Pct=(llam.ahtN&&llam.callsUnder20Min!=null&&llam.ahtN>0)?(llam.callsUnder20Min/llam.ahtN)*100:null;
+      const outboundPct=callsAt?(llam.atendidasOut/callsAt)*100:null;
+      const releasedPct=llam.atendidasIn?(llam.released/llam.atendidasIn)*100:null;
+      const sdr=llam.atendidasIn?(enc.sent/llam.atendidasIn)*100:null;
+      const acwMin=v.acwN?v.acwMinSum/v.acwN:null;
+      const holdMin=v.holdN?v.holdMinSum/v.holdN:null;
+      const breakMin=v.breakDays?v.breakSum/v.breakDays:null;
+      const banoMin=v.banoDays?v.banoSum/v.banoDays:null;
+      
+      // El coord de esta fila es el del bucket, no el de la distro
+      // Resolver senior según el coord histórico (si está disponible)
+      const coordForRow=v.coord||ag.coord;
+      // Buscar senior del coord histórico
+      let seniorForRow=ag.senior;
+      const distroOtroCoord=(STATE.distro||[]).find(a=>a.coord===coordForRow);
+      if(distroOtroCoord)seniorForRow=distroOtroCoord.senior;
+      
+      // Quejas: solo se asignan UNA vez por agente (al coord con más días o al actual).
+      // Para no contarlas duplicadas, las dejamos solo en el primer bucket.
+      const isFirstBucket=buckets.indexOf(v)===0;
+      
+      out.push({
+        ...ag,
+        coord:coordForRow,
+        senior:seniorForRow,
+        rr,csat,srr,sdr,aht,ahtP90Pct,acwMin,holdMin,breakMin,banoMin,
+        callsAt,callsIn:llam.atendidasIn,callsOut:llam.atendidasOut,
+        outboundPct,releasedPct,
+        qaScore:qa?qa.score:null,qaEvals:qa?qa.evals:0,
+        quejasYellow:isFirstBucket?quejasYellow:0,
+        quejasRed:isFirstBucket?quejasRed:0,
+        quejasTotal:isFirstBucket?quejasAg.length:0,
+        servTotal:v.servTotal||0,
+        servComp:v.servComp||0,
+        servCanc:v.servCanc||0,
+        surveysSent:enc.sent||0,
+        surveysSentIn:enc.sentIn||0,
+        surveysSentOut:enc.sentOut||0,
+        surveysAnsIn:enc.ansIn||0,
+        surveysAnsOut:enc.ansOut||0,
+        surveysAnswered:enc.answered||0,
+        isCoordSplit:hasSplit,
+        coordDias:v.n||0  // días con datos en este coord
+      });
+    }
   }
   return out;
 }
@@ -2191,8 +2438,8 @@ function viewScorecard(){
           <th class="col-num">Serv.</th>
         </tr></thead>
         <tbody>
-        ${displayed.map(r=>`<tr onclick="selectAgent('${r.nameKey}')">
-          <td class="col-name">${r.agent}</td>
+        ${displayed.map(r=>`<tr onclick="selectAgent('${r.nameKey}')" ${r.isCoordSplit?'style="background:#fffbeb"':''}>
+          <td class="col-name">${r.agent}${r.isCoordSplit?` <span class="b" style="font-size:9px;background:#fef3c7;color:#92400e;padding:1px 4px;border-radius:3px;margin-left:4px" title="Este agente tuvo varios coords en el periodo · ${r.coordDias||0} día(s) con ${r.coord}">${r.coordDias||0}d</span>`:''}</td>
           <td class="muted">${r.coord}</td>
           <td>${clusterTag(r.cluster)}</td>
           <td class="col-num">${fmt.num(r.callsAt)}</td>
@@ -3128,20 +3375,32 @@ function viewDistro(){
 
 
 // Construye el scorecard para un rango de fechas específico, sin mutar STATE
+// Si un agente tuvo varios coords en el rango, genera una fila por coord.
 function buildScorecardForRange(startDate, endDate){
   const filtered = STATE.history.filter(h => h.date >= startDate && h.date <= endDate);
-  const byAgent = {};
+  // Agrupar por (nameKey, coordEnEseDia) en lugar de solo nameKey
+  const byAgentCoord = {};   // 'nameKey|coord' -> acc
   for(const h of filtered){
-    if(!byAgent[h.nameKey]) byAgent[h.nameKey] = {n:0, ...emptyAccumulator()};
-    accumulate(byAgent[h.nameKey], h);
-    byAgent[h.nameKey].n++;
+    const c=getCoordOnDate(h.nameKey, h.date);
+    const coord=c?c.coord:'';
+    const key=h.nameKey+'|'+coord;
+    if(!byAgentCoord[key]) byAgentCoord[key] = {n:0,coord,...emptyAccumulator()};
+    accumulate(byAgentCoord[key], h);
+    byAgentCoord[key].n++;
   }
-  // Construir filas estilo scorecard
+  
   const rows=[];
   for(const ag of (STATE.distro||[])){
     if(ag.type.toLowerCase()!=='prod agent') continue;
-    const v=byAgent[ag.nameKey];
-    if(!v){
+    
+    // Recolectar buckets de este agente
+    const buckets=[];
+    for(const [bk,bv] of Object.entries(byAgentCoord)){
+      const parts=bk.split('|');
+      if(parts[0]===ag.nameKey)buckets.push(bv);
+    }
+    
+    if(buckets.length===0){
       rows.push({
         nameKey:ag.nameKey, agent:ag.agent, coord:ag.coord, senior:ag.senior,
         cluster:ag.cluster, extension:ag.extension,
@@ -3150,37 +3409,56 @@ function buildScorecardForRange(startDate, endDate){
         aht:null, releasedPct:null, outboundPct:null,
         surveysSent:0, surveysAnswered:0, sdr:null, srr:null,
         acwMin:null, holdMin:null, breakMin:null, banoMin:null,
-        servTotal:0, servComp:0, servCanc:0, quejasTotal:0, quejasYellow:0, quejasRed:0
+        servTotal:0, servComp:0, servCanc:0, quejasTotal:0, quejasYellow:0, quejasRed:0,
+        isCoordSplit:false
       });
       continue;
     }
-    const callsAt = (v.callsIn||0)+(v.callsOut||0);
-    const aht = v.ahtN ? v.ahtSecSum/v.ahtN : null;
-    const rr = v.rrN ? v.rrPctSum/v.rrN : null;
-    const csat = v.csatN ? v.csatPctSum/v.csatN : null;
-    const sdr = v.callsIn ? (v.surveysSent/v.callsIn)*100 : null;
-    const srr = v.surveysSent ? (v.surveysAnswered/v.surveysSent)*100 : null;
-    const releasedPct = v.totalEntrantes ? (v.released/v.totalEntrantes)*100 : null;
-    const outboundPct = callsAt ? (v.callsOut/callsAt)*100 : null;
-    const acw = v.acwN ? v.acwMinSum/v.acwN : null;
-    const hold = v.holdN ? v.holdMinSum/v.holdN : null;
-    // Quejas
+    
+    const hasSplit=buckets.length>1;
+    
+    // Quejas en el rango (se asignan solo al primer bucket)
     const quejas=(STATE.quejas||[]).filter(q=>q.nameKey===ag.nameKey&&q.fecha>=startDate&&q.fecha<=endDate);
     const quejasYellow=quejas.filter(q=>(q.tarjeta||'').toLowerCase().includes('amaril')).length;
     const quejasRed=quejas.filter(q=>(q.tarjeta||'').toLowerCase().includes('roj')).length;
-    rows.push({
-      nameKey:ag.nameKey, agent:ag.agent, coord:ag.coord, senior:ag.senior,
-      cluster:ag.cluster, extension:ag.extension,
-      callsAt, callsIn:v.callsIn||0, callsOut:v.callsOut||0,
-      rr, csat, qaScore: STATE.qa[ag.nameKey]?.score ?? null,
-      aht, releasedPct, outboundPct,
-      surveysSent:v.surveysSent||0, surveysAnswered:v.surveysAnswered||0, sdr, srr,
-      acwMin:acw, holdMin:hold,
-      breakMin: v.n? v.breakSum/v.n : null,
-      banoMin: v.n? v.banoSum/v.n : null,
-      servTotal:v.servTotal||0, servComp:v.servComp||0, servCanc:v.servCanc||0,
-      quejasTotal: quejas.length, quejasYellow, quejasRed
-    });
+    
+    for(let i=0;i<buckets.length;i++){
+      const v=buckets[i];
+      const callsAt = (v.callsIn||0)+(v.callsOut||0);
+      const aht = v.ahtN ? v.ahtSecSum/v.ahtN : null;
+      const rr = v.rrN ? v.rrPctSum/v.rrN : null;
+      const csat = v.csatN ? v.csatPctSum/v.csatN : null;
+      const sdr = v.callsIn ? (v.surveysSent/v.callsIn)*100 : null;
+      const srr = v.surveysSent ? (v.surveysAnswered/v.surveysSent)*100 : null;
+      const releasedPct = v.totalEntrantes ? (v.released/v.totalEntrantes)*100 : null;
+      const outboundPct = callsAt ? (v.callsOut/callsAt)*100 : null;
+      const acw = v.acwN ? v.acwMinSum/v.acwN : null;
+      const hold = v.holdN ? v.holdMinSum/v.holdN : null;
+      
+      // El coord de esta fila viene del bucket
+      const coordForRow=v.coord||ag.coord;
+      let seniorForRow=ag.senior;
+      const distroOtroCoord=(STATE.distro||[]).find(a=>a.coord===coordForRow);
+      if(distroOtroCoord)seniorForRow=distroOtroCoord.senior;
+      
+      rows.push({
+        nameKey:ag.nameKey, agent:ag.agent, coord:coordForRow, senior:seniorForRow,
+        cluster:ag.cluster, extension:ag.extension,
+        callsAt, callsIn:v.callsIn||0, callsOut:v.callsOut||0,
+        rr, csat, qaScore: STATE.qa[ag.nameKey]?.score ?? null,
+        aht, releasedPct, outboundPct,
+        surveysSent:v.surveysSent||0, surveysAnswered:v.surveysAnswered||0, sdr, srr,
+        acwMin:acw, holdMin:hold,
+        breakMin: v.breakDays? v.breakSum/v.breakDays : null,
+        banoMin: v.banoDays? v.banoSum/v.banoDays : null,
+        servTotal:v.servTotal||0, servComp:v.servComp||0, servCanc:v.servCanc||0,
+        quejasTotal: i===0?quejas.length:0,
+        quejasYellow: i===0?quejasYellow:0,
+        quejasRed: i===0?quejasRed:0,
+        isCoordSplit:hasSplit,
+        coordDias:v.n||0
+      });
+    }
   }
   return rows;
 }
