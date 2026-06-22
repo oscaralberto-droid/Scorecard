@@ -734,6 +734,30 @@ async function fetchQA(){
         score=Number(st);
         if(isNaN(score))score=null;
       }
+      // Para el histórico: calcular score desde criterios Yes/No si Score_Total no existe
+      if(score===null){
+        const yn=k=>{const v=(row[k]||'').toString().toLowerCase().trim();return v==='yes'?1:v==='no'?0:null;};
+        const af=yn("Did the agent commit any errors that could potentially impact the guest experience or the business reputation?");
+        if(af===1){score=0;}else{
+          const criteria=[
+            {v:yn("Did the agent provide the correct opening statement based on client's scripts?"),p:3},
+            {v:yn("Did the agent provide the correct closing line and offered further assistance?"),p:3},
+            {v:yn("Did the agent provide a follow up number (Salesforce ticket) to the guest?"),p:4},
+            {v:yn("Did the agent ask for all the mandatory information to verify guest's reservation?"),p:10},
+            {v:yn("Did the agent act based on client's protocols?"),p:15},
+            {v:yn("Did the agent verify all necessary tools to provide accurate and complete information to the guest?"),p:10},
+            {v:yn("Agent's notes reflect guest's comments accurately"),p:10},
+            {v:yn("Agent documented all mandatory information in the report of the call"),p:15},
+            {v:yn("Agent used appropriate hold time and asked guest's permission to put them on hold?"),p:5},
+            {v:yn("Did the agent use probing questions to build rapport with the guest?"),p:10},
+            {v:yn("Did the agent use a friendly and welcoming tone of voice, remained professional and was willing to help the guest?"),p:10},
+            {v:yn("Did the agent offer the survey to the guest at the end of the call?"),p:5},
+          ];
+          let earned=0,total=0;
+          for(const c of criteria){if(c.v!==null){total+=c.p;if(c.v===1)earned+=c.p;}}
+          score=total>0?Math.round(earned/total*100):null;
+        }
+      }
       if(score===null)continue;
       // Resolver nameKey contra la distro actual (maneja cambios de roster)
       const key=resolveAgentKey(name);
