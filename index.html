@@ -188,250 +188,70 @@ hr{border:none;border-top:1px solid var(--border);margin:14px 0}
 
 @media print{header,.tabs{display:none}.card{box-shadow:none;break-inside:avoid}}
 
-/* Tabs admin: ocultas por defecto, visibles cuando body tiene clase .admin */
 .tab.admin-only{display:none}
 body.admin .tab.admin-only{display:inline-block}
 
-/* Botón admin (candado) en el header */
 .admin-pill{cursor:pointer;user-select:none}
 .admin-pill:hover{background:var(--s3)}
 body.admin .admin-pill{background:var(--accent-light);color:var(--accent);border-color:rgba(15,122,86,.3)}
-
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* INFORME OPERATIVO - estilos visuales y de impresión */
-/* ═══════════════════════════════════════════════════════════════════════════ */
 
 .not-admin{display:inline-block}
 body.admin .not-admin{display:none}
 body.admin .admin-only{display:inline-block!important}
 
-.report-doc{
-  background:white;
-  padding:32px;
-  border-radius:14px;
-  border:1px solid var(--border);
-  box-shadow:0 1px 3px rgba(0,0,0,0.04);
-  margin-top:8px;
-}
-.report-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-end;
-  border-bottom:3px solid var(--accent);
-  padding-bottom:16px;
-  margin-bottom:24px;
-}
-.report-title{
-  font-size:24px;
-  font-weight:700;
-  color:var(--text);
-  letter-spacing:-0.5px;
-}
-.report-subtitle{
-  font-size:14px;
-  color:var(--muted);
-  margin-top:4px;
-}
-.report-brand{
-  font-family:var(--mono);
-  font-size:11px;
-  color:var(--accent);
-  letter-spacing:1px;
-  font-weight:600;
-}
+.report-doc{background:white;padding:32px;border-radius:14px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.04);margin-top:8px}
+.report-header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--accent);padding-bottom:16px;margin-bottom:24px}
+.report-title{font-size:24px;font-weight:700;color:var(--text);letter-spacing:-0.5px}
+.report-subtitle{font-size:14px;color:var(--muted);margin-top:4px}
+.report-brand{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:1px;font-weight:600}
 .report-section{margin-bottom:28px}
-.report-section h3{
-  font-size:14px;
-  font-weight:600;
-  color:var(--text);
-  margin:0 0 14px 0;
-  padding-bottom:6px;
-  border-bottom:1px solid var(--border);
-}
-.report-kpis{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:12px;
-}
-.report-kpi{
-  background:var(--s1);
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:14px;
-  text-align:center;
-}
-.report-kpi-accent{
-  background:linear-gradient(135deg,var(--accent-light),#fff);
-  border-color:var(--accent);
-}
-.report-kpi-value{
-  font-size:22px;
-  font-weight:700;
-  color:var(--text);
-  font-family:var(--mono);
-}
-.report-kpi-label{
-  font-size:11px;
-  color:var(--muted);
-  margin-top:4px;
-  text-transform:uppercase;
-  letter-spacing:0.5px;
-  font-weight:600;
-}
-.report-kpi-sub{
-  font-size:10px;
-  color:var(--muted2);
-  margin-top:2px;
-}
-.report-progress-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:16px;
-}
+.report-section h3{font-size:14px;font-weight:600;color:var(--text);margin:0 0 14px 0;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.report-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.report-kpi{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.report-kpi-accent{background:linear-gradient(135deg,var(--accent-light),#fff);border-color:var(--accent)}
+.report-kpi-value{font-size:22px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.report-kpi-label{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600}
+.report-kpi-sub{font-size:10px;color:var(--muted2);margin-top:2px}
+.report-progress-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 .report-progress-row{}
-.report-progress-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:baseline;
-  margin-bottom:6px;
-}
-.report-progress-label{
-  font-size:13px;
-  font-weight:600;
-  color:var(--text);
-}
-.report-progress-value{
-  font-family:var(--mono);
-  font-size:14px;
-  font-weight:700;
-}
-.report-progress-bar{
-  height:8px;
-  background:var(--s1);
-  border-radius:4px;
-  overflow:hidden;
-}
-.report-progress-fill{
-  height:100%;
-  border-radius:4px;
-  transition:width 0.3s;
-}
-.report-progress-count{
-  font-size:11px;
-  color:var(--muted);
-  margin-top:4px;
-  font-family:var(--mono);
-}
-.report-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:12px;
-}
-.report-table th{
-  background:var(--s1);
-  text-align:left;
-  padding:8px 10px;
-  border-bottom:2px solid var(--border);
-  font-weight:600;
-  font-size:11px;
-  text-transform:uppercase;
-  color:var(--muted);
-  letter-spacing:0.3px;
-}
-.report-table td{
-  padding:7px 10px;
-  border-bottom:1px solid var(--s1);
-}
+.report-progress-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.report-progress-label{font-size:13px;font-weight:600;color:var(--text)}
+.report-progress-value{font-family:var(--mono);font-size:14px;font-weight:700}
+.report-progress-bar{height:8px;background:var(--s1);border-radius:4px;overflow:hidden}
+.report-progress-fill{height:100%;border-radius:4px;transition:width 0.3s}
+.report-progress-count{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.report-table{width:100%;border-collapse:collapse;font-size:12px}
+.report-table th{background:var(--s1);text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);font-weight:600;font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:0.3px}
+.report-table td{padding:7px 10px;border-bottom:1px solid var(--s1)}
 .report-table tbody tr:hover{background:var(--s1)}
 .report-table .col-num{text-align:right;font-family:var(--mono)}
-.report-two-col{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:24px;
-}
+.report-two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 .report-tier-bars{display:flex;flex-direction:column;gap:8px}
-.report-tier-row{
-  display:grid;
-  grid-template-columns:120px 1fr 100px;
-  align-items:center;
-  gap:12px;
-}
-.report-tier-label{
-  font-size:12px;
-  font-weight:600;
-}
-.report-tier-bar{
-  height:18px;
-  background:var(--s1);
-  border-radius:4px;
-  overflow:hidden;
-}
-.report-tier-fill{
-  height:100%;
-  border-radius:4px;
-}
-.report-tier-count{
-  font-size:11px;
-  color:var(--muted);
-  font-family:var(--mono);
-}
-.report-footer{
-  margin-top:24px;
-  padding-top:12px;
-  border-top:1px solid var(--border);
-  display:flex;
-  justify-content:space-between;
-  font-size:10px;
-  color:var(--muted2);
-  font-family:var(--mono);
-}
+.report-tier-row{display:grid;grid-template-columns:120px 1fr 100px;align-items:center;gap:12px}
+.report-tier-label{font-size:12px;font-weight:600}
+.report-tier-bar{height:18px;background:var(--s1);border-radius:4px;overflow:hidden}
+.report-tier-fill{height:100%;border-radius:4px}
+.report-tier-count{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.report-footer{margin-top:24px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:10px;color:var(--muted2);font-family:var(--mono)}
 
-/* IMPRESIÓN A PDF (A4 horizontal) */
 @page{size:A4 landscape;margin:12mm}
 @media print{
-  body.printing-report header,
-  body.printing-report .tabs,
-  body.printing-report .no-print,
-  body.printing-report #view-scorecard,
-  body.printing-report #view-agente,
-  body.printing-report #view-coordinador,
-  body.printing-report #view-senior,
-  body.printing-report #view-top,
-  body.printing-report #view-bono,
-  body.printing-report #view-distro,
-  body.printing-report #view-cargar,
+  body.printing-report header,body.printing-report .tabs,body.printing-report .no-print,
+  body.printing-report #view-scorecard,body.printing-report #view-agente,
+  body.printing-report #view-coordinador,body.printing-report #view-senior,
+  body.printing-report #view-top,body.printing-report #view-bono,
+  body.printing-report #view-distro,body.printing-report #view-cargar,
   body.printing-report #view-config{display:none!important}
   body.printing-report .container{padding:0;margin:0;max-width:none}
   body.printing-report .content{padding:0;margin:0}
-  body.printing-report .report-doc{
-    box-shadow:none;
-    border:none;
-    padding:0;
-    margin:0;
-  }
-  body.printing-report .report-section{
-    page-break-inside:avoid;
-  }
+  body.printing-report .report-doc{box-shadow:none;border:none;padding:0;margin:0}
+  body.printing-report .report-section{page-break-inside:avoid}
   body.printing-report{background:white}
 }
 
-
-
-/* Optimización del informe al exportar a PDF */
-.exporting-pdf{
-  width:1400px!important;
-  background:white!important;
-  padding:20px!important;
-}
-.exporting-pdf .report-section{
-  page-break-inside:avoid;
-  break-inside:avoid;
-}
-.exporting-pdf .report-kpis{
-  grid-template-columns:repeat(5,1fr)!important;
-}
-
+.exporting-pdf{width:1400px!important;background:white!important;padding:20px!important}
+.exporting-pdf .report-section{page-break-inside:avoid;break-inside:avoid}
+.exporting-pdf .report-kpis{grid-template-columns:repeat(5,1fr)!important}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -498,34 +318,25 @@ body.admin .admin-only{display:inline-block!important}
 // CONFIGURACIÓN
 // ═══════════════════════════════════════════════════════════════════════════
 const CFG = {
-  // Tiempo real - URLs
-  QA_URL:'https://script.google.com/macros/s/AKfycbwLHOdODleS0_-ur9qx5DjB1t0pdtlaI3BcSd2EaOyO4DxlL2C3Qdv6TbVW8RIrjQYd/exec',
+  // *** URL ACTUALIZADA AL NUEVO ENDPOINT DE CALLLENS QA ***
+  QA_URL:'https://script.google.com/a/macros/roomonitor.com/s/AKfycbwhf2UkvulaxwssWwwySKg6EmZFKoTHY-kPcFog3LaNkeZqO2SK-kwCLH4WPeFpLCFu1w/exec?dashboard=1',
   DISTRO_SHEET:'1c752kRpIb3oIBAGkSS-GJ0lpkDg6ICQK7HIOlO5cfaU',
   DISTRO_TAB:'Schedules',
   QUEJAS_SHEET:'1Ll3FhAGF6KeH_I0SYn77mwIDm-MdKARcMGPdC5jYHIU',
   AUSENTISMO_SHEET:'1CBmg8H4JjzrMg3aZKhFcIuf357Vhaw-7c7U_dSrI2Ng',
   AUSENTISMO_TAB:'',
   QUEJAS_TAB:'',
-
-  // Backend (Apps Script para histórico) - el usuario pegará la URL aquí
   BACKEND_URL:'https://script.google.com/a/macros/roomonitor.com/s/AKfycbxz4LcvNZFeU_J34SAvpY4lQyZRmiyU6q-bRNwRCQib26M-jGSNs3K4AjvdlG9GSjS3iw/exec',
-
-  // PIN para subir archivos (cambiarlo en producción)
   UPLOAD_PIN:'Roomonitor2026*1',
-
   REFRESH_MS:60000,
-
-  // Metas scorecard
   META_RR:75, META_CSAT:85,
   META_SDR:90, META_SRR:70,
-  META_AHT_SEC:510,    // 8:30 = 510 seg
-  META_ACW_MIN:2,      // 2:00
+  META_AHT_SEC:510,
+  META_ACW_MIN:2,
   META_HOLD_MIN:2,
   META_BREAK_MIN:30,
   META_BANO_MIN:10,
   META_QA:85,
-
-  // Bonificaciones (todo o nada)
   BONO:{
     quality:{target:85,points:1100,dir:'gte',label:'Quality %'},
     released:{target:6,points:500,dir:'lte',label:'Released Calls %'},
@@ -537,13 +348,7 @@ const CFG = {
     absent:{target:4,points:150,dir:'lte',label:'Absenteeism %'}
   },
   PEN:{procedural:600,serious:1300,absences:500},
-  
-  // Coordinadores con meta de Outbound distinta (turno con mas salientes naturalmente)
-  // Sus agentes y ellos mismos usan meta 35% en lugar de 30%
   COORDS_OUTBOUND_35:['Kenneth Gonzalez','German Bernal'],
-  
-  // Penalizaciones del coord segun columna 'Resultado' del archivo de apelaciones
-  // Mapeo: penType -> {label, points (positivo o negativo)}
   COORD_PEN_TYPES:{
     redencion:  {label:'Redencion',                   points:+1000},
     procedural: {label:'Falta en procedimiento',      points: -600},
@@ -551,8 +356,6 @@ const CFG = {
     absence:    {label:'Ausencia injustificada',      points: -500},
     attitude:   {label:'Actitud neutra/negativa',     points: -500}
   },
-  
-  // Bonos de COORDINADORES (todo o nada por métrica)
   COORD_BONO:{
     aht_p90:{target:90,points:900,dir:'gte',label:'AHT P90 < 20 min %'},
     ausentismo:{target:4,points:150,dir:'lte',label:'Ausentismo %'},
@@ -562,14 +365,11 @@ const CFG = {
     srr:{target:75,points:200,dir:'gte',label:'Survey Return Rate %'},
     csat:{target:90,points:300,dir:'gte',label:'CSAT %'}
   },
-  // Penalizaciones de coord (por total de tarjetas del equipo: amarillas+rojas)
   COORD_PEN_CARDS:[
     {min:6,max:8,deduction:600},
     {min:9,max:11,deduction:1300},
     {min:12,max:9999,setZero:true}
   ],
-  // Tiers de bono coordinador
-  // Rangos: 0-2099 = $0 | 2100-2199 = $75 | 2200-2699 = $150 | >=2700 = $300
   COORD_TIER:[
     {min:2700,bonus:300,n:3,label:'Tier 3'},
     {min:2200,bonus:150,n:2,label:'Tier 2'},
@@ -591,59 +391,33 @@ const CFG = {
 // STATE
 // ═══════════════════════════════════════════════════════════════════════════
 const STATE = {
-  distro:[],            // [{agent,coord,senior,cluster,type,extension,nameKey}]
-  qa:{},                // {nameKey: {fullName,score,evals}}
+  distro:[],
+  qa:{},
   quejas:[],
-  ausentismo:{},  // { nameKey: { agentName, coord, pct, monthKey } }            // [{agent,fecha,tarjeta,nameKey}]
-  encuestas:{},         // por agente {nameKey: {fullName,sent,answered,rrSum,rrN,csatSum,csatN}}
-  llamadas:{},          // {nameKey: {atendidasIn,atendidasOut,ahtSum,ahtN,released,totalEntrantes}}
-  auxiliares:{},        // {nameKey: {acwSum,acwN,holdSum,holdN,breakAvg,banoAvg,breakMaxDay,banoMaxDay}}
-  servicios:{},         // {nameKey: {total,completed,canceled}}
-  manualPenalties:{},   // {nameKey: {procedural,serious,absences,redemption,absenteeism,flatAttitud,productivity}}
-  history:[],           // [{date,nameKey,...metrics}]
-  
+  ausentismo:{},
+  encuestas:{},
+  llamadas:{},
+  auxiliares:{},
+  servicios:{},
+  manualPenalties:{},
+  history:[],
   selectedAgent:null,
   selectedCoord:null,
   selectedSenior:null,
-  
-  // Filtros de fecha
-  // Filtro de fecha global (compatibilidad)
   dateFilter:{mode:'day',day:null,start:null,end:null,month:null,week:null},
-  
-  // Filtro master del Scorecard (heredado por las demás pestañas al entrar)
-  // Cada pestaña puede sobrescribir localmente sin afectar a las demás
   dateFilters:{
     scorecard:{mode:'day',day:null,start:null,end:null,month:null,week:null}
   },
-  
-  // Trackea qué pestañas tienen un filtro local sobrescrito (no hereda hasta volver a Scorecard)
   dateFilterOverridden:{},
-  
   loading:{qa:false,quejas:false,distro:false,backend:false},
   lastSync:{qa:null,quejas:null,distro:null,backend:null},
-  
-  // Auth
   authenticated:false,
-  
-  // Cargas pendientes
   pendingUploads:{encuestas:null,llamadas:null,auxiliares:null,servicios:null},
   uploadDate:new Date().toISOString().slice(0,10),
-  
-  // Filtro de mes para QA (formato YYYY-MM)
   qaMonth:new Date().toISOString().slice(0,7),
   qaAvailableMonths:[],
-  
-  // Penalizaciones/ajustes manuales por COORDINADOR
-  // {coordName: {ausentismo, quejasDirectas, greenCards, buenDesempeno}}
   coordManual:{},
-  
-  // P90 de duración de llamadas por coord-día
-  // [{date, coordName, p90Sec, totalCalls, callsUnder20Min, ahtP90Pct}]
   coordDaily:[],
-  
-  // Historial de asignaciones agente-coord
-  // [{nameKey, agentName, coord, senior, fechaDesde, fechaHasta, updatedAt}]
-  // fechaDesde inclusiva, fechaHasta exclusiva (vacía=vigente)
   coordHistory:[]
 };
 
@@ -676,10 +450,6 @@ const normName=s=>!s?'':s.toString()
   .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   .toLowerCase().replace(/\s+/g,' ').trim();
 
-// Genera el nameKey canónico para un agente: primer nombre + primer apellido
-// Para nombres de 4 palabras: posiciones 0 + 2 (Nombre1 Apellido1)
-// Para 3: posiciones 0 + 2
-// Para 2: ambas
 const firstLast=fullName=>{
   if(!fullName)return'';
   const parts=normName(fullName).split(' ').filter(p=>p.length>0);
@@ -689,27 +459,21 @@ const firstLast=fullName=>{
   return parts[0]+' '+parts[1];
 };
 
-// Devuelve un Set de palabras normalizadas del nombre (>=2 letras, no comunes)
 const nameWords=fullName=>{
   if(!fullName)return new Set();
   const parts=normName(fullName).split(' ').filter(p=>p.length>=2);
   return new Set(parts);
 };
 
-// Cache del index de matches: archivoName → distroNameKey
 const _matchCache={};
 let _distroIndexBuilt=false;
 
-// Construye un índice de palabras → nameKey de distro para búsqueda rápida
 function buildDistroIndex(){
   _distroIndexBuilt=true;
-  // Limpiar cache y frecuencia cuando la distro cambia
   for(const k of Object.keys(_matchCache))delete _matchCache[k];
   _wordFrequency=null;
 }
 
-// Construye un mapa de cuántas veces aparece cada palabra en TODA la distro
-// Las palabras que aparecen muchas veces (como "carlos", "maria") son menos discriminantes
 let _wordFrequency=null;
 function buildWordFrequency(){
   _wordFrequency={};
@@ -721,82 +485,39 @@ function buildWordFrequency(){
   }
 }
 
-// Dado un nombre tal como aparece en archivos, encuentra el nameKey de la distro.
-// Reglas (en orden de prioridad):
-// 1. Match exacto del fileName completo en distro → match seguro
-// 2. fileName ⊆ distroAgent: TODAS las palabras del fileName están en el distro → match si solo 1 candidato
-// 3. ≥2 palabras en común Y al menos UNA es discriminante (aparece <=2 veces en toda la distro)
-// 4. Si hay ambigüedad (varios candidatos con mismo score) → NO hace match (devuelve firstLast)
 function resolveAgentKey(fileName){
   if(!fileName)return'';
   if(_matchCache[fileName])return _matchCache[fileName];
-  
   const fileWords=nameWords(fileName);
   if(fileWords.size===0){
     const k=firstLast(fileName);
     _matchCache[fileName]=k;
     return k;
   }
-  
-  // Construir frecuencia de palabras si no existe
   if(!_wordFrequency)buildWordFrequency();
-  
-  // Función: ¿es palabra discriminante? (aparece pocas veces en distro = es probablemente un apellido único)
   const isDiscriminant=w=>(_wordFrequency[w]||0)<=2;
-  
-  // Buscar todos los candidatos con sus scores
   const candidates=[];
   for(const ag of (STATE.distro||[])){
     const distroWords=nameWords(ag.agent);
-    let common=0;
-    let discriminantCommon=0;
-    let allFileWordsInDistro=true;
+    let common=0,discriminantCommon=0,allFileWordsInDistro=true;
     for(const w of fileWords){
-      if(distroWords.has(w)){
-        common++;
-        if(isDiscriminant(w))discriminantCommon++;
-      }else{
-        allFileWordsInDistro=false;
-      }
+      if(distroWords.has(w)){common++;if(isDiscriminant(w))discriminantCommon++;}
+      else{allFileWordsInDistro=false;}
     }
     if(common===0)continue;
-    if(common<2)continue;  // GUARD: nunca matchear con 1 sola palabra (evita falsos positivos como Erick A Bonilla → Francisco Bonilla)
-    
-    // Calcular score
-    // - Match perfecto (todas las palabras del fileName están en distro): score muy alto
-    // - Si tiene al menos 1 palabra discriminante: score normal
-    // - Si solo tiene palabras comunes (Francisco, Alejandro, etc.): score bajo
+    if(common<2)continue;
     let score=0;
-    if(allFileWordsInDistro&&fileWords.size>=2){
-      score=1000+common; // match casi perfecto
-    }else if(discriminantCommon>=1&&common>=2){
-      score=100+common+discriminantCommon*10;
-    }else if(common>=2){
-      // Solo palabras comunes: descartado, no hacer match
-      continue;
-    }
+    if(allFileWordsInDistro&&fileWords.size>=2){score=1000+common;}
+    else if(discriminantCommon>=1&&common>=2){score=100+common+discriminantCommon*10;}
+    else if(common>=2){continue;}
     candidates.push({ag,score,common,discriminantCommon});
   }
-  
-  // Ordenar por score
   candidates.sort((a,b)=>b.score-a.score);
-  
   let bestMatch=null;
-  if(candidates.length===1){
-    bestMatch=candidates[0].ag;
-  }else if(candidates.length>=2){
-    // Si el primero tiene score significativamente mayor (>=20% más), usarlo
-    if(candidates[0].score>=candidates[1].score*1.2){
-      bestMatch=candidates[0].ag;
-    }
-    // Si están empatados o muy cerca, NO hacer match (ambigüedad)
+  if(candidates.length===1){bestMatch=candidates[0].ag;}
+  else if(candidates.length>=2){
+    if(candidates[0].score>=candidates[1].score*1.2){bestMatch=candidates[0].ag;}
   }
-  
-  // ELIMINADO: matching con 1 sola palabra causa falsos positivos
-  // Ej: "Erick A Bonilla" → "Bonilla" es discriminante pero NO debe matchear
-  // con "Francisco Alejandro Bonilla Ayala" porque son personas distintas.
-  // Si solo hay 1 palabra coincidente, NO se hace match (mejor sin match que match incorrecto).
-  
   const result=bestMatch?bestMatch.nameKey:firstLast(fileName);
   _matchCache[fileName]=result;
   return result;
@@ -805,7 +526,6 @@ function resolveAgentKey(fileName){
 const extractAgent=str=>{
   if(!str)return null;
   const s=str.toString();
-  // Acepta cualquier prefijo no-espacio antes de "IP:" (ej: "C1", "C2", "C3", "AL", etc.)
   const m=s.match(/(?:\S+\s+)?IP:\s*\d+\s+(.+?)(?:\s*\(|$)/);
   return m?m[1].trim():null;
 };
@@ -824,11 +544,7 @@ const parseMin=s=>{
   return isNaN(v)?0:v;
 };
 
-// Parser robusto de fecha: acepta DD/MM/YYYY, YYYY-MM-DD, Date object, ISO string
-// Devuelve siempre 'YYYY-MM-DD' o null si no se pudo parsear
-
-// Helper: calcula el percentil 90 de un array de números
-function percentile(arr, p){
+function percentile(arr,p){
   if(!arr||!arr.length)return null;
   const sorted=[...arr].sort((a,b)=>a-b);
   const idx=Math.ceil((p/100)*sorted.length)-1;
@@ -844,13 +560,10 @@ const parseDate=v=>{
     return y+'-'+m+'-'+d;
   }
   const s=v.toString().trim();
-  // YYYY-MM-DD
   let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if(m)return m[1]+'-'+m[2]+'-'+m[3];
-  // DD/MM/YYYY o DD-MM-YYYY
   m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
   if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
-  // Intento general
   const d=new Date(s);
   if(!isNaN(d.getTime())){
     const y=d.getFullYear();
@@ -904,9 +617,6 @@ function statusCell(val,target,dir,formatter){
   return`<span class="${cls}">${txt}</span>`;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// CSV PARSER (con detección de delimitador)
-// ═══════════════════════════════════════════════════════════════════════════
 function parseCSV(text,delim){
   if(!delim){
     const fl=text.split('\n')[0]||'';
@@ -942,107 +652,100 @@ async function fetchSheetCSV(id,sheetName){
   return parseCSV(text,',');
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// fetchQA — ACTUALIZADO: usa CallLens QA Platform (?api=rows&callback=JSONP)
+// Score_Total ya viene calculado por el GAS (0-100). No se recalcula aquí.
+// Filtra por mes activo (STATE.qaMonth) y resuelve nombres contra la distro
+// actual con resolveAgentKey() para manejar cambios de roster automáticamente.
+// ═══════════════════════════════════════════════════════════════════════════
 async function fetchQA(){
   setSync('QA','sync','QA…');
   STATE.loading.qa=true;
   try{
-    const r=await fetch(CFG.QA_URL+'?t='+Date.now());
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const j=await r.json();
-    if(!j.ok)throw new Error(j.error||'Error');
+    const callbackName='_qaCb_'+Date.now();
+    const result=await new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      let resolved=false;
+      const cleanup=()=>{
+        try{document.body.removeChild(script);}catch(e){}
+        try{delete window[callbackName];}catch(e){}
+      };
+      window[callbackName]=function(j){
+        if(resolved)return;
+        resolved=true;
+        cleanup();
+        resolve(j);
+      };
+      script.onerror=()=>{
+        if(resolved)return;
+        resolved=true;
+        cleanup();
+        reject(new Error('Error cargando QA'));
+      };
+      setTimeout(()=>{
+        if(resolved)return;
+        resolved=true;
+        cleanup();
+        reject(new Error('QA timeout'));
+      },20000);
+      // QA_URL ya incluye ?dashboard=1, añadimos &api=rows&callback=...
+      script.src=CFG.QA_URL+'&api=rows&callback='+callbackName+'&t='+Date.now();
+      document.body.appendChild(script);
+    });
 
-    // Estructura de calificación QA basada en el QA Dashboard original de Roomonitor
-    // Total = 100 pts. Cada sección suma su weight si todo es Yes/N/A. Cada No resta los pts del criterio.
-    const SECTIONS=[
-      {id:'s2',weight:20,criteria:[
-        {col:'Did the agent provide the correct ope',pts:3},   // Apertura
-        {col:'Did the agent provide the correct clo',pts:3},   // Cierre
-        {col:'Did the agent provide a follow up num',pts:4},   // Follow-up SF ticket
-        {col:'Did the agent ask for all the mandato',pts:10}   // Info mandatoria
-      ]},
-      {id:'s3',weight:50,criteria:[
-        {col:'Did the agent act based on client',pts:15},      // Protocolos
-        {col:'Did the agent verify all necessary',pts:10},     // Herramientas
-        {col:"Agent's notes reflect",pts:10},                  // Notas en SF
-        {col:'Agent documented all mandatory',pts:15}          // Info en reporte
-      ]},
-      {id:'s4',weight:30,criteria:[
-        {col:'Agent used appropriate hold time',pts:5},        // Hold
-        {col:'Did the agent use probing questions',pts:10},    // Probing
-        {col:'Did the agent use a friendly',pts:10},           // Tono
-        {col:'Did the agent offer the survey',pts:5}           // Encuesta
-      ]}
-    ];
+    if(!result.ok)throw new Error(result.error||'Error QA');
 
-    const gCol=(rw,p)=>{
-      const k=Object.keys(rw).find(k=>k.toLowerCase().includes(p.toLowerCase()));
-      return k?(rw[k]||'').toString():'';
-    };
-    const aName=rw=>rw["Agent's name"]||gCol(rw,"Agent name")||'';
-
-    function score(rw){
-      // Auto-fail: si "commit any errors..." es Yes → score 0
-      const af=(gCol(rw,'commit any errors that could potentially impact')||gCol(rw,'business impact')||gCol(rw,'business')||'').toLowerCase().trim();
-      if(af==='yes'||af==='failed'||af==='fail')return 0;
-      let total=0;
-      for(const sec of SECTIONS){
-        let s=sec.weight;
-        for(const c of sec.criteria){
-          const v=gCol(rw,c.col).toLowerCase().trim();
-          const na=(v===''||v==='n/a'||v==='na'||v==='not applicable');
-          const yes=(v==='yes');
-          // Solo resta puntos si NO es N/A y NO es Yes (i.e., es No)
-          if(!na&&!yes)s-=c.pts;
-        }
-        total+=s;
-      }
-      return total;
-    }
-
-    const evalDate=row=>{
-      const raw=row['Marca temporal']||gCol(row,'Marca temporal')||row['Date of contact']||gCol(row,'Date of contact')||'';
-      if(!raw)return null;
-      const d=new Date(raw);
-      return isNaN(d.getTime())?null:d;
-    };
-    
-    // Recolectar meses disponibles en las evaluaciones
+    // Recolectar meses disponibles desde Marca temporal / Fecha Eval
     const monthSet=new Set();
-    for(const row of j.rows){
-      const d=evalDate(row);
-      if(d){
-        const ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-        monthSet.add(ym);
-      }
+    for(const row of result.rows){
+      const raw=row['Marca temporal']||row['Fecha Eval']||'';
+      if(!raw)continue;
+      const d=new Date(raw);
+      if(isNaN(d.getTime()))continue;
+      const ym=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      monthSet.add(ym);
     }
-    STATE.qaAvailableMonths=[...monthSet].sort().reverse(); // más recientes primero
-    
-    // Si el mes seleccionado no tiene datos, usar el más reciente disponible
+    STATE.qaAvailableMonths=[...monthSet].sort().reverse();
     if(!monthSet.has(STATE.qaMonth)&&STATE.qaAvailableMonths.length>0){
       STATE.qaMonth=STATE.qaAvailableMonths[0];
     }
-    
-    // Filtrar evaluaciones del mes seleccionado (STATE.qaMonth, formato YYYY-MM)
+
+    // Filtrar por mes activo
     const [yr,mo]=STATE.qaMonth.split('-').map(Number);
     const monthStart=new Date(yr,mo-1,1);
     const monthEnd=new Date(yr,mo,0,23,59,59);
 
+    // Agrupar por agente — Score_Total ya viene calculado por CallLens
     const byAgent={};
-    for(const row of j.rows){
-      const name=aName(row);
+    for(const row of result.rows){
+      // CallLens usa 'Agente'; histórico usa "Agent's name" / "Agent name"
+      const name=row['Agente']||row["Agent's name"]||row["Agent name"]||'';
       if(!name)continue;
-      const d=evalDate(row);
-      if(!d||d<monthStart||d>monthEnd)continue;
+      const raw=row['Marca temporal']||row['Fecha Eval']||'';
+      if(!raw)continue;
+      const d=new Date(raw);
+      if(isNaN(d.getTime())||d<monthStart||d>monthEnd)continue;
+      // Leer Score_Total (número 0-100 calculado por el GAS)
+      let score=null;
+      const st=row['Score_Total'];
+      if(st!==undefined&&st!==''&&st!==null){
+        score=Number(st);
+        if(isNaN(score))score=null;
+      }
+      if(score===null)continue;
+      // Resolver nameKey contra la distro actual (maneja cambios de roster)
       const key=resolveAgentKey(name);
-      if(!byAgent[key])byAgent[key]={fullName:name,scores:[]};
-      byAgent[key].scores.push(score(row));
+      if(!byAgent[key]){byAgent[key]={fullName:name,scores:[],evals:0};}
+      byAgent[key].scores.push(score);
+      byAgent[key].evals++;
     }
+
     STATE.qa={};
     for(const [k,v] of Object.entries(byAgent)){
       STATE.qa[k]={
         fullName:v.fullName,
         score:v.scores.length?v.scores.reduce((a,b)=>a+b,0)/v.scores.length:null,
-        evals:v.scores.length
+        evals:v.evals
       };
     }
 
@@ -1063,22 +766,13 @@ async function fetchDistro(){
   try{
     const csv=await fetchSheetCSV(CFG.DISTRO_SHEET,CFG.DISTRO_TAB);
     let agents=[];
-    // Estructura confirmada de la Sheet "Schedules":
-    // A=Senior, B=Coord, C=Agent, D=Type, E=Hours, F=Extension, G=Nivel
-    // (índices 0-based: 0=A, 1=B, 2=C, 3=D, 4=E, 5=F, 6=G)
-    // Detectar automáticamente la fila del header (busca "Senior" o "Coordinador")
     let headerRow=-1;
     for(let i=0;i<Math.min(csv.length,5);i++){
       const r=csv[i];if(!r)continue;
       const cells=r.map(c=>(c||'').toString().toLowerCase());
-      if(cells.some(c=>c.includes('senior'))&&cells.some(c=>c.includes('agent'))){
-        headerRow=i;break;
-      }
+      if(cells.some(c=>c.includes('senior'))&&cells.some(c=>c.includes('agent'))){headerRow=i;break;}
     }
-    // Si no detectó header, asumir fila 1 (índice 0) como header → datos empiezan en índice 1
     const startIdx=headerRow>=0?headerRow+1:1;
-    
-    // Detectar las columnas correctas buscando los headers
     let cSenior=-1,cCoord=-1,cAgent=-1,cType=-1,cHours=-1,cExt=-1,cNivel=-1;
     if(headerRow>=0){
       const h=csv[headerRow].map(c=>(c||'').toString().toLowerCase().trim());
@@ -1092,15 +786,12 @@ async function fetchDistro(){
         else if(h[i].includes('nivel')||h[i].includes('cluster'))cNivel=i;
       }
     }
-    // Fallback: si no detectó las columnas, usar índices clásicos (0-based)
-    // Layout actual: A=Senior(0), B=Coord(1), C=Agent(2), D=Type(3), E=Hours(4), F=Extension(5), G=Nivel(6)
     if(cSenior<0)cSenior=0;
     if(cCoord<0)cCoord=1;
     if(cAgent<0)cAgent=2;
     if(cType<0)cType=3;
     if(cExt<0)cExt=5;
     if(cNivel<0)cNivel=6;
-    
     for(let i=startIdx;i<csv.length;i++){
       const r=csv[i];if(!r)continue;
       const senior=(r[cSenior]||'').trim();
@@ -1111,22 +802,13 @@ async function fetchDistro(){
       const nivel=(r[cNivel]||'').trim();
       if(!agent||!coord||!type)continue;
       if(type.toLowerCase()!=='prod agent')continue;
-      agents.push({
-        agent,coord,senior,type,
-        extension:ext,
-        cluster:nivel||'—',
-        nameKey:firstLast(agent)
-      });
+      agents.push({agent,coord,senior,type,extension:ext,cluster:nivel||'—',nameKey:firstLast(agent)});
     }
     STATE.distro=agents;
     setSync('Distro','live',`Distro · ${agents.length}`);
     STATE.lastSync.distro=Date.now();
     setLastUpdate();
-    
-    // Sincronizar historial de coords (detectar cambios automáticamente)
-    // Esto NO requiere autenticación, es un guardado seguro de cambios
     syncCoordHistoryWithBackend();
-    
     renderActiveTab();
   }catch(e){
     console.error('Distro error',e);
@@ -1135,47 +817,20 @@ async function fetchDistro(){
   STATE.loading.distro=false;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// COORD HISTORY: detectar y registrar cambios de asignación agente-coord
-// ═══════════════════════════════════════════════════════════════════════════
-
-// Envía la distro actual al backend para que detecte cambios contra el snapshot guardado.
-// El backend cierra registros viejos y abre nuevos cuando ve un coord distinto.
-// Usa form-submit a iframe oculto para evitar CORS (igual que pushBackend).
 async function syncCoordHistoryWithBackend(){
   if(!CFG.BACKEND_URL)return;
   if(!STATE.distro||!STATE.distro.length)return;
-  
-  // Construir snapshot mínimo
-  const snapshot=STATE.distro.map(a=>({
-    nameKey:a.nameKey,
-    agentName:a.agent,
-    coord:a.coord||'',
-    senior:a.senior||''
-  }));
-  
-  // Fecha de hoy en zona horaria de España
+  const snapshot=STATE.distro.map(a=>({nameKey:a.nameKey,agentName:a.agent,coord:a.coord||'',senior:a.senior||''}));
   const today=getTodayInSpain();
-  // Fecha de bootstrap: solo se usa la primera vez que se ejecuta (cuando la hoja está vacía).
   const bootstrapDate='2026-01-01';
-  
   try{
-    const result=await pushBackend({
-      type:'syncCoordHistory',
-      snapshot:snapshot,
-      today:today,
-      bootstrapDate:bootstrapDate
-    });
-    
+    const result=await pushBackend({type:'syncCoordHistory',snapshot:snapshot,today:today,bootstrapDate:bootstrapDate});
     if(result&&result.ok&&!result.assumed){
       if(result.opened>0||result.created>0||result.closed>0){
-        console.log('CoordHistory sync:',
-          `created=${result.created}, opened=${result.opened}, closed=${result.closed}, unchanged=${result.unchanged}, bootstrap=${result.bootstrap}`);
-        // Recargar coordHistory del backend para tener el estado actualizado
+        console.log('CoordHistory sync:',`created=${result.created}, opened=${result.opened}, closed=${result.closed}, unchanged=${result.unchanged}, bootstrap=${result.bootstrap}`);
         setTimeout(()=>fetchBackendHistory(),500);
       }
     }else if(result&&result.assumed){
-      // No pudimos leer la respuesta pero el POST pasó. Recargar para verificar.
       setTimeout(()=>fetchBackendHistory(),1500);
     }
   }catch(e){
@@ -1183,15 +838,10 @@ async function syncCoordHistoryWithBackend(){
   }
 }
 
-// Resuelve el coord vigente de un agente en una fecha específica.
-// Si no hay historial, hace fallback a la distro actual.
-// dateStr formato YYYY-MM-DD
 function getCoordOnDate(nameKey,dateStr){
   if(!nameKey)return null;
-  // Buscar en el historial
   const records=STATE.coordHistory||[];
   if(records.length>0){
-    // Filtrar registros de este agente cuya fechaDesde <= dateStr y (fechaHasta vacia o > dateStr)
     let best=null;
     for(const r of records){
       if(r.nameKey!==nameKey)continue;
@@ -1200,74 +850,41 @@ function getCoordOnDate(nameKey,dateStr){
       if(!desde)continue;
       if(desde>dateStr)continue;
       if(hasta&&hasta<=dateStr)continue;
-      // Match: este registro estaba vigente en dateStr
-      // Si ya teníamos uno, quedarnos con el más reciente (mayor fechaDesde)
       if(!best||desde>best.fechaDesde)best=r;
     }
-    if(best){
-      return {coord:best.coord||'',senior:best.senior||''};
-    }
+    if(best){return {coord:best.coord||'',senior:best.senior||''};}
   }
-  // Fallback: distro actual
   const cur=(STATE.distro||[]).find(a=>a.nameKey===nameKey);
   if(cur)return {coord:cur.coord||'',senior:cur.senior||''};
   return null;
 }
 
-// Dado un rango [startDate, endDate] (ambos YYYY-MM-DD inclusive), devuelve los
-// segmentos coord-días para un agente. Cada segmento: {coord, senior, fechaDesde, fechaHasta, dias}.
-// Si el agente tuvo 1 solo coord en el rango → 1 segmento.
-// Si cambió, devuelve los segmentos cortados por el rango.
 function getCoordSegmentsForRange(nameKey,startDate,endDate){
   const records=(STATE.coordHistory||[]).filter(r=>r.nameKey===nameKey&&r.fechaDesde);
   if(records.length===0){
-    // No hay historial: usar distro actual como segmento único
     const cur=(STATE.distro||[]).find(a=>a.nameKey===nameKey);
     if(!cur)return [];
     return [{coord:cur.coord||'',senior:cur.senior||'',fechaDesde:startDate,fechaHasta:endDate,dias:daysBetween(startDate,endDate)}];
   }
-  
-  // Ordenar por fechaDesde
   const sorted=records.slice().sort((a,b)=>String(a.fechaDesde).localeCompare(String(b.fechaDesde)));
   const segments=[];
   for(const r of sorted){
     const desde=String(r.fechaDesde||'');
     const hasta=String(r.fechaHasta||'');
-    // Recortar al rango pedido
     const segStart=desde>startDate?desde:startDate;
-    const segEnd=(hasta&&hasta<=endDate)?
-      // hasta es exclusiva → último día activo es hasta-1
-      addDays(hasta,-1):
-      endDate;
-    if(segStart>segEnd)continue;  // sin overlap
-    segments.push({
-      coord:r.coord||'',
-      senior:r.senior||'',
-      fechaDesde:segStart,
-      fechaHasta:segEnd,
-      dias:daysBetween(segStart,segEnd)
-    });
+    const segEnd=(hasta&&hasta<=endDate)?addDays(hasta,-1):endDate;
+    if(segStart>segEnd)continue;
+    segments.push({coord:r.coord||'',senior:r.senior||'',fechaDesde:segStart,fechaHasta:segEnd,dias:daysBetween(segStart,segEnd)});
   }
   return segments;
 }
 
-// Devuelve la fecha de HOY en zona horaria de España (Europe/Madrid) como YYYY-MM-DD
-// Independiente de la zona horaria del navegador donde se ejecute el dashboard.
 function getTodayInSpain(){
-  // Intl.DateTimeFormat con timeZone permite formatear en una zona específica
-  const fmt=new Intl.DateTimeFormat('en-CA',{
-    timeZone:'Europe/Madrid',
-    year:'numeric',
-    month:'2-digit',
-    day:'2-digit'
-  });
-  // 'en-CA' devuelve formato YYYY-MM-DD que es lo que queremos
+  const fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'});
   return fmt.format(new Date());
 }
 
-// Helpers de fecha
 function daysBetween(a,b){
-  // Días inclusivos entre a y b (ambos YYYY-MM-DD)
   const da=new Date(a+'T00:00:00');
   const db=new Date(b+'T00:00:00');
   return Math.round((db-da)/86400000)+1;
@@ -1292,7 +909,6 @@ async function fetchQuejas(){
     const iCoord=idx('Coordinador');
     const iMesAplica=idx('Mes a aplicar');
     const iResultado=idx('Resultado');
-
     const rows=[];
     for(let i=1;i<csv.length;i++){
       const r=csv[i];if(!r||r.every(c=>!c||!c.trim()))continue;
@@ -1301,27 +917,20 @@ async function fetchQuejas(){
       const fecha=(r[iFecha]||'').trim();
       const coord=iCoord>=0?(r[iCoord]||'').trim():'';
       if(!tarjeta)continue;
-      if(!agente&&!coord)continue;  // necesita al menos uno
+      if(!agente&&!coord)continue;
       const t=tarjeta.toLowerCase().replace(/\s/g,'');
       if(t==='noaplica'||t==='n/a'||t==='no'||t==='na')continue;
       const agentes=agente?agente.split(/\s+y\s+|,/).map(s=>s.trim()).filter(s=>s):[];
-      // quejaId unico: identifica una misma queja aunque tenga varios involucrados
-      // Lo construimos con la fila de origen para evitar colisiones
       const quejaId=`${fecha}|${t}|row${i}`;
-      // Leer y normalizar el mes a aplicar (sin acentos, minusculas, sin espacios extra)
       let mesAplica='';
       if(iMesAplica>=0){
         const raw=(r[iMesAplica]||'').toString().trim().toLowerCase();
-        // Normalizar acentos y quedarse solo con el nombre del mes
         const norm=raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
         const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-        for(const m of meses){
-          if(norm.includes(m)){mesAplica=m;break;}
-        }
+        for(const m of meses){if(norm.includes(m)){mesAplica=m;break;}}
       }
-      // Leer columna Resultado y detectar tipo de penalizacion
       let resultado='';
-      let penType=null;  // 'redencion'|'procedural'|'serious'|'absence'|'attitude'|null
+      let penType=null;
       if(iResultado>=0){
         resultado=(r[iResultado]||'').toString().trim();
         const rl=resultado.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -1331,17 +940,12 @@ async function fetchQuejas(){
         else if(rl.includes('ausencia')||rl.includes('injustif'))penType='absence';
         else if(rl.includes('actitud'))penType='attitude';
       }
-      
       if(agentes.length>0){
-        // Queja contra agente(s)
         for(const a of agentes){
-          rows.push({agent:a,fecha,tarjeta,coord,quejaId,mesAplica,resultado,penType,
-            isCoordOnly:false,nameKey:resolveAgentKey(a)});
+          rows.push({agent:a,fecha,tarjeta,coord,quejaId,mesAplica,resultado,penType,isCoordOnly:false,nameKey:resolveAgentKey(a)});
         }
       }else if(coord){
-        // Queja directa al coord (sin agente)
-        rows.push({agent:'',fecha,tarjeta,coord,quejaId,mesAplica,resultado,penType,
-          isCoordOnly:true,nameKey:''});
+        rows.push({agent:'',fecha,tarjeta,coord,quejaId,mesAplica,resultado,penType,isCoordOnly:true,nameKey:''});
       }
     }
     STATE.quejas=rows;
@@ -1356,11 +960,6 @@ async function fetchQuejas(){
   STATE.loading.quejas=false;
 }
 
-
-// ═══════════════════════════════════════════════════════════════════════════
-// AUSENTISMO: Lectura desde Sheet provisional (cambiar a Apps Script despues)
-// Detecta automaticamente la columna del mes activo en el filtro
-// ═══════════════════════════════════════════════════════════════════════════
 async function fetchAusentismo(){
   setSync('Ausentismo','sync','Ausentismo...');
   STATE.loading.ausentismo=true;
@@ -1368,43 +967,20 @@ async function fetchAusentismo(){
     const csv=await fetchSheetCSV(CFG.AUSENTISMO_SHEET,CFG.AUSENTISMO_TAB);
     if(!csv.length){STATE.ausentismo={};return;}
     const header=csv[0].map(h=>(h||'').trim());
-
-    // Identificar columnas fijas
     const idx=name=>header.findIndex(h=>h.toLowerCase().includes(name.toLowerCase()));
     const iAgente=idx('Agente');
     const iCoord=idx('Coordinador');
     const iSenior=idx('VAR');
-
-    if(iAgente<0){
-      console.warn('Ausentismo: no se encontro columna Agente');
-      setSync('Ausentismo','err','Sin col Agente');
-      return;
-    }
-
-    // Identificar TODAS las columnas de "Ausentismo {mes}"
-    // Las guardamos por nombre del mes para que la vista pueda elegir
-    const meses=['enero','febrero','marzo','abril','mayo','junio',
-                 'julio','agosto','septiembre','octubre','noviembre','diciembre'];
-    const monthCols={};  // { 'abril': colIndex, 'mayo': colIndex, ... }
+    if(iAgente<0){console.warn('Ausentismo: no se encontro columna Agente');setSync('Ausentismo','err','Sin col Agente');return;}
+    const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const monthCols={};
     for(let i=0;i<header.length;i++){
       const h=header[i].toLowerCase();
       if(!h.includes('ausentismo'))continue;
-      for(const m of meses){
-        if(h.includes(m)){
-          monthCols[m]=i;
-          break;
-        }
-      }
+      for(const m of meses){if(h.includes(m)){monthCols[m]=i;break;}}
     }
-
-    if(Object.keys(monthCols).length===0){
-      console.warn('Ausentismo: no se encontraron columnas de mes');
-      setSync('Ausentismo','err','Sin cols mes');
-      return;
-    }
-
-    // Parsear filas
-    const data={};  // { nameKey: { name, coord, senior, byMonth: {abril: 0, mayo: 0} } }
+    if(Object.keys(monthCols).length===0){console.warn('Ausentismo: no se encontraron columnas de mes');setSync('Ausentismo','err','Sin cols mes');return;}
+    const data={};
     for(let i=1;i<csv.length;i++){
       const r=csv[i];if(!r||r.every(c=>!c||!c.trim()))continue;
       const agente=(r[iAgente]||'').trim();
@@ -1412,14 +988,10 @@ async function fetchAusentismo(){
       const coord=iCoord>=0?(r[iCoord]||'').trim():'';
       const senior=iSenior>=0?(r[iSenior]||'').trim():'';
       const nameKey=resolveAgentKey(agente);
-      if(!data[nameKey]){
-        data[nameKey]={name:agente,coord:coord,senior:senior,byMonth:{}};
-      }
-      // Leer cada mes disponible
+      if(!data[nameKey]){data[nameKey]={name:agente,coord:coord,senior:senior,byMonth:{}};}
       for(const [mes,colIdx] of Object.entries(monthCols)){
         const raw=(r[colIdx]||'').toString().trim();
         if(!raw)continue;
-        // Normalizar: "0,00%" -> 0.00, "12,5%" -> 12.5
         let s=raw.replace('%','').trim();
         s=s.replace(',','.');
         const num=parseFloat(s);
@@ -1439,9 +1011,7 @@ async function fetchAusentismo(){
   STATE.loading.ausentismo=false;
 }
 
-// Helper: obtener el % de ausentismo del agente para el mes activo del filtro
-// Devuelve null si no hay dato para ese mes
-function getAusentismoForAgent(nameKey, monthName){
+function getAusentismoForAgent(nameKey,monthName){
   const data=STATE.ausentismo&&STATE.ausentismo[nameKey];
   if(!data)return null;
   const m=(monthName||'').toLowerCase();
@@ -1449,67 +1019,43 @@ function getAusentismoForAgent(nameKey, monthName){
   return null;
 }
 
-// Helper: dado un filtro activo (mode=day/month/range/week), retorna el nombre del mes
 function getActiveMonthName(){
   const f=getActiveDateFilter();
-  const meses=['enero','febrero','marzo','abril','mayo','junio',
-               'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   let d=null;
   if(f.mode==='month'&&f.month){
-    // f.month formato "YYYY-MM"
     const parts=f.month.split('-');
-    if(parts.length===2){
-      const monthIdx=parseInt(parts[1])-1;
-      if(monthIdx>=0&&monthIdx<12)return meses[monthIdx];
-    }
-  }else if(f.mode==='day'&&f.day){
-    d=new Date(f.day+'T00:00:00');
-  }else if(f.mode==='range'&&f.start){
-    d=new Date(f.start+'T00:00:00');
-  }else if(f.mode==='week'&&f.week){
-    d=new Date(f.week+'T00:00:00');
-  }
+    if(parts.length===2){const monthIdx=parseInt(parts[1])-1;if(monthIdx>=0&&monthIdx<12)return meses[monthIdx];}
+  }else if(f.mode==='day'&&f.day){d=new Date(f.day+'T00:00:00');}
+  else if(f.mode==='range'&&f.start){d=new Date(f.start+'T00:00:00');}
+  else if(f.mode==='week'&&f.week){d=new Date(f.week+'T00:00:00');}
   if(d&&!isNaN(d))return meses[d.getMonth()];
-  // Fallback: mes mas reciente disponible en la sheet
   if(STATE.ausentismoMonthsAvailable&&STATE.ausentismoMonthsAvailable.length){
     return STATE.ausentismoMonthsAvailable[STATE.ausentismoMonthsAvailable.length-1];
   }
   return null;
 }
 
-
 // ═══════════════════════════════════════════════════════════════════════════
-// BACKEND: Google Sheets via Apps Script
+// BACKEND
 // ═══════════════════════════════════════════════════════════════════════════
 async function fetchBackendHistory(){
-  if(!CFG.BACKEND_URL){
-    setSync('Backend','err','Sin backend');
-    return;
-  }
+  if(!CFG.BACKEND_URL){setSync('Backend','err','Sin backend');return;}
   setSync('Backend','sync','Backend…');
   STATE.loading.backend=true;
-  
-  // JSONP: usar <script> tag para evitar CORS con Apps Script de workspace
-  // Apps Script soporta callback automáticamente cuando se pasa ?callback=funcName
   return new Promise((resolve)=>{
     const callbackName='_backendCb_'+Date.now();
     const script=document.createElement('script');
     let resolved=false;
-    
     const cleanup=()=>{
       try{document.body.removeChild(script);}catch(e){}
       try{delete window[callbackName];}catch(e){window[callbackName]=undefined;}
     };
-    
     window[callbackName]=function(j){
       if(resolved)return;
       resolved=true;
       try{
-        if(j&&j.ok&&Array.isArray(j.history)){
-          STATE.history=j.history;
-          reconstructCurrentDay();
-        }
-        // Cargar también coordManual desde el backend
+        if(j&&j.ok&&Array.isArray(j.history)){STATE.history=j.history;reconstructCurrentDay();}
         if(j&&j.ok&&Array.isArray(j.coordManual)){
           STATE.coordManual={};
           for(const c of j.coordManual){
@@ -1523,18 +1069,9 @@ async function fetchBackendHistory(){
             }
           }
         }
-        // Cargar coordDaily (P90 por coord-día)
-        if(j&&j.ok&&Array.isArray(j.coordDaily)){
-          STATE.coordDaily=j.coordDaily;
-        }
-        // Cargar llamadas largas persistidas
-        if(j&&j.ok&&Array.isArray(j.longCalls)){
-          STATE.longCallsBackend=j.longCalls;
-        }
-        // Cargar historial de asignaciones agente-coord
-        if(j&&j.ok&&Array.isArray(j.coordHistory)){
-          STATE.coordHistory=j.coordHistory;
-        }
+        if(j&&j.ok&&Array.isArray(j.coordDaily)){STATE.coordDaily=j.coordDaily;}
+        if(j&&j.ok&&Array.isArray(j.longCalls)){STATE.longCallsBackend=j.longCalls;}
+        if(j&&j.ok&&Array.isArray(j.coordHistory)){STATE.coordHistory=j.coordHistory;}
         setSync('Backend','live','Backend · '+STATE.history.length);
         STATE.lastSync.backend=Date.now();
         setLastUpdate();
@@ -1544,7 +1081,6 @@ async function fetchBackendHistory(){
       cleanup();
       resolve();
     };
-    
     script.onerror=()=>{
       if(resolved)return;
       resolved=true;
@@ -1554,8 +1090,6 @@ async function fetchBackendHistory(){
       cleanup();
       resolve();
     };
-    
-    // Timeout
     setTimeout(()=>{
       if(resolved)return;
       resolved=true;
@@ -1565,7 +1099,6 @@ async function fetchBackendHistory(){
       cleanup();
       resolve();
     },20000);
-    
     script.src=CFG.BACKEND_URL+'?action=read&callback='+callbackName+'&t='+Date.now();
     document.body.appendChild(script);
   });
@@ -1573,70 +1106,41 @@ async function fetchBackendHistory(){
 
 async function pushBackend(payload){
   if(!CFG.BACKEND_URL)throw new Error('No hay BACKEND_URL configurada');
-  // Técnica: form submit a iframe oculto. Esto sigue redirecciones de auth
-  // de Google Workspace y evita CORS porque NO es un fetch.
   return new Promise((resolve,reject)=>{
     const iframeId='_backendFrame_'+Date.now();
     const formId='_backendForm_'+Date.now();
-    
-    // Crear iframe oculto
     const iframe=document.createElement('iframe');
-    iframe.name=iframeId;
-    iframe.id=iframeId;
-    iframe.style.display='none';
+    iframe.name=iframeId;iframe.id=iframeId;iframe.style.display='none';
     document.body.appendChild(iframe);
-    
-    // Crear form
     const form=document.createElement('form');
-    form.id=formId;
-    form.method='POST';
-    form.action=CFG.BACKEND_URL;
-    form.target=iframeId;
-    form.style.display='none';
-    
-    // Campos del form (Apps Script los lee como e.parameter)
+    form.id=formId;form.method='POST';form.action=CFG.BACKEND_URL;
+    form.target=iframeId;form.style.display='none';
     const addField=(name,value)=>{
       const inp=document.createElement('input');
-      inp.type='hidden';
-      inp.name=name;
-      inp.value=value;
+      inp.type='hidden';inp.name=name;inp.value=value;
       form.appendChild(inp);
     };
     addField('action','write');
     addField('pin',CFG.UPLOAD_PIN);
     addField('payload',JSON.stringify(payload));
-    
     document.body.appendChild(form);
-    
-    // Listener para cuando el iframe carga
     let resolved=false;
     iframe.onload=()=>{
       if(resolved)return;
       resolved=true;
-      // Intentar leer la respuesta del iframe (puede fallar por CORS, no importa)
       try{
         const doc=iframe.contentDocument||iframe.contentWindow.document;
         const text=doc.body?doc.body.innerText:'';
         if(text){
-          try{
-            const j=JSON.parse(text);
-            resolve(j);
-          }catch{resolve({ok:true,assumed:true,raw:text});}
-        }else{
-          resolve({ok:true,assumed:true});
-        }
-      }catch(e){
-        // No podemos leer la respuesta por CORS, pero el POST sí pasó
-        resolve({ok:true,assumed:true});
-      }
-      // Limpiar
+          try{const j=JSON.parse(text);resolve(j);}
+          catch{resolve({ok:true,assumed:true,raw:text});}
+        }else{resolve({ok:true,assumed:true});}
+      }catch(e){resolve({ok:true,assumed:true});}
       setTimeout(()=>{
         try{document.body.removeChild(form);}catch(e){}
         try{document.body.removeChild(iframe);}catch(e){}
       },1000);
     };
-    
-    // Timeout de seguridad
     setTimeout(()=>{
       if(!resolved){
         resolved=true;
@@ -1645,47 +1149,33 @@ async function pushBackend(payload){
         reject(new Error('Timeout: el backend no respondió en 30 segundos'));
       }
     },30000);
-    
     form.submit();
   });
 }
 
-// Aplica el filtro de fecha al historial y reconstruye el estado actual
 function reconstructCurrentDay(){
-  // Tomar el último día disponible si no hay filtro específico
   const dates=[...new Set(STATE.history.map(h=>h.date))].sort();
   if(!dates.length)return;
   const targetDate=STATE.dateFilter.day||dates[dates.length-1];
   STATE.dateFilter.day=STATE.dateFilter.day||targetDate;
-
-  // Filtrar registros según filtro
   const filtered=filterHistoryByDate(STATE.history);
-
-  // Agrupar por (nameKey + coordEnEseDia). Si el agente tuvo varios coords en el periodo
-  // del filtro, generará varios buckets. Esto permite ver métricas separadas por coord.
-  const byAgentCoord={};   // 'nameKey|coord' -> acc
-  const agentMeta={};      // nameKey -> {fullName, segmentos:[{coord, dias}]}
+  const byAgentCoord={};
+  const agentMeta={};
   for(const h of filtered){
-    const c=getCoordOnDate(h.nameKey, h.date);
+    const c=getCoordOnDate(h.nameKey,h.date);
     const coord=c?c.coord:'';
     const key=h.nameKey+'|'+coord;
     if(!byAgentCoord[key])byAgentCoord[key]={n:0,coord,...emptyAccumulator()};
     accumulate(byAgentCoord[key],h);
     byAgentCoord[key].n++;
-    // Trackear meta del agente
     if(!agentMeta[h.nameKey])agentMeta[h.nameKey]={fullName:h.fullName||'',coordsVistos:{}};
     agentMeta[h.nameKey].coordsVistos[coord]=(agentMeta[h.nameKey].coordsVistos[coord]||0)+1;
   }
-  
-  // Para compatibilidad con código viejo: también reconstruir STATE.encuestas/llamadas/etc
-  // agrupando solo por agente (suma de todos sus coords). Esto sirve para vistas que
-  // todavía no usan el split por coord.
   STATE.encuestas={};STATE.llamadas={};STATE.auxiliares={};STATE.servicios={};
   const byAgent={};
   for(const [k,v] of Object.entries(byAgentCoord)){
     const nameKey=k.split('|')[0];
     if(!byAgent[nameKey])byAgent[nameKey]={n:0,...emptyAccumulator()};
-    // Sumar
     const a=byAgent[nameKey];
     a.fullName=a.fullName||v.fullName;
     a.surveysSent+=v.surveysSent;a.surveysSentIn+=v.surveysSentIn;a.surveysSentOut+=v.surveysSentOut;
@@ -1710,26 +1200,19 @@ function reconstructCurrentDay(){
         rrSum:v.rrPctSum,rrN:v.rrN,csatSum:v.csatPctSum,csatN:v.csatN};
     }
     if(v.callsAt){
-      STATE.llamadas[k]={fullName:v.fullName,
-        atendidasIn:v.callsIn,atendidasOut:v.callsOut,
-        ahtSum:v.ahtSecSum,ahtN:v.ahtN,
-        released:v.released,totalEntrantes:v.totalEntrantes,
+      STATE.llamadas[k]={fullName:v.fullName,atendidasIn:v.callsIn,atendidasOut:v.callsOut,
+        ahtSum:v.ahtSecSum,ahtN:v.ahtN,released:v.released,totalEntrantes:v.totalEntrantes,
         callsUnder20Min:v.callsUnder20Min||0};
     }
     if(v.acwN||v.holdN||v.breakSum||v.banoSum){
-      STATE.auxiliares[k]={fullName:v.fullName,
-        acwSum:v.acwMinSum,acwN:v.acwN,
+      STATE.auxiliares[k]={fullName:v.fullName,acwSum:v.acwMinSum,acwN:v.acwN,
         holdSum:v.holdMinSum,holdN:v.holdN,
         breakAvg:v.breakDays?v.breakSum/v.breakDays:null,
         banoAvg:v.banoDays?v.banoSum/v.banoDays:null,
         breakMaxDay:v.breakMaxDay,banoMaxDay:v.banoMaxDay};
     }
-    if(v.servTotal){
-      STATE.servicios[k]={fullName:v.fullName,total:v.servTotal,completed:v.servComp,canceled:v.servCanc};
-    }
+    if(v.servTotal){STATE.servicios[k]={fullName:v.fullName,total:v.servTotal,completed:v.servComp,canceled:v.servCanc};}
   }
-  
-  // Guardar el desglose por (agente, coord) para que buildScorecard lo use
   STATE._byAgentCoord=byAgentCoord;
 }
 
@@ -1741,34 +1224,21 @@ function emptyAccumulator(){
     callsAt:0,callsIn:0,callsOut:0,ahtSecSum:0,ahtN:0,released:0,totalEntrantes:0,
     acwMinSum:0,acwN:0,holdMinSum:0,holdN:0,
     breakSum:0,breakDays:0,breakMaxDay:0,banoSum:0,banoDays:0,banoMaxDay:0,
-    servTotal:0,servComp:0,servCanc:0,
-    callsUnder20Min:0};  // P90: cuántas llamadas duraron menos de 20 min
+    servTotal:0,servComp:0,servCanc:0,callsUnder20Min:0};
 }
+
 function accumulate(acc,h){
   if(h.fullName)acc.fullName=h.fullName;
-  acc.surveysSent+=(+h.surveysSent||0);
-  acc.surveysSentIn+=(+h.surveysSentIn||0);
-  acc.surveysSentOut+=(+h.surveysSentOut||0);
-  acc.surveysAnsIn+=(+h.surveysAnsIn||0);
-  acc.surveysAnsOut+=(+h.surveysAnsOut||0);
-  acc.surveysAnswered+=(+h.surveysAnswered||0);
-  acc.rrPctSum+=(+h.rrPctSum||0);acc.rrN+=(+h.rrN||0);
-  acc.csatPctSum+=(+h.csatPctSum||0);acc.csatN+=(+h.csatN||0);
-  acc.callsAt+=(+h.callsAt||0);
-  acc.callsIn+=(+h.callsIn||0);
-  acc.callsOut+=(+h.callsOut||0);
-  acc.ahtSecSum+=(+h.ahtSecSum||0);acc.ahtN+=(+h.ahtN||0);
-  acc.released+=(+h.released||0);
-  acc.totalEntrantes+=(+h.totalEntrantes||0);
-  acc.acwMinSum+=(+h.acwMinSum||0);acc.acwN+=(+h.acwN||0);
-  acc.holdMinSum+=(+h.holdMinSum||0);acc.holdN+=(+h.holdN||0);
+  acc.surveysSent+=(+h.surveysSent||0);acc.surveysSentIn+=(+h.surveysSentIn||0);acc.surveysSentOut+=(+h.surveysSentOut||0);
+  acc.surveysAnsIn+=(+h.surveysAnsIn||0);acc.surveysAnsOut+=(+h.surveysAnsOut||0);acc.surveysAnswered+=(+h.surveysAnswered||0);
+  acc.rrPctSum+=(+h.rrPctSum||0);acc.rrN+=(+h.rrN||0);acc.csatPctSum+=(+h.csatPctSum||0);acc.csatN+=(+h.csatN||0);
+  acc.callsAt+=(+h.callsAt||0);acc.callsIn+=(+h.callsIn||0);acc.callsOut+=(+h.callsOut||0);
+  acc.ahtSecSum+=(+h.ahtSecSum||0);acc.ahtN+=(+h.ahtN||0);acc.released+=(+h.released||0);acc.totalEntrantes+=(+h.totalEntrantes||0);
+  acc.acwMinSum+=(+h.acwMinSum||0);acc.acwN+=(+h.acwN||0);acc.holdMinSum+=(+h.holdMinSum||0);acc.holdN+=(+h.holdN||0);
   if(+h.breakSum>0){acc.breakSum+=(+h.breakSum);acc.breakDays++;}
   if(+h.banoSum>0){acc.banoSum+=(+h.banoSum);acc.banoDays++;}
-  acc.breakMaxDay=Math.max(acc.breakMaxDay,+h.breakSum||0);
-  acc.banoMaxDay=Math.max(acc.banoMaxDay,+h.banoSum||0);
-  acc.servTotal+=(+h.servTotal||0);
-  acc.servComp+=(+h.servComp||0);
-  acc.servCanc+=(+h.servCanc||0);
+  acc.breakMaxDay=Math.max(acc.breakMaxDay,+h.breakSum||0);acc.banoMaxDay=Math.max(acc.banoMaxDay,+h.banoSum||0);
+  acc.servTotal+=(+h.servTotal||0);acc.servComp+=(+h.servComp||0);acc.servCanc+=(+h.servCanc||0);
   acc.callsUnder20Min+=(+h.callsUnder20Min||0);
 }
 
@@ -1776,17 +1246,9 @@ function filterHistoryByDate(history){
   const f=STATE.dateFilter;
   if(f.mode==='all')return history;
   if(f.mode==='day'&&f.day)return history.filter(h=>h.date===f.day);
-  if(f.mode==='range'&&f.start&&f.end){
-    return history.filter(h=>h.date>=f.start&&h.date<=f.end);
-  }
-  if(f.mode==='week'&&f.week){
-    // week format YYYY-Www
-    const [yr,w]=f.week.split('-W');
-    return history.filter(h=>weekKey(h.date)===f.week);
-  }
-  if(f.mode==='month'&&f.month){
-    return history.filter(h=>h.date.startsWith(f.month));
-  }
+  if(f.mode==='range'&&f.start&&f.end)return history.filter(h=>h.date>=f.start&&h.date<=f.end);
+  if(f.mode==='week'&&f.week)return history.filter(h=>weekKey(h.date)===f.week);
+  if(f.mode==='month'&&f.month)return history.filter(h=>h.date.startsWith(f.month));
   return history;
 }
 
@@ -1812,29 +1274,17 @@ async function parseEncuestas(file,defaultDate){
   const iLlamante=header.findIndex(h=>(h||'').toString().toLowerCase().trim()==='llamante');
   const iDest=header.findIndex(h=>(h||'').toString().toLowerCase().includes('nombre destino'));
   const iPuls=header.findIndex(h=>(h||'').toString().toLowerCase().includes('pulsacion'));
-
-  // Estructura: acc[date][agentKey] = {sent,answered,rrSum,rrN,csatSum,csatN,fullName}
   const acc={};
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r.length)continue;
-    
     const date=parseDate(r[iFecha])||defaultDate;
     if(!date)continue;
-    
-    // Detectar si es ENTRANTE (agente en dest) o SALIENTE (agente en llamante)
-    let agName=null;
-    let surveyType=null; // 'in' o 'out'
+    let agName=null,surveyType=null;
     const dest=r[iDest];
-    if(dest){
-      agName=extractAgent(dest);
-      if(agName)surveyType='in';
-    }
+    if(dest){agName=extractAgent(dest);if(agName)surveyType='in';}
     if(!agName&&iLlamante>=0){
       const ll=(r[iLlamante]||'').toString();
-      if(/[a-zA-Z]/.test(ll)&&!/^\+?\d[\d\s]*$/.test(ll)){
-        agName=extractAgent(ll)||ll.trim();
-        if(agName)surveyType='out';
-      }
+      if(/[a-zA-Z]/.test(ll)&&!/^\+?\d[\d\s]*$/.test(ll)){agName=extractAgent(ll)||ll.trim();if(agName)surveyType='out';}
     }
     if(!agName)continue;
     const key=resolveAgentKey(agName);
@@ -1843,7 +1293,6 @@ async function parseEncuestas(file,defaultDate){
     acc[date][key].sent++;
     if(surveyType==='in')acc[date][key].sentIn++;
     else if(surveyType==='out')acc[date][key].sentOut++;
-
     const p=r[iPuls];
     if(p==null||p==='')continue;
     const s=p.toString().trim();
@@ -1851,31 +1300,16 @@ async function parseEncuestas(file,defaultDate){
     acc[date][key].answered++;
     if(surveyType==='in')acc[date][key].ansIn++;
     else if(surveyType==='out')acc[date][key].ansOut++;
-
     const digits=s.split(/[;,\s\-_/]+/).filter(x=>/^\d+$/.test(x)).map(x=>parseInt(x));
     if(!digits.length)continue;
-
     const rr=digits[0];
     let rrPct=null;
-    // Resolution Rate (RR):
-    //   1 = Resuelto       → 100%
-    //   2 = No resuelto    →   0%
-    //   3 = En proceso     →  50%  (va camino a resolverse)
-    if(rr===1)rrPct=100;
-    else if(rr===2)rrPct=0;
-    else if(rr===3)rrPct=50;
+    if(rr===1)rrPct=100;else if(rr===2)rrPct=0;else if(rr===3)rrPct=50;
     if(rrPct!=null){acc[date][key].rrSum+=rrPct;acc[date][key].rrN++;}
-
     if(digits.length>=2){
       const csat=digits[digits.length-1];
       let csatPct=null;
-      // CSAT scoring (escala numérica del cliente):
-      //   1 a 4  → 0%   (insatisfecho)
-      //   5 a 6  → 50%  (neutral)
-      //   7+     → 100% (satisfecho)
-      if(csat>=7)csatPct=100;
-      else if(csat>=5)csatPct=50;
-      else if(csat>=1)csatPct=0;
+      if(csat>=7)csatPct=100;else if(csat>=5)csatPct=50;else if(csat>=1)csatPct=0;
       if(csatPct!=null){acc[date][key].csatSum+=csatPct;acc[date][key].csatN++;}
     }
   }
@@ -1908,31 +1342,24 @@ async function parseLlamadas(file,defaultDate){
   const iColgo=findCol('colgó','colgo');
   const iRes=findCol('resultado');
   const iGrab=findCol('grabacion','grabación');
-
   const acc={};
-  // Acumular llamadas largas (>20 min) para la pestaña Llamadas largas
   if(!STATE.longCalls)STATE.longCalls=[];
-  STATE.longCalls.length=0;  // reset al re-parsear
+  STATE.longCalls.length=0;
   for(let i=1;i<rows.length;i++){
     const r=rows[i];if(!r||!r.length)continue;
-    
     const date=parseDate(r[iFecha])||defaultDate;
     if(!date)continue;
-    
     const tipo=(r[iTipo]||'').toString();
     const res=(r[iRes]||'').toString();
     const colgo=(r[iColgo]||'').toString();
     const dur=parseInt(r[iDur])||0;
-
     let agName=null;
     if(tipo==='Entrante')agName=extractAgent(r[iUltDest]);
     else if(tipo==='Saliente')agName=extractAgent(r[iLlamante]);
     if(!agName)continue;
     const key=resolveAgentKey(agName);
     if(!acc[date])acc[date]={};
-    if(!acc[date][key])acc[date][key]={fullName:agName,
-      atendidasIn:0,atendidasOut:0,ahtSum:0,ahtN:0,released:0,totalEntrantes:0};
-
+    if(!acc[date][key])acc[date][key]={fullName:agName,atendidasIn:0,atendidasOut:0,ahtSum:0,ahtN:0,released:0,totalEntrantes:0};
     if(tipo==='Entrante')acc[date][key].totalEntrantes++;
     if(res==='Atendida'){
       if(tipo==='Entrante'){
@@ -1941,34 +1368,13 @@ async function parseLlamadas(file,defaultDate){
         if(!acc[date][key].durations)acc[date][key].durations=[];
         acc[date][key].durations.push(dur);
         if(colgo==='Destino'&&dur<10)acc[date][key].released++;
-        // Capturar si es llamada larga (>=20 min)
-        if(dur>=1200){
-          STATE.longCalls.push({
-            date:date,
-            hora:(r[iHora]||'').toString(),
-            agent:agName,
-            nameKey:key,
-            tipo:tipo,
-            duration:dur,
-            grabacion:(r[iGrab]||'').toString()
-          });
-        }
+        if(dur>=1200){STATE.longCalls.push({date:date,hora:(r[iHora]||'').toString(),agent:agName,nameKey:key,tipo:tipo,duration:dur,grabacion:(r[iGrab]||'').toString()});}
       }else if(tipo==='Saliente'){
         acc[date][key].atendidasOut++;
         acc[date][key].ahtSum+=dur;acc[date][key].ahtN++;
         if(!acc[date][key].durations)acc[date][key].durations=[];
         acc[date][key].durations.push(dur);
-        if(dur>=1200){
-          STATE.longCalls.push({
-            date:date,
-            hora:(r[iHora]||'').toString(),
-            agent:agName,
-            nameKey:key,
-            tipo:tipo,
-            duration:dur,
-            grabacion:(r[iGrab]||'').toString()
-          });
-        }
+        if(dur>=1200){STATE.longCalls.push({date:date,hora:(r[iHora]||'').toString(),agent:agName,nameKey:key,tipo:tipo,duration:dur,grabacion:(r[iGrab]||'').toString()});}
       }
     }
   }
@@ -1981,22 +1387,15 @@ async function parseAuxiliares(file,defaultDate){
   const csv=parseCSV(cleaned,';');
   const header=csv[0]||[];
   const findCol=(...names)=>{
-    for(const n of names){
-      const i=header.findIndex(c=>(c||'').toLowerCase().trim()===n.toLowerCase());
-      if(i>=0)return i;
-    }
+    for(const n of names){const i=header.findIndex(c=>(c||'').toLowerCase().trim()===n.toLowerCase());if(i>=0)return i;}
     return-1;
   };
   const iAg=findCol('agente');
   const iDia=findCol('día','dia');
   const iCausa=findCol('causa');
   const iDur=header.findIndex(c=>(c||'').toLowerCase().includes('duración')||(c||'').toLowerCase().includes('duracion'));
-
   const ACW_CAUSAS=['acw','wrap-up','wrap_up','wrap_contacto'];
-  // acc[date][agentKey] = {fullName,acwSum,acwN,holdSum,holdN,breakSum,banoSum}
-  // Por día, break y baño se suman directamente (es el total del día)
   const acc={};
-
   for(let i=1;i<csv.length;i++){
     const r=csv[i];if(!r||!r.length)continue;
     const agName=extractAgent(r[iAg]);
@@ -2006,21 +1405,13 @@ async function parseAuxiliares(file,defaultDate){
     const date=parseDate(r[iDia])||defaultDate;
     if(!date)continue;
     const dur=parseMin(r[iDur]);
-
     if(!acc[date])acc[date]={};
-    if(!acc[date][key])acc[date][key]={fullName:agName,
-      acwSum:0,acwN:0,holdSum:0,holdN:0,breakSum:0,banoSum:0};
-
+    if(!acc[date][key])acc[date][key]={fullName:agName,acwSum:0,acwN:0,holdSum:0,holdN:0,breakSum:0,banoSum:0};
     const ck=causa.toLowerCase().replace(/\s+/g,'');
-    if(ACW_CAUSAS.includes(ck)){
-      acc[date][key].acwSum+=dur;acc[date][key].acwN++;
-    }else if(causa==='Hold Time'){
-      acc[date][key].holdSum+=dur;acc[date][key].holdN++;
-    }else if(causa==='Break'){
-      acc[date][key].breakSum+=dur;
-    }else if(causa==='Baño'){
-      acc[date][key].banoSum+=dur;
-    }
+    if(ACW_CAUSAS.includes(ck)){acc[date][key].acwSum+=dur;acc[date][key].acwN++;}
+    else if(causa==='Hold Time'){acc[date][key].holdSum+=dur;acc[date][key].holdN++;}
+    else if(causa==='Break'){acc[date][key].breakSum+=dur;}
+    else if(causa==='Baño'){acc[date][key].banoSum+=dur;}
   }
   return acc;
 }
@@ -2034,8 +1425,6 @@ async function parseServicios(file,defaultDate){
   const iStatus=header.findIndex(h=>h.toLowerCase()==='status');
   const iDate=header.findIndex(h=>h.toLowerCase()==='service date');
   if(iAssigner<0)return{};
-
-  // acc[date][agentKey] = {fullName,total,completed,canceled}
   const acc={};
   for(let i=1;i<csv.length;i++){
     const r=csv[i];if(!r||!r.length)continue;
@@ -2056,19 +1445,14 @@ async function parseServicios(file,defaultDate){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CÁLCULO DE MÉTRICAS POR AGENTE
+// CÁLCULO DE MÉTRICAS
 // ═══════════════════════════════════════════════════════════════════════════
 function buildScorecard(){
   const out=[];
-  // Si tenemos el desglose por coord (calculado en reconstructCurrentDay), úsalo.
-  // Cada agente puede generar múltiples filas: una por cada coord vigente en el periodo.
   const split=STATE._byAgentCoord;
-  
   for(const ag of STATE.distro){
     const k=ag.nameKey;
     const qa=STATE.qa[k];
-    
-    // Filtrar quejas: solo las del mes activo (si hay filtro mensual)
     const _activeMonthQ=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
     const quejasAg=STATE.quejas.filter(q=>{
       if(q.nameKey!==k)return false;
@@ -2078,8 +1462,6 @@ function buildScorecard(){
     });
     const quejasYellow=quejasAg.filter(q=>q.tarjeta.toLowerCase().includes('amarill')).length;
     const quejasRed=quejasAg.filter(q=>q.tarjeta.toLowerCase().includes('roj')).length;
-    
-    // Recolectar los buckets de este agente (por coord)
     const buckets=[];
     if(split){
       for(const [bk,bv] of Object.entries(split)){
@@ -2087,33 +1469,23 @@ function buildScorecard(){
         if(parts[0]===k)buckets.push(bv);
       }
     }
-    
     if(buckets.length===0){
-      // Sin datos en el periodo: una sola fila con el coord ACTUAL de la distro
-      out.push({
-        ...ag,
-        rr:null,csat:null,srr:null,sdr:null,aht:null,ahtP90Pct:null,
+      out.push({...ag,rr:null,csat:null,srr:null,sdr:null,aht:null,ahtP90Pct:null,
         acwMin:null,holdMin:null,breakMin:null,banoMin:null,
         callsAt:0,callsIn:0,callsOut:0,outboundPct:null,releasedPct:null,
         qaScore:qa?qa.score:null,qaEvals:qa?qa.evals:0,
         quejasYellow,quejasRed,quejasTotal:quejasAg.length,
         servTotal:0,servComp:0,servCanc:0,
         surveysSent:0,surveysSentIn:0,surveysSentOut:0,surveysAnsIn:0,surveysAnsOut:0,surveysAnswered:0,
-        isCoordSplit:false
-      });
+        isCoordSplit:false});
       continue;
     }
-    
-    // Determinar si hay split (más de 1 coord con datos)
     const hasSplit=buckets.length>1;
-    
     for(const v of buckets){
-      const enc={sent:v.surveysSent,answered:v.surveysAnswered,
-        sentIn:v.surveysSentIn,sentOut:v.surveysSentOut,ansIn:v.surveysAnsIn,ansOut:v.surveysAnsOut,
-        rrSum:v.rrPctSum,rrN:v.rrN,csatSum:v.csatPctSum,csatN:v.csatN};
-      const llam={atendidasIn:v.callsIn,atendidasOut:v.callsOut,
-        ahtSum:v.ahtSecSum,ahtN:v.ahtN,released:v.released,totalEntrantes:v.totalEntrantes,
-        callsUnder20Min:v.callsUnder20Min||0};
+      const enc={sent:v.surveysSent,answered:v.surveysAnswered,sentIn:v.surveysSentIn,sentOut:v.surveysSentOut,
+        ansIn:v.surveysAnsIn,ansOut:v.surveysAnsOut,rrSum:v.rrPctSum,rrN:v.rrN,csatSum:v.csatPctSum,csatN:v.csatN};
+      const llam={atendidasIn:v.callsIn,atendidasOut:v.callsOut,ahtSum:v.ahtSecSum,ahtN:v.ahtN,
+        released:v.released,totalEntrantes:v.totalEntrantes,callsUnder20Min:v.callsUnder20Min||0};
       const rr=enc.rrN?enc.rrSum/enc.rrN:null;
       const csat=enc.csatN?enc.csatSum/enc.csatN:null;
       const srr=enc.sent?(enc.answered/enc.sent)*100:null;
@@ -2127,48 +1499,26 @@ function buildScorecard(){
       const holdMin=v.holdN?v.holdMinSum/v.holdN:null;
       const breakMin=v.breakDays?v.breakSum/v.breakDays:null;
       const banoMin=v.banoDays?v.banoSum/v.banoDays:null;
-      
-      // El coord de esta fila es el del bucket, no el de la distro
-      // Resolver senior según el coord histórico (si está disponible)
       const coordForRow=v.coord||ag.coord;
-      // Buscar senior del coord histórico
       let seniorForRow=ag.senior;
       const distroOtroCoord=(STATE.distro||[]).find(a=>a.coord===coordForRow);
       if(distroOtroCoord)seniorForRow=distroOtroCoord.senior;
-      
-      // Quejas: solo se asignan UNA vez por agente (al coord con más días o al actual).
-      // Para no contarlas duplicadas, las dejamos solo en el primer bucket.
       const isFirstBucket=buckets.indexOf(v)===0;
-      
-      out.push({
-        ...ag,
-        coord:coordForRow,
-        senior:seniorForRow,
+      out.push({...ag,coord:coordForRow,senior:seniorForRow,
         rr,csat,srr,sdr,aht,ahtP90Pct,acwMin,holdMin,breakMin,banoMin,
-        callsAt,callsIn:llam.atendidasIn,callsOut:llam.atendidasOut,
-        outboundPct,releasedPct,
+        callsAt,callsIn:llam.atendidasIn,callsOut:llam.atendidasOut,outboundPct,releasedPct,
         qaScore:qa?qa.score:null,qaEvals:qa?qa.evals:0,
-        quejasYellow:isFirstBucket?quejasYellow:0,
-        quejasRed:isFirstBucket?quejasRed:0,
+        quejasYellow:isFirstBucket?quejasYellow:0,quejasRed:isFirstBucket?quejasRed:0,
         quejasTotal:isFirstBucket?quejasAg.length:0,
-        servTotal:v.servTotal||0,
-        servComp:v.servComp||0,
-        servCanc:v.servCanc||0,
-        surveysSent:enc.sent||0,
-        surveysSentIn:enc.sentIn||0,
-        surveysSentOut:enc.sentOut||0,
-        surveysAnsIn:enc.ansIn||0,
-        surveysAnsOut:enc.ansOut||0,
-        surveysAnswered:enc.answered||0,
-        isCoordSplit:hasSplit,
-        coordDias:v.n||0  // días con datos en este coord
-      });
+        servTotal:v.servTotal||0,servComp:v.servComp||0,servCanc:v.servCanc||0,
+        surveysSent:enc.sent||0,surveysSentIn:enc.sentIn||0,surveysSentOut:enc.sentOut||0,
+        surveysAnsIn:enc.ansIn||0,surveysAnsOut:enc.ansOut||0,surveysAnswered:enc.answered||0,
+        isCoordSplit:hasSplit,coordDias:v.n||0});
     }
   }
   return out;
 }
 
-// Devuelve la meta de outbound segun el coord (35% para coords del turno especial, 30% el resto)
 function getOutboundTarget(coordName){
   if(coordName&&CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(coordName))return 35;
   return CFG.BONO.outbound.target;
@@ -2184,18 +1534,14 @@ function calcBono(row){
   checks.rr_bono={val:row.rr,target:CFG.BONO.rr_bono.target,met:row.rr!=null&&row.rr>=CFG.BONO.rr_bono.target,points:CFG.BONO.rr_bono.points,label:CFG.BONO.rr_bono.label,dir:'gte'};
   checks.srr_bono={val:row.srr,target:CFG.BONO.srr_bono.target,met:row.srr!=null&&row.srr>=CFG.BONO.srr_bono.target,points:CFG.BONO.srr_bono.points,label:CFG.BONO.srr_bono.label,dir:'gte'};
   checks.sdr_bono={val:row.sdr,target:CFG.BONO.sdr_bono.target,met:row.sdr!=null&&row.sdr>=CFG.BONO.sdr_bono.target,points:CFG.BONO.sdr_bono.points,label:CFG.BONO.sdr_bono.label,dir:'gte'};
-  
   const pen=STATE.manualPenalties[row.nameKey]||{};
-  // Ausentismo del agente: leer primero de la Sheet automatica, fallback al manual
   let absVal=null;
   const _monthName=getActiveMonthName();
   if(_monthName)absVal=getAusentismoForAgent(row.nameKey,_monthName);
   if(absVal==null&&pen.absenteeism!=null)absVal=+pen.absenteeism;
   checks.absent={val:absVal,target:CFG.BONO.absent.target,met:absVal!=null&&absVal<=CFG.BONO.absent.target,points:CFG.BONO.absent.points,label:CFG.BONO.absent.label,dir:'lte'};
-
   let earnedPoints=0;
   for(const c of Object.values(checks))if(c.met)earnedPoints+=c.points;
-
   const yellow=row.quejasYellow||0;
   const red=row.quejasRed||0;
   const redEff=red+Math.floor(yellow/2);
@@ -2204,18 +1550,12 @@ function calcBono(row){
   const serious=redEff;
   const absences=+(pen.absences||0);
   const redemption=+(pen.redemption||0);
-
   const lostPoints=redemption-(procedural*CFG.PEN.procedural)-(serious*CFG.PEN.serious)-(absences*CFG.PEN.absences);
   const adjustedPoints=earnedPoints+lostPoints;
-
   let tier=0,bonus=0;
   for(const t of CFG.TIER){if(adjustedPoints>=t.min){tier=t.n;bonus=t.bonus;break;}}
-
-  return{
-    checks,earnedPoints,procedural,serious,absences,redemption,lostPoints,adjustedPoints,tier,bonus,
-    yellowOriginal:yellow,redOriginal:red,
-    baseSalary:CFG.BASE_SALARY,adjustedSalary:CFG.BASE_SALARY+bonus
-  };
+  return{checks,earnedPoints,procedural,serious,absences,redemption,lostPoints,adjustedPoints,tier,bonus,
+    yellowOriginal:yellow,redOriginal:red,baseSalary:CFG.BASE_SALARY,adjustedSalary:CFG.BASE_SALARY+bonus};
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2224,9 +1564,7 @@ function calcBono(row){
 function renderActiveTab(){
   const tab=document.querySelector('.tab.active');
   if(tab&&tab.dataset.tab)STATE.activeTab=tab.dataset.tab;
-  // Sincronizar filtro activo
   STATE.dateFilter=getActiveDateFilter();
-  const _origTab=tab;
   if(!tab)return;
   const which=tab.dataset.tab;
   const containerId='view-'+which;
@@ -2243,64 +1581,34 @@ function renderActiveTab(){
   else if(which==='llamadasLargas')c.innerHTML=viewLlamadasLargas();
   else if(which==='cargar')c.innerHTML=viewCargar();
   else if(which==='config')c.innerHTML=viewConfig();
-  
-  // Render charts after innerHTML
   if(which==='agente'&&STATE.selectedAgent)renderAgentCharts();
 }
 
-
-// Obtiene el filtro de fecha de la pestaña activa actual
-// Lógica: Scorecard es el master. Las demás heredan del Scorecard al entrar,
-// PERO pueden sobrescribirlo localmente sin afectar a otras pestañas.
 function getActiveDateFilter(){
   const tab=STATE.activeTab||'scorecard';
-  
-  // Scorecard siempre devuelve su propio filtro (es el master)
   if(tab==='scorecard'){
     if(!STATE.dateFilters.scorecard)STATE.dateFilters.scorecard={mode:'day',day:null,start:null,end:null,month:null,week:null};
     return STATE.dateFilters.scorecard;
   }
-  
-  // Otras pestañas: si tienen override local, usarlo; si no, heredar del scorecard
-  if(STATE.dateFilterOverridden[tab]&&STATE.dateFilters[tab]){
-    return STATE.dateFilters[tab];
-  }
-  
-  // Heredar del scorecard (clonando para no mutarlo accidentalmente)
+  if(STATE.dateFilterOverridden[tab]&&STATE.dateFilters[tab]){return STATE.dateFilters[tab];}
   const master=STATE.dateFilters.scorecard||{mode:'day',day:null,start:null,end:null,month:null,week:null};
   STATE.dateFilters[tab]=Object.assign({},master);
   return STATE.dateFilters[tab];
 }
 
-// Establece el filtro de fecha de la pestaña activa
-// Si no es Scorecard, marca la pestaña como "override" (deja de heredar)
 function setActiveDateFilter(updates){
   const tab=STATE.activeTab||'scorecard';
   if(!STATE.dateFilters[tab])STATE.dateFilters[tab]={mode:'day',day:null,start:null,end:null,month:null,week:null};
   Object.assign(STATE.dateFilters[tab],updates);
-  
-  // Si NO es scorecard, marcar como override (deja de heredar del master)
-  if(tab!=='scorecard'){
-    STATE.dateFilterOverridden[tab]=true;
-  }else{
-    // Si cambia el master, todas las pestañas que NO han sido overrideadas vuelven a heredar
-    // (Las que sí fueron overrideadas mantienen su valor local)
-  }
-  
-  // Sincronizar con el global por compatibilidad
+  if(tab!=='scorecard'){STATE.dateFilterOverridden[tab]=true;}
   STATE.dateFilter=STATE.dateFilters[tab];
 }
 
-// Resetea el override de una pestaña: vuelve a heredar del scorecard
 function resetTabFilterToMaster(tab){
-  if(tab&&tab!=='scorecard'){
-    delete STATE.dateFilterOverridden[tab];
-    delete STATE.dateFilters[tab];
-  }
+  if(tab&&tab!=='scorecard'){delete STATE.dateFilterOverridden[tab];delete STATE.dateFilters[tab];}
 }
 
 function dateFilterBar(){
-  // Sincronizar el filtro activo con dateFilter para que las funciones existentes sigan funcionando
   STATE.dateFilter=getActiveDateFilter();
   const f=STATE.dateFilter;
   const dates=[...new Set(STATE.history.map(h=>h.date))].sort();
@@ -2349,7 +1657,6 @@ function changeDateMode(m){
   renderActiveTab();
 }
 
-// ═══════════════ VISTA: SCORECARD ═══════════════
 function viewScorecard(){
   const rows=buildScorecard();
   if(!rows.length){
@@ -2369,19 +1676,15 @@ function viewScorecard(){
   const kRR=avg(validRR.map(r=>r.rr));
   const kCSAT=avg(validCSAT.map(r=>r.csat));
   const kQA=avg(validQA.map(r=>r.qaScore));
-
   const filterCoord=$('filterCoord')?$('filterCoord').value:'';
   const filterCluster=$('filterCluster')?$('filterCluster').value:'';
   const filterSearch=($('filterSearch')?$('filterSearch').value:'').toLowerCase();
-
   let displayed=rows;
   if(filterCoord)displayed=displayed.filter(r=>r.coord===filterCoord);
   if(filterCluster)displayed=displayed.filter(r=>r.cluster===filterCluster);
   if(filterSearch)displayed=displayed.filter(r=>r.agent.toLowerCase().includes(filterSearch));
-
   const coords=[...new Set(rows.map(r=>r.coord))].sort();
   const clusters=[...new Set(rows.map(r=>r.cluster))].sort();
-
   return`
     ${dateFilterBar()}
     <div class="kpi-row">
@@ -2392,9 +1695,7 @@ function viewScorecard(){
       <div class="kpi"><div class="kpi-label">QA promedio</div><div class="kpi-value">${fmt.pct(kQA)}</div><div class="kpi-meta">Meta ≥${CFG.META_QA}%</div></div>
       <div class="kpi"><div class="kpi-label">Quejas activas</div><div class="kpi-value">${totalQuejas}</div><div class="kpi-meta">Tarjetas aplicadas</div></div>
     </div>
-
     ${noData?'<div class="banner warn">⚠ No hay datos de operación cargados aún. Ve a <strong>Cargar datos</strong> para subir los archivos del día.</div>':''}
-
     <div class="card">
       <div class="filter-row">
         <div class="field"><label>Buscar agente</label><input type="text" id="filterSearch" placeholder="Nombre…" value="${filterSearch}" oninput="onFilterSearchInput(this)"></div>
@@ -2407,31 +1708,19 @@ function viewScorecard(){
           ${clusters.map(c=>`<option value="${c}"${c===filterCluster?' selected':''}>${c}</option>`).join('')}
         </select></div>
       </div>
-
       <div style="overflow-x:auto;max-height:70vh;overflow-y:auto">
       <table>
         <thead><tr>
-          <th style="min-width:180px">Agente</th>
-          <th>Coord</th>
-          <th>CL</th>
-          <th class="col-num">Llam.</th>
-          <th class="col-num">RR</th>
-          <th class="col-num">CSAT</th>
-          <th class="col-num">SDR</th>
-          <th class="col-num">SRR</th>
+          <th style="min-width:180px">Agente</th><th>Coord</th><th>CL</th>
+          <th class="col-num">Llam.</th><th class="col-num">RR</th><th class="col-num">CSAT</th>
+          <th class="col-num">SDR</th><th class="col-num">SRR</th>
           <th class="col-num" title="Encuestas enviadas: total (entrantes/salientes)">ENVIADAS</th>
           <th class="col-num" title="Encuestas respondidas">RESP</th>
-          <th class="col-num">AHT</th>
-          <th class="col-num" title="P90: % de llamadas bajo 20 min">P90</th>
-          <th class="col-num">ACW</th>
-          <th class="col-num">Hold</th>
-          <th class="col-num">Break</th>
-          <th class="col-num">Baño</th>
-          <th class="col-num">QA</th>
-          <th class="col-num">Rel%</th>
-          <th class="col-num">Out%</th>
-          <th class="col-num">Quejas</th>
-          <th class="col-num">Serv.</th>
+          <th class="col-num">AHT</th><th class="col-num" title="P90: % de llamadas bajo 20 min">P90</th>
+          <th class="col-num">ACW</th><th class="col-num">Hold</th>
+          <th class="col-num">Break</th><th class="col-num">Baño</th>
+          <th class="col-num">QA</th><th class="col-num">Rel%</th><th class="col-num">Out%</th>
+          <th class="col-num">Quejas</th><th class="col-num">Serv.</th>
         </tr></thead>
         <tbody>
         ${displayed.map(r=>`<tr onclick="selectAgent('${r.nameKey}')" ${r.isCoordSplit?'style="background:#fffbeb"':''}>
@@ -2461,8 +1750,7 @@ function viewScorecard(){
       </table>
       </div>
       <div style="margin-top:10px;font-size:11px;color:var(--muted2);font-family:var(--mono)">Mostrando ${displayed.length} de ${rows.length} agentes · Click en una fila para ver el detalle</div>
-    </div>
-  `;
+    </div>`;
 }
 
 function selectAgent(nameKey){
@@ -2474,17 +1762,23 @@ function selectAgent(nameKey){
   renderActiveTab();
 }
 
-// ═══════════════ VISTA: POR AGENTE ═══════════════
+function metricTile(label,value,meta,status){
+  const cls=status==='ok'?'cell-ok':status==='warn'?'cell-warn':status==='bad'?'cell-bad':'';
+  return`<div class="metric-tile">
+    <div class="metric-tile-label">${label}</div>
+    <div class="metric-tile-value ${cls}">${value}</div>
+    <div class="metric-tile-meta">${meta}</div>
+  </div>`;
+}
+
 function viewAgente(){
   const rows=buildScorecard();
   if(!rows.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
-  
   const sel=STATE.selectedAgent||rows[0].nameKey;
   const r=rows.find(x=>x.nameKey===sel)||rows[0];
   STATE.selectedAgent=r.nameKey;
   const bono=calcBono(r);
   const pen=STATE.manualPenalties[r.nameKey]||{};
-
   return`
     <div class="card" style="padding:12px 16px">${dateFilterBar()}</div>
     <div class="card">
@@ -2498,7 +1792,6 @@ function viewAgente(){
         <div class="field"><label>Extensión</label><div class="kpi-value" style="font-size:14px;font-family:var(--mono)">${r.extension||'—'}</div></div>
       </div>
     </div>
-
     <div class="card">
       <div class="section-title">Métricas operativas</div>
       <div class="metric-grid">
@@ -2506,18 +1799,17 @@ function viewAgente(){
         ${metricTile('CSAT',fmt.pct(r.csat),`Meta ≥${CFG.META_CSAT}%`,statusFor(r.csat,CFG.META_CSAT,'gte'))}
         ${metricTile('Survey Delivery',fmt.pct(r.sdr),`Meta ≥${CFG.META_SDR}%`,statusFor(r.sdr,CFG.META_SDR,'gte'))}
         ${metricTile('Response Rate',fmt.pct(r.srr),`Meta ≥${CFG.META_SRR}%`,statusFor(r.srr,CFG.META_SRR,'gte'))}
-        ${metricTile('AHT',fmt.secs(r.aht),`Meta ≤08:30`,statusFor(r.aht,CFG.META_AHT_SEC,'lte'))}
+        ${metricTile('AHT',fmt.secs(r.aht),'Meta ≤08:30',statusFor(r.aht,CFG.META_AHT_SEC,'lte'))}
         ${metricTile('P90 < 20min',fmt.pct(r.ahtP90Pct),'Meta ≥90% (% llamadas bajo 20 min)',statusFor(r.ahtP90Pct,90,'gte'))}
-        ${metricTile('ACW',fmt.mins(r.acwMin),`Meta ≤02:00`,statusFor(r.acwMin,CFG.META_ACW_MIN,'lte'))}
-        ${metricTile('Hold',fmt.mins(r.holdMin),`Meta ≤02:00`,statusFor(r.holdMin,CFG.META_HOLD_MIN,'lte'))}
-        ${metricTile('Break',r.breakMin!=null?r.breakMin.toFixed(1)+' min':'—',`Meta ≤30 min/día`,statusFor(r.breakMin,CFG.META_BREAK_MIN,'lte'))}
-        ${metricTile('Baño',r.banoMin!=null?r.banoMin.toFixed(1)+' min':'—',`Meta ≤10 min/día`,statusFor(r.banoMin,CFG.META_BANO_MIN,'lte'))}
+        ${metricTile('ACW',fmt.mins(r.acwMin),'Meta ≤02:00',statusFor(r.acwMin,CFG.META_ACW_MIN,'lte'))}
+        ${metricTile('Hold',fmt.mins(r.holdMin),'Meta ≤02:00',statusFor(r.holdMin,CFG.META_HOLD_MIN,'lte'))}
+        ${metricTile('Break',r.breakMin!=null?r.breakMin.toFixed(1)+' min':'—','Meta ≤30 min/día',statusFor(r.breakMin,CFG.META_BREAK_MIN,'lte'))}
+        ${metricTile('Baño',r.banoMin!=null?r.banoMin.toFixed(1)+' min':'—','Meta ≤10 min/día',statusFor(r.banoMin,CFG.META_BANO_MIN,'lte'))}
         ${metricTile('QA',fmt.pct(r.qaScore),`Meta ≥${CFG.META_QA}%${r.qaEvals?' · '+r.qaEvals+' eval':''}`,statusFor(r.qaScore,CFG.META_QA,'gte'))}
-        ${metricTile('Released',fmt.pct(r.releasedPct),`Meta ≤6%`,statusFor(r.releasedPct,6,'lte'))}
+        ${metricTile('Released',fmt.pct(r.releasedPct),'Meta ≤6%',statusFor(r.releasedPct,6,'lte'))}
         ${(()=>{const _t=getOutboundTarget(r.coord);return metricTile('Outbound',fmt.pct(r.outboundPct),`Meta ≤${_t}%`+(_t===35?' · turno especial':''),statusFor(r.outboundPct,_t,'lte'));})()}
       </div>
     </div>
-
     <div class="grid-2">
       <div class="card">
         <div class="section-title">Volumen</div>
@@ -2529,7 +1821,6 @@ function viewAgente(){
           ${metricTile('Quejas',`${r.quejasYellow}A + ${r.quejasRed}R`,`${r.quejasTotal} total`,r.quejasRed>0?'bad':r.quejasYellow>0?'warn':'ok')}
         </div>
       </div>
-      
       <div class="card">
         <div class="section-title">Bonificación estimada</div>
         <div class="metric-grid">
@@ -2540,18 +1831,10 @@ function viewAgente(){
         </div>
       </div>
     </div>
-
     <div class="grid-2">
-      <div class="card">
-        <div class="section-title">Tendencia histórica</div>
-        <div class="chart-wrap"><canvas id="chartTrend"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="section-title">Volumen diario</div>
-        <div class="chart-wrap"><canvas id="chartVolume"></canvas></div>
-      </div>
+      <div class="card"><div class="section-title">Tendencia histórica</div><div class="chart-wrap"><canvas id="chartTrend"></canvas></div></div>
+      <div class="card"><div class="section-title">Volumen diario</div><div class="chart-wrap"><canvas id="chartVolume"></canvas></div></div>
     </div>
-
     <div class="card">
       <div class="section-title">Penalizaciones manuales</div>
       <p class="section-sub">Estos campos se ingresan manualmente y afectan el cálculo del bono. Click en guardar para aplicar.</p>
@@ -2565,17 +1848,7 @@ function viewAgente(){
         Procedural failures: ${bono.procedural} (de ${bono.yellowOriginal} amarillas · ${Math.floor(bono.yellowOriginal/2)} convertidas a rojas) · 
         Serious faults: ${bono.serious} (de ${bono.redOriginal} rojas + conversiones)
       </div>
-    </div>
-  `;
-}
-
-function metricTile(label,value,meta,status){
-  const cls=status==='ok'?'cell-ok':status==='warn'?'cell-warn':status==='bad'?'cell-bad':'';
-  return`<div class="metric-tile">
-    <div class="metric-tile-label">${label}</div>
-    <div class="metric-tile-value ${cls}">${value}</div>
-    <div class="metric-tile-meta">${meta}</div>
-  </div>`;
+    </div>`;
 }
 
 async function savePenalties(nameKey){
@@ -2587,12 +1860,8 @@ async function savePenalties(nameKey){
   };
   STATE.manualPenalties[nameKey]=data;
   if(CFG.BACKEND_URL){
-    try{
-      await pushBackend({type:'penalties',nameKey,data});
-      showBanner('success','Penalizaciones guardadas y sincronizadas');
-    }catch(e){
-      showBanner('error','Error al guardar: '+e.message);
-    }
+    try{await pushBackend({type:'penalties',nameKey,data});showBanner('success','Penalizaciones guardadas y sincronizadas');}
+    catch(e){showBanner('error','Error al guardar: '+e.message);}
   }
   renderActiveTab();
 }
@@ -2606,8 +1875,6 @@ function renderAgentCharts(){
     return;
   }
   const labels=hist.map(h=>h.date.slice(5));
-  
-  // Trend chart
   const trendEl=$('chartTrend');
   if(trendEl){
     if(window._trendChart)window._trendChart.destroy();
@@ -2620,11 +1887,9 @@ function renderAgentCharts(){
       ]},
       options:{responsive:true,maintainAspectRatio:false,
         scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'}}},
-        plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}
-      }
+        plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}}
     });
   }
-  
   const volEl=$('chartVolume');
   if(volEl){
     if(window._volChart)window._volChart.destroy();
@@ -2635,30 +1900,19 @@ function renderAgentCharts(){
         {label:'Encuestas',data:hist.map(h=>h.surveysSent||0),backgroundColor:'#2563eb'}
       ]},
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}
-      }
+        plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}}}}
     });
   }
 }
 
-// ═══════════════ CÁLCULO DE MÉTRICAS DE COORDINADOR ═══════════════
-
-// AHT P90 < 20 min: porcentaje de llamadas con duración < 1200 seg
-// Se calcula desde STATE.coordDaily (que tiene P90 real por coord-día)
-// usando el rango de fechas del filtro actual
 function calcCoordMetrics(coordAgents,coordName){
-  let totalLlamadasAt=0,totalEntrantes=0;
-  let totalSalientes=0;
-  let rrSum=0,rrN=0,csatSum=0,csatN=0,qaSum=0,qaN=0;
-  let srrSum=0,srrN=0;
-  let releasedPctSum=0,releasedPctN=0;
-  let outboundPctSum=0,outboundPctN=0;
-  
+  let totalLlamadasAt=0,totalEntrantes=0,totalSalientes=0;
+  let rrSum=0,rrN=0,csatSum=0,csatN=0,qaSum=0,qaN=0,srrSum=0,srrN=0;
+  let releasedPctSum=0,releasedPctN=0,outboundPctSum=0,outboundPctN=0;
   for(const a of coordAgents){
     totalLlamadasAt+=a.callsAt||0;
     if(a.callsIn)totalEntrantes+=a.callsIn;
     if(a.callsOut)totalSalientes+=a.callsOut;
-    
     if(a.rr!=null){rrSum+=a.rr;rrN++;}
     if(a.srr!=null){srrSum+=a.srr;srrN++;}
     if(a.csat!=null){csatSum+=a.csat;csatN++;}
@@ -2666,42 +1920,21 @@ function calcCoordMetrics(coordAgents,coordName){
     if(a.releasedPct!=null){releasedPctSum+=a.releasedPct;releasedPctN++;}
     if(a.outboundPct!=null){outboundPctSum+=a.outboundPct;outboundPctN++;}
   }
-  
-  // AHT P90: leer de STATE.coordDaily, sumar todas las llamadas del coord en el rango filtrado
-  // Total calls + bajo 20 min = % cumplido
-  let totalCallsAll=0,totalUnder20=0;
-  let p90Best=null;  // P90 ponderado: del día con más llamadas (informativo)
-  
+  let totalCallsAll=0,totalUnder20=0,p90Best=null;
   if(coordName){
     const filteredDaily=filterCoordDailyByDate(STATE.coordDaily,coordName);
     for(const r of filteredDaily){
-      totalCallsAll+=(+r.totalCalls||0);
-      totalUnder20+=(+r.callsUnder20Min||0);
-      if(p90Best==null||(+r.totalCalls>p90Best.calls)){
-        p90Best={calls:+r.totalCalls,p90:+r.p90Sec};
-      }
+      totalCallsAll+=(+r.totalCalls||0);totalUnder20+=(+r.callsUnder20Min||0);
+      if(p90Best==null||(+r.totalCalls>p90Best.calls)){p90Best={calls:+r.totalCalls,p90:+r.p90Sec};}
     }
   }
-  
   const ahtP90Pct=totalCallsAll>0?(totalUnder20/totalCallsAll)*100:null;
-  
-  return{
-    ahtP90:ahtP90Pct,
-    p90Sec:p90Best?p90Best.p90:null,
-    p90TotalCalls:totalCallsAll,
-    p90Under20:totalUnder20,
-    colgadas:releasedPctN?releasedPctSum/releasedPctN:null,
-    outbound:outboundPctN?outboundPctSum/outboundPctN:null,
-    qa:qaN?qaSum/qaN:null,
-    rr:rrN?rrSum/rrN:null,
-    srr:srrN?srrSum/srrN:null,
-    csat:csatN?csatSum/csatN:null,
-    totalLlamadas:totalLlamadasAt,
-    totalEntrantes,totalSalientes
-  };
+  return{ahtP90:ahtP90Pct,p90Sec:p90Best?p90Best.p90:null,p90TotalCalls:totalCallsAll,p90Under20:totalUnder20,
+    colgadas:releasedPctN?releasedPctSum/releasedPctN:null,outbound:outboundPctN?outboundPctSum/outboundPctN:null,
+    qa:qaN?qaSum/qaN:null,rr:rrN?rrSum/rrN:null,srr:srrN?srrSum/srrN:null,csat:csatN?csatSum/csatN:null,
+    totalLlamadas:totalLlamadasAt,totalEntrantes,totalSalientes};
 }
 
-// Filtrar coordDaily según el filtro de fecha global del scorecard
 function filterCoordDailyByDate(rows,coordName){
   if(!rows)return[];
   const f=STATE.dateFilter;
@@ -2719,29 +1952,18 @@ function filterCoordDailyByDate(rows,coordName){
 function calcCoordBono(coordName,coordAgents){
   const m=calcCoordMetrics(coordAgents,coordName);
   const manual=STATE.coordManual[coordName]||{};
-  
-  // Ausentismo: calcular automaticamente desde la Sheet de ausencias (promedio del equipo)
-  // Si no hay datos en la sheet, usar el valor manual como fallback
   let ausentismo=null;
   const monthName=getActiveMonthName();
   if(monthName&&STATE.ausentismo&&Object.keys(STATE.ausentismo).length){
     let sum=0,n=0;
-    for(const ag of coordAgents){
-      const pct=getAusentismoForAgent(ag.nameKey,monthName);
-      if(pct!=null){sum+=pct;n++;}
-    }
+    for(const ag of coordAgents){const pct=getAusentismoForAgent(ag.nameKey,monthName);if(pct!=null){sum+=pct;n++;}}
     if(n>0)ausentismo=sum/n;
   }
-  // Fallback: si no hay datos automaticos, usar el ingreso manual
   if(ausentismo==null&&manual.ausentismo!=null)ausentismo=+manual.ausentismo;
   const quejasDirectas=+(manual.quejasDirectas||0);
   const greenCards=+(manual.greenCards||0);
   const buenDesempeno=+(manual.buenDesempeno||0);
-  
-  // Tarjetas del equipo: deduplicar por quejaId
-  // Si una queja involucra a varios agentes del mismo equipo, cuenta como 1
   const agentKeys=new Set(coordAgents.map(a=>a.nameKey));
-  // Filtrar por mes activo (igual que en el agente individual)
   const _activeMonthC=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
   const quejasDelEquipo=(STATE.quejas||[]).filter(q=>{
     if(!agentKeys.has(q.nameKey))return false;
@@ -2749,24 +1971,16 @@ function calcCoordBono(coordName,coordAgents){
     if(!_activeMonthC)return true;
     return q.mesAplica===_activeMonthC;
   });
-  // Deduplicar por quejaId, manteniendo el tipo de tarjeta
-  const quejasUnicas=new Map();  // quejaId -> tarjeta
-  for(const q of quejasDelEquipo){
-    if(!quejasUnicas.has(q.quejaId))quejasUnicas.set(q.quejaId,q.tarjeta||'');
-  }
+  const quejasUnicas=new Map();
+  for(const q of quejasDelEquipo){if(!quejasUnicas.has(q.quejaId))quejasUnicas.set(q.quejaId,q.tarjeta||'');}
   let amarillas=0,rojas=0;
   for(const t of quejasUnicas.values()){
     const tl=(t||'').toLowerCase();
-    if(tl.includes('amarill'))amarillas++;
-    else if(tl.includes('roj'))rojas++;
+    if(tl.includes('amarill'))amarillas++;else if(tl.includes('roj'))rojas++;
   }
   const totalCards=amarillas+rojas;
-  // Para debug/tooltip: cuantos registros vs cuantas quejas unicas
   const _quejasRegistros=quejasDelEquipo.length;
   const _quejasUnicasCount=quejasUnicas.size;
-  
-  // Quejas directas al coord (del archivo, sin agente involucrado)
-  // Se identifican con isCoordOnly y se filtran por coord + mes activo
   const _coordKey=(coordName||'').toString().trim().toLowerCase();
   const quejasCoordDirectas=(STATE.quejas||[]).filter(q=>{
     if(!q.isCoordOnly)return false;
@@ -2775,13 +1989,9 @@ function calcCoordBono(coordName,coordAgents){
     if(!_activeMonthC)return true;
     return q.mesAplica===_activeMonthC;
   });
-  // Deduplicar por quejaId (por si hay dos coords en la misma queja, raro pero por consistencia)
   const _coordQuejasUnicas=new Set();
   for(const q of quejasCoordDirectas)_coordQuejasUnicas.add(q.quejaId);
   const _quejasDirectasAuto=_coordQuejasUnicas.size;
-  
-  // Desglose por tipo de penalizacion (basado en columna Resultado del archivo)
-  // Solo cuenta quejas unicas (deduplicadas por quejaId)
   const _seenIds=new Set();
   const penBreakdown={redencion:0,procedural:0,serious:0,absence:0,attitude:0,other:0};
   let penPointsAuto=0;
@@ -2789,16 +1999,9 @@ function calcCoordBono(coordName,coordAgents){
     if(_seenIds.has(q.quejaId))continue;
     _seenIds.add(q.quejaId);
     const t=q.penType;
-    if(t&&CFG.COORD_PEN_TYPES[t]){
-      penBreakdown[t]++;
-      penPointsAuto+=CFG.COORD_PEN_TYPES[t].points;
-    }else{
-      penBreakdown.other++;
-      // sin tipo identificado: no aplica penalizacion (informativo)
-    }
+    if(t&&CFG.COORD_PEN_TYPES[t]){penBreakdown[t]++;penPointsAuto+=CFG.COORD_PEN_TYPES[t].points;}
+    else{penBreakdown.other++;}
   }
-  
-  // Calcular puntos por métrica
   const checks={
     aht_p90:{val:m.ahtP90,target:CFG.COORD_BONO.aht_p90.target,met:m.ahtP90!=null&&m.ahtP90>=CFG.COORD_BONO.aht_p90.target,points:CFG.COORD_BONO.aht_p90.points,label:CFG.COORD_BONO.aht_p90.label,dir:'gte'},
     ausentismo:{val:ausentismo,target:CFG.COORD_BONO.ausentismo.target,met:ausentismo!=null&&ausentismo<=CFG.COORD_BONO.ausentismo.target,points:CFG.COORD_BONO.ausentismo.points,label:CFG.COORD_BONO.ausentismo.label,dir:'lte'},
@@ -2808,106 +2011,61 @@ function calcCoordBono(coordName,coordAgents){
     srr:{val:m.srr,target:CFG.COORD_BONO.srr.target,met:m.srr!=null&&m.srr>=CFG.COORD_BONO.srr.target,points:CFG.COORD_BONO.srr.points,label:CFG.COORD_BONO.srr.label,dir:'gte'},
     csat:{val:m.csat,target:CFG.COORD_BONO.csat.target,met:m.csat!=null&&m.csat>=CFG.COORD_BONO.csat.target,points:CFG.COORD_BONO.csat.points,label:CFG.COORD_BONO.csat.label,dir:'gte'}
   };
-  
   let earnedPoints=0;
   for(const c of Object.values(checks))if(c.met)earnedPoints+=c.points;
-  
-  // Penalización por tarjetas
-  let cardPenalty=0;
-  let zeroOut=false;
+  let cardPenalty=0,zeroOut=false;
   for(const rule of CFG.COORD_PEN_CARDS){
-    if(totalCards>=rule.min&&totalCards<=rule.max){
-      if(rule.setZero){zeroOut=true;}
-      else cardPenalty=rule.deduction;
-      break;
-    }
+    if(totalCards>=rule.min&&totalCards<=rule.max){if(rule.setZero){zeroOut=true;}else cardPenalty=rule.deduction;break;}
   }
-  
   let preliminaryPoints=zeroOut?0:earnedPoints-cardPenalty;
-  // Aplicar penalizaciones por tipo (del archivo, automaticas)
-  // penPointsAuto ya incluye signos: redencion suma, demas restan
   preliminaryPoints+=penPointsAuto;
-  // Sumar manual extra (legacy: cada queja directa manual = -100pts)
   preliminaryPoints-=(quejasDirectas*100);
-  // Para compatibilidad con la UI existente
   const _totalQuejasDirectas=quejasDirectas+_quejasDirectasAuto;
-  // Sumar green cards (+50 cada una por defecto)
   preliminaryPoints+=(greenCards*50);
-  // Sumar buen desempeño (manual)
   preliminaryPoints+=buenDesempeno;
-  
-  // Calcular tier y bono
   let tier=0,bonus=0;
-  for(const t of CFG.COORD_TIER){
-    if(preliminaryPoints>=t.min){
-      tier=t.n;bonus=t.bonus;break;
-    }
-  }
-  
-  return{
-    metrics:m,checks,
-    earnedPoints,cardPenalty,zeroOut,
-    amarillas,rojas,totalCards,
-    quejasDirectasManual:quejasDirectas,
-    quejasDirectasAuto:_quejasDirectasAuto,
-    quejasDirectasTotal:_totalQuejasDirectas,
-    penBreakdown,penPointsAuto,
-    _quejasRegistros,_quejasUnicasCount,
-    quejasDirectas,greenCards,buenDesempeno,
-    finalPoints:preliminaryPoints,
-    tier,bonus,ausentismo
-  };
+  for(const t of CFG.COORD_TIER){if(preliminaryPoints>=t.min){tier=t.n;bonus=t.bonus;break;}}
+  return{metrics:m,checks,earnedPoints,cardPenalty,zeroOut,amarillas,rojas,totalCards,
+    quejasDirectasManual:quejasDirectas,quejasDirectasAuto:_quejasDirectasAuto,
+    quejasDirectasTotal:_totalQuejasDirectas,penBreakdown,penPointsAuto,
+    _quejasRegistros,_quejasUnicasCount,quejasDirectas,greenCards,buenDesempeno,
+    finalPoints:preliminaryPoints,tier,bonus,ausentismo};
 }
 
-// ═══════════════ VISTA: POR COORDINADOR ═══════════════
 function viewCoordinador(){
   const rows=buildScorecard();
   if(!rows.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
-  
-  // Agrupar agentes por coordinador
   const byCoord={};
   for(const r of rows){
     if(!byCoord[r.coord])byCoord[r.coord]={coord:r.coord,senior:r.senior,agents:[]};
     byCoord[r.coord].agents.push(r);
   }
-  
-  // Calcular bonos
-  const coords=Object.values(byCoord).map(c=>({
-    ...c,
-    bono:calcCoordBono(c.coord,c.agents)
-  })).sort((a,b)=>a.coord.localeCompare(b.coord));
-  
+  const coords=Object.values(byCoord).map(c=>({...c,bono:calcCoordBono(c.coord,c.agents)})).sort((a,b)=>a.coord.localeCompare(b.coord));
   const sel=STATE.selectedCoord||coords[0]?.coord;
   const selData=coords.find(c=>c.coord===sel)||coords[0];
-  
-  // Tabla resumen
   const summary=`
     <div class="card" style="padding:12px 16px">${dateFilterBar()}</div>
     <div class="card">
       <div class="section-title">Bonificaciones de coordinadores</div>
-      <p class="section-sub">Click en una fila para ver el detalle. El ausentismo se ingresa manualmente en el detalle.</p>
+      <p class="section-sub">Click en una fila para ver el detalle.</p>
       <table>
         <thead><tr>
-          <th>Coordinador</th>
-          <th>Senior</th>
-          <th class="col-num">Agentes</th>
+          <th>Coordinador</th><th>Senior</th><th class="col-num">Agentes</th>
           <th class="col-num" title="P90 AHT < 20min">AHT P90</th>
           <th class="col-num" title="Ausentismo">Ausen.</th>
           <th class="col-num" title="Llamadas Colgadas">Colg.</th>
           <th class="col-num" title="Outbound vs Inbound">Out%</th>
           <th class="col-num">QA</th>
           <th class="col-num" title="Resolution Rate · meta ≥75%">RR</th>
-          <th class="col-num" title="Survey Return Rate · meta ≥75% · cuenta para bono">SRR</th>
+          <th class="col-num" title="Survey Return Rate · meta ≥75%">SRR</th>
           <th class="col-num">CSAT</th>
-          <th class="col-num" title="Tarjetas del equipo (deduplicadas por queja)">Tarjetas</th>
-          <th class="col-num" title="Penalizaciones del coord segun columna Resultado del archivo">Penaliz.</th>
-          <th class="col-num">Pts</th>
-          <th class="col-num">Bono</th>
+          <th class="col-num" title="Tarjetas del equipo">Tarjetas</th>
+          <th class="col-num" title="Penalizaciones del coord">Penaliz.</th>
+          <th class="col-num">Pts</th><th class="col-num">Bono</th>
         </tr></thead>
         <tbody>
         ${coords.map(c=>{
-          const b=c.bono;
-          const m=b.metrics;
+          const b=c.bono;const m=b.metrics;
           return`<tr onclick="STATE.selectedCoord='${c.coord}';renderActiveTab()" style="${c.coord===sel?'background:var(--accent-light)':''}">
             <td class="col-name">${c.coord}</td>
             <td class="muted">${c.senior||'—'}</td>
@@ -2915,33 +2073,27 @@ function viewCoordinador(){
             <td class="col-num">${statusCell(m.ahtP90,90,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${b.ausentismo!=null?statusCell(b.ausentismo,5,'lte',v=>fmt.pct(v)):'<span class="muted">—</span>'}</td>
             <td class="col-num">${statusCell(m.colgadas,6,'lte',v=>fmt.pct(v))}</td>
-            <td class="col-num" title="${(CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(c.coord))?'Meta ≤35% (turno especial)':'Meta ≤30%'}">${statusCell(m.outbound,(CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(c.coord))?35:30,'lte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(m.outbound,(CFG.COORDS_OUTBOUND_35&&CFG.COORDS_OUTBOUND_35.includes(c.coord))?35:30,'lte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(m.qa,85,'gte',v=>fmt.pct(v))}</td>
-            <td class="col-num" title="Resolution Rate">${statusCell(m.rr,75,'gte',v=>fmt.pct(v))}</td>
-            <td class="col-num" title="Survey Return Rate (bono del coord)">${statusCell(m.srr,75,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(m.rr,75,'gte',v=>fmt.pct(v))}</td>
+            <td class="col-num">${statusCell(m.srr,75,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(m.csat,90,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${b.totalCards>0?`<span class="b ${b.totalCards>=12?'bad':b.totalCards>=6?'warn':'neutral'}">${b.amarillas}A · ${b.rojas}R</span>`:'<span class="muted">—</span>'}</td>
-            <td class="col-num" title="${b.penPointsAuto!==0||b.quejasDirectasManual>0?Object.entries(b.penBreakdown||{}).filter(([k,v])=>v>0).map(([k,v])=>`${v}× ${CFG.COORD_PEN_TYPES[k]?CFG.COORD_PEN_TYPES[k].label:k}`).join(' · '):'Sin penalizaciones'}">${(()=>{const total=(b.penPointsAuto||0)-(b.quejasDirectasManual||0)*100;if(total===0)return '<span class="muted">—</span>';const cls=total<0?'bad':'ok';const sign=total>0?'+':'';return `<span class="b ${cls}">${sign}${total}</span>`;})()}</td>
+            <td class="col-num">${(()=>{const total=(b.penPointsAuto||0)-(b.quejasDirectasManual||0)*100;if(total===0)return'<span class="muted">—</span>';const cls=total<0?'bad':'ok';const sign=total>0?'+':'';return`<span class="b ${cls}">${sign}${total}</span>`;})()}</td>
             <td class="col-num"><strong>${fmt.num(b.finalPoints)}</strong></td>
             <td class="col-num"><span class="tier-badge tier-${Math.max(0,b.tier)}">${b.bonus<0?'-$'+Math.abs(b.bonus):fmt.money(b.bonus)}</span></td>
           </tr>`;
         }).join('')}
         </tbody>
       </table>
-    </div>
-  `;
-  
-  // Detalle del coordinador seleccionado
+    </div>`;
   if(!selData)return summary;
-  const b=selData.bono;
-  const m=b.metrics;
+  const b=selData.bono;const m=b.metrics;
   const manual=STATE.coordManual[selData.coord]||{};
-  
   const detail=`
     <div class="card">
       <div class="section-title">Detalle de ${selData.coord}</div>
       <p class="section-sub">${selData.senior?'Senior: '+selData.senior+' · ':''}${selData.agents.length} Prod Agents · ${m.totalLlamadas} llamadas atendidas</p>
-      
       <div class="metric-grid" style="margin-top:14px">
         ${metricTile('AHT P90 < 20min',fmt.pct(m.ahtP90),'Meta ≥90% · '+(b.checks.aht_p90.met?'+900pts':'+0pts'),statusFor(m.ahtP90,90,'gte'))}
         ${metricTile('Ausentismo',b.ausentismo!=null?fmt.pct(b.ausentismo):'—','Meta ≤5% · '+(b.checks.ausentismo.met?'+150pts':'+0pts'),b.ausentismo!=null?statusFor(b.ausentismo,5,'lte'):'neutral')}
@@ -2952,15 +2104,14 @@ function viewCoordinador(){
         ${metricTile('CSAT',fmt.pct(m.csat),'Meta ≥90% · '+(b.checks.csat.met?'+300pts':'+0pts'),statusFor(m.csat,90,'gte'))}
       </div>
     </div>
-    
     ${(()=>{
       const bd=b.penBreakdown||{};
       const items=Object.entries(CFG.COORD_PEN_TYPES).map(([k,cfg])=>({k,...cfg,count:bd[k]||0}));
       const totalPts=b.penPointsAuto||0;
-      return `<div class="card">
+      return`<div class="card">
         <div class="section-title">Penalizaciones del archivo</div>
         <p class="section-sub">Detalle basado en la columna "Resultado" del archivo de apelaciones</p>
-        <table class="data-table" style="margin-top:12px">
+        <table style="margin-top:12px">
           <thead><tr><th>Tipo</th><th class="col-num">Cantidad</th><th class="col-num">Pts c/u</th><th class="col-num">Total</th></tr></thead>
           <tbody>
             ${items.map(it=>`<tr>
@@ -2969,7 +2120,7 @@ function viewCoordinador(){
               <td class="col-num" style="color:${it.points>0?'#10b981':'#dc2626'}">${it.points>0?'+':''}${it.points}</td>
               <td class="col-num"><strong style="color:${it.count*it.points>0?'#10b981':it.count*it.points<0?'#dc2626':'#94a3b8'}">${it.count===0?'—':(it.count*it.points>0?'+':'')+it.count*it.points}</strong></td>
             </tr>`).join('')}
-            <tr style="border-top:2px solid var(--border);font-weight:bold;background:var(--bg-cream)">
+            <tr style="border-top:2px solid var(--border);font-weight:bold">
               <td colspan="3">TOTAL APLICADO</td>
               <td class="col-num"><strong style="color:${totalPts>0?'#10b981':totalPts<0?'#dc2626':'#94a3b8'};font-size:16px">${totalPts===0?'—':(totalPts>0?'+':'')+totalPts+' pts'}</strong></td>
             </tr>
@@ -2977,7 +2128,6 @@ function viewCoordinador(){
         </table>
       </div>`;
     })()}
-    
     <div class="card">
       <div class="section-title">Resumen de bonificación</div>
       <div class="metric-grid">
@@ -2987,31 +2137,26 @@ function viewCoordinador(){
         ${metricTile('Bono',b.bonus<0?'-$'+Math.abs(b.bonus):fmt.money(b.bonus),b.bonus<0?'Penalización al salario':b.bonus>0?'Sumado al salario':'Sin bono','neutral')}
       </div>
     </div>
-    
     <div class="card">
       <div class="section-title">Ajustes manuales</div>
-      <p class="section-sub">Estos campos los ingresas manualmente y afectan el cálculo del bono. Click en guardar para aplicar.</p>
+      <p class="section-sub">Estos campos los ingresas manualmente y afectan el cálculo del bono.</p>
       <div class="grid-4">
         <div class="field"><label>Ausentismo %</label><input type="number" id="coordAusentismo" value="${manual.ausentismo!=null?manual.ausentismo:''}" step="0.01" placeholder="—"></div>
-        <div class="field"><label>Quejas directas EXTRA (-100 c/u)</label><input type="number" id="coordQuejasDirectas" value="${manual.quejasDirectas||0}" min="0" title="Quejas directas adicionales. Las que vienen del archivo de apelaciones se cuentan automaticamente."></div>
+        <div class="field"><label>Quejas directas EXTRA (-100 c/u)</label><input type="number" id="coordQuejasDirectas" value="${manual.quejasDirectas||0}" min="0"></div>
         <div class="field"><label>Green cards (+50 c/u)</label><input type="number" id="coordGreenCards" value="${manual.greenCards||0}" min="0"></div>
         <div class="field"><label>Buen desempeño (pts)</label><input type="number" id="coordBuenDesempeno" value="${manual.buenDesempeno||0}"></div>
       </div>
       <div style="margin-top:12px"><button class="btn primary" onclick="saveCoordManual('${selData.coord}')">Guardar</button></div>
     </div>
-    
     <div class="card">
       <div class="section-title">Equipo de ${selData.coord}</div>
       <table>
         <thead><tr>
-          <th>Agente</th><th>CL</th>
-          <th class="col-num">Llam.</th>
+          <th>Agente</th><th>CL</th><th class="col-num">Llam.</th>
           <th class="col-num">RR</th><th class="col-num">CSAT</th>
-          <th class="col-num">AHT</th><th class="col-num" title="P90: % bajo 20 min">P90</th><th class="col-num">QA</th>
-          <th class="col-num">Rel%</th>
-          <th class="col-num">Out%</th>
-          <th class="col-num">Quejas</th>
-          <th class="col-num">Bono</th>
+          <th class="col-num">AHT</th><th class="col-num" title="P90: % bajo 20 min">P90</th>
+          <th class="col-num">QA</th><th class="col-num">Rel%</th><th class="col-num">Out%</th>
+          <th class="col-num">Quejas</th><th class="col-num">Bono</th>
         </tr></thead>
         <tbody>
         ${selData.agents.map(r=>{
@@ -3033,9 +2178,7 @@ function viewCoordinador(){
         }).join('')}
         </tbody>
       </table>
-    </div>
-  `;
-  
+    </div>`;
   return summary+detail;
 }
 
@@ -3049,21 +2192,15 @@ async function saveCoordManual(coordName){
   };
   STATE.coordManual[coordName]=data;
   if(CFG.BACKEND_URL){
-    try{
-      await pushBackend({type:'coordManual',coordName,data});
-      showBanner('success','Datos del coordinador guardados');
-    }catch(e){
-      showBanner('error','Error al guardar: '+e.message);
-    }
+    try{await pushBackend({type:'coordManual',coordName,data});showBanner('success','Datos del coordinador guardados');}
+    catch(e){showBanner('error','Error al guardar: '+e.message);}
   }
   renderActiveTab();
 }
 
-// ═══════════════ VISTA: POR SENIOR ═══════════════
 function viewSenior(){
   const rows=buildScorecard();
   if(!rows.length)return'<div class="card" style="padding:12px 16px">'+dateFilterBar()+'</div><div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
-  
   const bySr={};
   for(const r of rows){
     const sr=r.senior||'—';
@@ -3075,9 +2212,7 @@ function viewSenior(){
     if(r.rr!=null){s.rrSum+=r.rr;s.rrN++;}
     if(r.csat!=null){s.csatSum+=r.csat;s.csatN++;}
     if(r.qaScore!=null){s.qaSum+=r.qaScore;s.qaN++;}
-    s.callsAt+=r.callsAt;
-    s.quejas+=r.quejasTotal;
-    s.bonusTotal+=calcBono(r).bonus;
+    s.callsAt+=r.callsAt;s.quejas+=r.quejasTotal;s.bonusTotal+=calcBono(r).bonus;
   }
   return`
     <div class="card" style="padding:12px 16px">${dateFilterBar()}</div>
@@ -3085,15 +2220,9 @@ function viewSenior(){
       <div class="section-title">Resumen por senior</div>
       <table>
         <thead><tr>
-          <th>Senior</th>
-          <th class="col-num">Coordinadores</th>
-          <th class="col-num">Agentes</th>
-          <th class="col-num">Llamadas</th>
-          <th class="col-num">RR</th>
-          <th class="col-num">CSAT</th>
-          <th class="col-num">QA</th>
-          <th class="col-num">Quejas</th>
-          <th class="col-num">Bono total</th>
+          <th>Senior</th><th class="col-num">Coordinadores</th><th class="col-num">Agentes</th>
+          <th class="col-num">Llamadas</th><th class="col-num">RR</th><th class="col-num">CSAT</th>
+          <th class="col-num">QA</th><th class="col-num">Quejas</th><th class="col-num">Bono total</th>
         </tr></thead>
         <tbody>
         ${Object.values(bySr).sort((a,b)=>a.senior.localeCompare(b.senior)).map(s=>`<tr>
@@ -3110,30 +2239,21 @@ function viewSenior(){
         </tbody>
       </table>
     </div>
-    
     ${Object.values(bySr).map(s=>`<div class="card">
       <div class="section-title">Equipo de ${s.senior}</div>
       <p class="section-sub">${Object.keys(s.coords).length} coordinador(es) · ${s.agents.length} agentes</p>
       <table>
-        <thead><tr>
-          <th>Coordinador</th>
-          <th class="col-num">Agentes</th>
-          <th class="col-num">RR prom</th>
-          <th class="col-num">CSAT prom</th>
-          <th class="col-num">QA prom</th>
+        <thead><tr><th>Coordinador</th><th class="col-num">Agentes</th>
+          <th class="col-num">RR prom</th><th class="col-num">CSAT prom</th><th class="col-num">QA prom</th>
         </tr></thead>
         <tbody>
         ${Object.entries(s.coords).map(([c,n])=>{
           const ags=s.agents.filter(a=>a.coord===c);
-          const rrV=ags.filter(a=>a.rr!=null);
-          const csV=ags.filter(a=>a.csat!=null);
-          const qaV=ags.filter(a=>a.qaScore!=null);
+          const rrV=ags.filter(a=>a.rr!=null);const csV=ags.filter(a=>a.csat!=null);const qaV=ags.filter(a=>a.qaScore!=null);
           const rr=rrV.length?rrV.reduce((s,a)=>s+a.rr,0)/rrV.length:null;
           const cs=csV.length?csV.reduce((s,a)=>s+a.csat,0)/csV.length:null;
           const qa=qaV.length?qaV.reduce((s,a)=>s+a.qaScore,0)/qaV.length:null;
-          return`<tr>
-            <td class="col-name">${c}</td>
-            <td class="col-num">${n}</td>
+          return`<tr><td class="col-name">${c}</td><td class="col-num">${n}</td>
             <td class="col-num">${statusCell(rr,CFG.META_RR,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(cs,CFG.META_CSAT,'gte',v=>fmt.pct(v))}</td>
             <td class="col-num">${statusCell(qa,CFG.META_QA,'gte',v=>fmt.pct(v))}</td>
@@ -3141,94 +2261,58 @@ function viewSenior(){
         }).join('')}
         </tbody>
       </table>
-    </div>`).join('')}
-  `;
+    </div>`).join('')}`;
 }
 
-// ═══════════════ VISTA: TOP PERFORMERS ═══════════════
 function viewTop(){
   const rows=buildScorecard();
   if(!rows.length)return'<div class="card" style="padding:12px 16px">'+dateFilterBar()+'</div><div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
-  
   const sorted=[...rows].map(r=>({...r,bono:calcBono(r)}));
-  
   const topRR=[...sorted].filter(r=>r.rr!=null).sort((a,b)=>b.rr-a.rr).slice(0,10);
   const topCSAT=[...sorted].filter(r=>r.csat!=null).sort((a,b)=>b.csat-a.csat).slice(0,10);
   const topQA=[...sorted].filter(r=>r.qaScore!=null).sort((a,b)=>b.qaScore-a.qaScore).slice(0,10);
   const topPoints=[...sorted].sort((a,b)=>b.bono.adjustedPoints-a.bono.adjustedPoints).slice(0,10);
   const topCalls=[...sorted].sort((a,b)=>b.callsAt-a.callsAt).slice(0,10);
   const topServ=[...sorted].filter(r=>r.servTotal>0).sort((a,b)=>b.servTotal-a.servTotal).slice(0,10);
-
   function topList(items,valueFn,fmtFn){
-    return`<table>
-      <thead><tr><th>#</th><th>Agente</th><th>Coord</th><th class="col-num">Valor</th></tr></thead>
-      <tbody>
+    return`<table><thead><tr><th>#</th><th>Agente</th><th>Coord</th><th class="col-num">Valor</th></tr></thead><tbody>
       ${items.map((r,i)=>`<tr onclick="selectAgent('${r.nameKey}')">
-        <td><strong>${i+1}</strong></td>
-        <td class="col-name">${r.agent}</td>
-        <td class="muted">${r.coord}</td>
-        <td class="col-num"><strong>${fmtFn(valueFn(r))}</strong></td>
+        <td><strong>${i+1}</strong></td><td class="col-name">${r.agent}</td>
+        <td class="muted">${r.coord}</td><td class="col-num"><strong>${fmtFn(valueFn(r))}</strong></td>
       </tr>`).join('')}
       </tbody></table>`;
   }
-
   return`
     <div class="card" style="padding:12px 16px">${dateFilterBar()}</div>
     <div class="grid-2">
-      <div class="card">
-        <div class="section-title">🏆 Top RR</div>
-        ${topList(topRR,r=>r.rr,fmt.pct)}
-      </div>
-      <div class="card">
-        <div class="section-title">🏆 Top CSAT</div>
-        ${topList(topCSAT,r=>r.csat,fmt.pct)}
-      </div>
+      <div class="card"><div class="section-title">🏆 Top RR</div>${topList(topRR,r=>r.rr,fmt.pct)}</div>
+      <div class="card"><div class="section-title">🏆 Top CSAT</div>${topList(topCSAT,r=>r.csat,fmt.pct)}</div>
     </div>
     <div class="grid-2">
-      <div class="card">
-        <div class="section-title">🏆 Top QA</div>
-        ${topList(topQA,r=>r.qaScore,fmt.pct)}
-      </div>
-      <div class="card">
-        <div class="section-title">🏆 Top Bonus Points</div>
-        ${topList(topPoints,r=>r.bono.adjustedPoints,v=>fmt.num(v)+' pts')}
-      </div>
+      <div class="card"><div class="section-title">🏆 Top QA</div>${topList(topQA,r=>r.qaScore,fmt.pct)}</div>
+      <div class="card"><div class="section-title">🏆 Top Bonus Points</div>${topList(topPoints,r=>r.bono.adjustedPoints,v=>fmt.num(v)+' pts')}</div>
     </div>
     <div class="grid-2">
-      <div class="card">
-        <div class="section-title">🏆 Top Volumen llamadas</div>
-        ${topList(topCalls,r=>r.callsAt,fmt.num)}
-      </div>
-      <div class="card">
-        <div class="section-title">🏆 Top Servicios solicitados</div>
-        ${topList(topServ,r=>r.servTotal,fmt.num)}
-      </div>
-    </div>
-  `;
+      <div class="card"><div class="section-title">🏆 Top Volumen llamadas</div>${topList(topCalls,r=>r.callsAt,fmt.num)}</div>
+      <div class="card"><div class="section-title">🏆 Top Servicios solicitados</div>${topList(topServ,r=>r.servTotal,fmt.num)}</div>
+    </div>`;
 }
 
-// ═══════════════ VISTA: BONIFICACIONES ═══════════════
 function viewBono(){
   const rows=buildScorecard();
   if(!rows.length)return'<div class="card" style="padding:12px 16px">'+dateFilterBar()+'</div><div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
-  
   const data=rows.map(r=>({...r,bono:calcBono(r)}));
   const totalBono=data.reduce((s,r)=>s+r.bono.bonus,0);
-  const totalSalary=data.reduce((s,r)=>s+r.bono.adjustedSalary,0);
   const tierCounts={0:0,1:0,2:0,3:0};
   data.forEach(r=>tierCounts[r.bono.tier]++);
-
   const filterCoord=$('bonoCoord')?$('bonoCoord').value:'';
   const filterTier=$('bonoTier')?$('bonoTier').value:'';
   let displayed=data;
   if(filterCoord)displayed=displayed.filter(r=>r.coord===filterCoord);
   if(filterTier!=='')displayed=displayed.filter(r=>String(r.bono.tier)===filterTier);
-  
   const coords=[...new Set(rows.map(r=>r.coord))].sort();
-
   return`
     <div class="card" style="padding:12px 16px">${dateFilterBar()}</div>
-    ${dateFilterBar()}
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-label">Agentes</div><div class="kpi-value">${data.length}</div></div>
       <div class="kpi"><div class="kpi-label">Tier 3 ($300)</div><div class="kpi-value cell-ok">${tierCounts[3]}</div></div>
@@ -3237,7 +2321,6 @@ function viewBono(){
       <div class="kpi"><div class="kpi-label">Tier 0 ($0)</div><div class="kpi-value cell-bad">${tierCounts[0]}</div></div>
       <div class="kpi"><div class="kpi-label">Bono total</div><div class="kpi-value">${fmt.money(totalBono)}</div><div class="kpi-meta">+ ${fmt.money(data.length*CFG.BASE_SALARY)} base</div></div>
     </div>
-
     <div class="card">
       <div class="filter-row">
         <div class="field"><label>Coordinador</label><select id="bonoCoord" onchange="renderActiveTab()">
@@ -3252,40 +2335,27 @@ function viewBono(){
           <option value="0"${filterTier==='0'?' selected':''}>Tier 0 ($0)</option>
         </select></div>
       </div>
-      
       <div style="overflow-x:auto;max-height:70vh;overflow-y:auto">
       <table>
         <thead><tr>
           <th>Agente</th><th>Coord</th>
-          <th class="col-num" title="Quality">QA</th>
-          <th class="col-num" title="Released ≤6%">Rel%</th>
-          <th class="col-num" title="CSAT ≥85%">CSAT</th>
-          <th class="col-num" title="Outbound ≤30%">Out%</th>
-          <th class="col-num" title="Resolution Rate ≥75%">RR</th>
-          <th class="col-num" title="Survey Return Rate ≥75%">SRR</th>
-          <th class="col-num" title="Survey Delivery Rate ≥45%">SDR</th>
-          <th class="col-num" title="Absenteeism ≤4%">Ab%</th>
-          <th class="col-num">Earned</th>
-          <th class="col-num">Pen.</th>
-          <th class="col-num">Adjusted</th>
-          <th>Tier</th>
-          <th class="col-num">Bono</th>
+          <th class="col-num" title="Quality">QA</th><th class="col-num" title="Released ≤6%">Rel%</th>
+          <th class="col-num" title="CSAT ≥85%">CSAT</th><th class="col-num" title="Outbound ≤30%">Out%</th>
+          <th class="col-num" title="Resolution Rate ≥75%">RR</th><th class="col-num" title="Survey Return Rate ≥75%">SRR</th>
+          <th class="col-num" title="Survey Delivery Rate ≥45%">SDR</th><th class="col-num" title="Absenteeism ≤4%">Ab%</th>
+          <th class="col-num">Earned</th><th class="col-num">Pen.</th><th class="col-num">Adjusted</th>
+          <th>Tier</th><th class="col-num">Bono</th>
         </tr></thead>
         <tbody>
         ${displayed.sort((a,b)=>b.bono.adjustedPoints-a.bono.adjustedPoints).map(r=>{
           const b=r.bono;
           const ck=k=>b.checks[k].met?'<span class="cell-ok">✓</span>':b.checks[k].val==null?'<span class="muted">—</span>':'<span class="cell-bad">✗</span>';
           return`<tr onclick="selectAgent('${r.nameKey}')">
-            <td class="col-name">${r.agent}</td>
-            <td class="muted">${r.coord}</td>
-            <td class="col-num">${ck('quality')}</td>
-            <td class="col-num">${ck('released')}</td>
-            <td class="col-num">${ck('csat')}</td>
-            <td class="col-num">${ck('outbound')}</td>
-            <td class="col-num">${ck('rr_bono')}</td>
-            <td class="col-num">${ck('srr_bono')}</td>
-            <td class="col-num">${ck('sdr_bono')}</td>
-            <td class="col-num">${ck('absent')}</td>
+            <td class="col-name">${r.agent}</td><td class="muted">${r.coord}</td>
+            <td class="col-num">${ck('quality')}</td><td class="col-num">${ck('released')}</td>
+            <td class="col-num">${ck('csat')}</td><td class="col-num">${ck('outbound')}</td>
+            <td class="col-num">${ck('rr_bono')}</td><td class="col-num">${ck('srr_bono')}</td>
+            <td class="col-num">${ck('sdr_bono')}</td><td class="col-num">${ck('absent')}</td>
             <td class="col-num">${fmt.num(b.earnedPoints)}</td>
             <td class="col-num ${b.lostPoints<0?'cell-bad':b.lostPoints>0?'cell-ok':''}">${b.lostPoints>=0?'+':''}${fmt.num(b.lostPoints)}</td>
             <td class="col-num"><strong>${fmt.num(b.adjustedPoints)}</strong></td>
@@ -3297,7 +2367,6 @@ function viewBono(){
       </table>
       </div>
     </div>
-    
     <div class="card">
       <div class="section-title">Reglas de bonificación</div>
       <div class="bono-row" style="font-weight:700;color:var(--muted3);text-transform:uppercase;font-size:10.5px;letter-spacing:.5px">
@@ -3313,163 +2382,111 @@ function viewBono(){
       <p class="section-sub">Penalizaciones: Procedural failure (amarilla) -${CFG.PEN.procedural} · Serious fault (roja) -${CFG.PEN.serious} · Ausencia injustificada -${CFG.PEN.absences} · 2 amarillas = 1 roja</p>
       <p class="section-sub">Tiers: ${CFG.TIER.slice().reverse().map(t=>`${t.label}: ≥${t.min} pts → ${fmt.money(t.bonus)}`).join(' · ')}</p>
       <p class="section-sub">Salario base: ${fmt.money(CFG.BASE_SALARY)} (no incluido en bono)</p>
-    </div>
-  `;
+    </div>`;
 }
 
-// ═══════════════ VISTA: DISTRIBUCIÓN ═══════════════
 function viewDistro(){
   if(!STATE.distro.length){
-    return`<div class="card"><div class="empty">
-      <div class="empty-icon">⏳</div>
-      <div class="empty-title">Cargando distribución…</div>
-      <div class="empty-text">Conectando a Google Sheets</div>
-    </div></div>`;
+    return`<div class="card"><div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Cargando distribución…</div><div class="empty-text">Conectando a Google Sheets</div></div></div>`;
   }
-  
   const bySr={};
   for(const a of STATE.distro){
     if(!bySr[a.senior])bySr[a.senior]={coords:{}};
     if(!bySr[a.senior].coords[a.coord])bySr[a.senior].coords[a.coord]=[];
     bySr[a.senior].coords[a.coord].push(a);
   }
-
   return`
     <div class="banner info">
       <strong>Distribución conectada en tiempo real.</strong> Los cambios en la Google Sheet se reflejan automáticamente cada ${CFG.REFRESH_MS/1000} segundos.
       <a href="https://docs.google.com/spreadsheets/d/${CFG.DISTRO_SHEET}/edit" target="_blank" style="color:var(--blue);text-decoration:underline">Abrir Sheet</a>
     </div>
-    
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-label">Total Prod Agents</div><div class="kpi-value">${STATE.distro.length}</div></div>
       <div class="kpi"><div class="kpi-label">Seniors</div><div class="kpi-value">${Object.keys(bySr).length}</div></div>
       <div class="kpi"><div class="kpi-label">Coordinadores</div><div class="kpi-value">${[...new Set(STATE.distro.map(a=>a.coord))].length}</div></div>
       <div class="kpi"><div class="kpi-label">Clusters</div><div class="kpi-value">${[...new Set(STATE.distro.map(a=>a.cluster))].length}</div></div>
     </div>
-    
     ${Object.entries(bySr).map(([sr,d])=>`<div class="card">
       <div class="section-title">${sr}</div>
       <p class="section-sub">${Object.keys(d.coords).length} coordinador(es) · ${Object.values(d.coords).flat().length} agentes</p>
       ${Object.entries(d.coords).map(([co,ags])=>`
         <div style="margin-top:14px">
           <div style="font-weight:700;font-size:12.5px;margin-bottom:6px;color:var(--muted3)">${co} <span class="muted" style="font-weight:400;font-family:var(--mono)">· ${ags.length} agentes</span></div>
-          <table>
-            <thead><tr><th>Agente</th><th>Cluster</th><th>Extensión</th></tr></thead>
-            <tbody>
-            ${ags.map(a=>`<tr onclick="selectAgent('${a.nameKey}')">
-              <td class="col-name">${a.agent}</td>
-              <td>${clusterTag(a.cluster)}</td>
-              <td class="muted">${a.extension||'—'}</td>
-            </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      `).join('')}
-    </div>`).join('')}
-  `;
+          <table><thead><tr><th>Agente</th><th>Cluster</th><th>Extensión</th></tr></thead>
+          <tbody>
+          ${ags.map(a=>`<tr onclick="selectAgent('${a.nameKey}')">
+            <td class="col-name">${a.agent}</td><td>${clusterTag(a.cluster)}</td><td class="muted">${a.extension||'—'}</td>
+          </tr>`).join('')}
+          </tbody></table>
+        </div>`).join('')}
+    </div>`).join('')}`;
 }
 
-
-// Construye el scorecard para un rango de fechas específico, sin mutar STATE
-// Si un agente tuvo varios coords en el rango, genera una fila por coord.
-function buildScorecardForRange(startDate, endDate){
-  const filtered = STATE.history.filter(h => h.date >= startDate && h.date <= endDate);
-  // Agrupar por (nameKey, coordEnEseDia) en lugar de solo nameKey
-  const byAgentCoord = {};   // 'nameKey|coord' -> acc
+function buildScorecardForRange(startDate,endDate){
+  const filtered=STATE.history.filter(h=>h.date>=startDate&&h.date<=endDate);
+  const byAgentCoord={};
   for(const h of filtered){
-    const c=getCoordOnDate(h.nameKey, h.date);
+    const c=getCoordOnDate(h.nameKey,h.date);
     const coord=c?c.coord:'';
     const key=h.nameKey+'|'+coord;
-    if(!byAgentCoord[key]) byAgentCoord[key] = {n:0,coord,...emptyAccumulator()};
-    accumulate(byAgentCoord[key], h);
+    if(!byAgentCoord[key])byAgentCoord[key]={n:0,coord,...emptyAccumulator()};
+    accumulate(byAgentCoord[key],h);
     byAgentCoord[key].n++;
   }
-  
   const rows=[];
   for(const ag of (STATE.distro||[])){
-    if(ag.type.toLowerCase()!=='prod agent') continue;
-    
-    // Recolectar buckets de este agente
+    if(ag.type.toLowerCase()!=='prod agent')continue;
     const buckets=[];
     for(const [bk,bv] of Object.entries(byAgentCoord)){
       const parts=bk.split('|');
       if(parts[0]===ag.nameKey)buckets.push(bv);
     }
-    
     if(buckets.length===0){
-      rows.push({
-        nameKey:ag.nameKey, agent:ag.agent, coord:ag.coord, senior:ag.senior,
-        cluster:ag.cluster, extension:ag.extension,
-        callsAt:0,callsIn:0,callsOut:0,
-        rr:null, csat:null, qaScore: STATE.qa[ag.nameKey]?.score ?? null,
-        aht:null, releasedPct:null, outboundPct:null,
-        surveysSent:0, surveysAnswered:0, sdr:null, srr:null,
-        acwMin:null, holdMin:null, breakMin:null, banoMin:null,
-        servTotal:0, servComp:0, servCanc:0, quejasTotal:0, quejasYellow:0, quejasRed:0,
-        isCoordSplit:false
-      });
+      rows.push({nameKey:ag.nameKey,agent:ag.agent,coord:ag.coord,senior:ag.senior,
+        cluster:ag.cluster,extension:ag.extension,callsAt:0,callsIn:0,callsOut:0,
+        rr:null,csat:null,qaScore:STATE.qa[ag.nameKey]?.score??null,
+        aht:null,releasedPct:null,outboundPct:null,surveysSent:0,surveysAnswered:0,sdr:null,srr:null,
+        acwMin:null,holdMin:null,breakMin:null,banoMin:null,
+        servTotal:0,servComp:0,servCanc:0,quejasTotal:0,quejasYellow:0,quejasRed:0,isCoordSplit:false});
       continue;
     }
-    
     const hasSplit=buckets.length>1;
-    
-    // Quejas en el rango (se asignan solo al primer bucket)
     const quejas=(STATE.quejas||[]).filter(q=>q.nameKey===ag.nameKey&&q.fecha>=startDate&&q.fecha<=endDate);
     const quejasYellow=quejas.filter(q=>(q.tarjeta||'').toLowerCase().includes('amaril')).length;
     const quejasRed=quejas.filter(q=>(q.tarjeta||'').toLowerCase().includes('roj')).length;
-    
     for(let i=0;i<buckets.length;i++){
       const v=buckets[i];
-      const callsAt = (v.callsIn||0)+(v.callsOut||0);
-      const aht = v.ahtN ? v.ahtSecSum/v.ahtN : null;
-      const rr = v.rrN ? v.rrPctSum/v.rrN : null;
-      const csat = v.csatN ? v.csatPctSum/v.csatN : null;
-      const sdr = v.callsIn ? (v.surveysSent/v.callsIn)*100 : null;
-      const srr = v.surveysSent ? (v.surveysAnswered/v.surveysSent)*100 : null;
-      const releasedPct = v.totalEntrantes ? (v.released/v.totalEntrantes)*100 : null;
-      const outboundPct = callsAt ? (v.callsOut/callsAt)*100 : null;
-      const acw = v.acwN ? v.acwMinSum/v.acwN : null;
-      const hold = v.holdN ? v.holdMinSum/v.holdN : null;
-      
-      // El coord de esta fila viene del bucket
+      const callsAt=(v.callsIn||0)+(v.callsOut||0);
+      const aht=v.ahtN?v.ahtSecSum/v.ahtN:null;
+      const rr=v.rrN?v.rrPctSum/v.rrN:null;
+      const csat=v.csatN?v.csatPctSum/v.csatN:null;
+      const sdr=v.callsIn?(v.surveysSent/v.callsIn)*100:null;
+      const srr=v.surveysSent?(v.surveysAnswered/v.surveysSent)*100:null;
+      const releasedPct=v.totalEntrantes?(v.released/v.totalEntrantes)*100:null;
+      const outboundPct=callsAt?(v.callsOut/callsAt)*100:null;
       const coordForRow=v.coord||ag.coord;
       let seniorForRow=ag.senior;
       const distroOtroCoord=(STATE.distro||[]).find(a=>a.coord===coordForRow);
       if(distroOtroCoord)seniorForRow=distroOtroCoord.senior;
-      
-      rows.push({
-        nameKey:ag.nameKey, agent:ag.agent, coord:coordForRow, senior:seniorForRow,
-        cluster:ag.cluster, extension:ag.extension,
-        callsAt, callsIn:v.callsIn||0, callsOut:v.callsOut||0,
-        rr, csat, qaScore: STATE.qa[ag.nameKey]?.score ?? null,
-        aht, releasedPct, outboundPct,
-        surveysSent:v.surveysSent||0, surveysAnswered:v.surveysAnswered||0, sdr, srr,
-        acwMin:acw, holdMin:hold,
-        breakMin: v.breakDays? v.breakSum/v.breakDays : null,
-        banoMin: v.banoDays? v.banoSum/v.banoDays : null,
-        servTotal:v.servTotal||0, servComp:v.servComp||0, servCanc:v.servCanc||0,
-        quejasTotal: i===0?quejas.length:0,
-        quejasYellow: i===0?quejasYellow:0,
-        quejasRed: i===0?quejasRed:0,
-        isCoordSplit:hasSplit,
-        coordDias:v.n||0
-      });
+      rows.push({nameKey:ag.nameKey,agent:ag.agent,coord:coordForRow,senior:seniorForRow,
+        cluster:ag.cluster,extension:ag.extension,callsAt,callsIn:v.callsIn||0,callsOut:v.callsOut||0,
+        rr,csat,qaScore:STATE.qa[ag.nameKey]?.score??null,aht,releasedPct,outboundPct,
+        surveysSent:v.surveysSent||0,surveysAnswered:v.surveysAnswered||0,sdr,srr,
+        acwMin:v.acwN?v.acwMinSum/v.acwN:null,holdMin:v.holdN?v.holdMinSum/v.holdN:null,
+        breakMin:v.breakDays?v.breakSum/v.breakDays:null,banoMin:v.banoDays?v.banoSum/v.banoDays:null,
+        servTotal:v.servTotal||0,servComp:v.servComp||0,servCanc:v.servCanc||0,
+        quejasTotal:i===0?quejas.length:0,quejasYellow:i===0?quejasYellow:0,quejasRed:i===0?quejasRed:0,
+        isCoordSplit:hasSplit,coordDias:v.n||0});
     }
   }
   return rows;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// VIEW: INFORME OPERATIVO SEMANAL
-// ═══════════════════════════════════════════════════════════════════════════
-
 function getWeekRange(dateStr){
   const d=new Date(dateStr+'T00:00:00');
   const day=d.getDay()||7;
-  const monday=new Date(d);
-  monday.setDate(d.getDate()-day+1);
-  const sunday=new Date(monday);
-  sunday.setDate(monday.getDate()+6);
+  const monday=new Date(d);monday.setDate(d.getDate()-day+1);
+  const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);
   const fmtDate=dt=>dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
   const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
   const fmtSpa=dt=>dt.getDate()+' '+meses[dt.getMonth()]+' '+dt.getFullYear();
@@ -3480,82 +2497,53 @@ function listAvailableWeeks(){
   const dates=[...new Set(STATE.history.map(h=>h.date))].sort();
   if(!dates.length)return[];
   const weeks={};
-  for(const d of dates){
-    const w=getWeekRange(d);
-    weeks[w.start]={start:w.start,end:w.end,label:w.label};
-  }
+  for(const d of dates){const w=getWeekRange(d);weeks[w.start]={start:w.start,end:w.end,label:w.label};}
   return Object.values(weeks).sort((a,b)=>b.start.localeCompare(a.start));
 }
 
 function viewInforme(){
   const weeks=listAvailableWeeks();
-  if(!weeks.length){
-    return '<div class="card"><div class="empty"><div class="empty-title">Sin datos</div><p class="muted">Carga datos en el histórico para generar informes</p></div></div>';
-  }
+  if(!weeks.length){return'<div class="card"><div class="empty"><div class="empty-title">Sin datos</div><p class="muted">Carga datos en el histórico para generar informes</p></div></div>';}
   if(!STATE.informeWeek)STATE.informeWeek=weeks[0].start;
   const selectedWeek=weeks.find(w=>w.start===STATE.informeWeek)||weeks[0];
-
-  // Construir filas DIRECTAMENTE filtrando por la semana sin tocar STATE
   const rows=buildScorecardForRange(selectedWeek.start,selectedWeek.end);
-
   let totalLlamadasIn=0,totalLlamadasOut=0,totalEncSent=0,totalEncAns=0,totalServ=0,totalServComp=0;
   let rrSum=0,rrN=0,csatSum=0,csatN=0,qaSum=0,qaN=0;
-  let agentsRR=0,agentsCSAT=0,agentsQA=0;
-  let totalBono=0;
+  let agentsRR=0,agentsCSAT=0,agentsQA=0,totalBono=0;
   const tierCount={0:0,1:0,2:0,3:0};
-
   for(const r of rows){
-    totalLlamadasIn+=(r.callsIn||0);
-    totalLlamadasOut+=(r.callsOut||0);
-    totalEncSent+=(r.surveysSent||0);
-    totalEncAns+=(r.surveysAnswered||0);
-    totalServ+=(r.servTotal||0);
-    totalServComp+=(r.servComp||0);
+    totalLlamadasIn+=(r.callsIn||0);totalLlamadasOut+=(r.callsOut||0);
+    totalEncSent+=(r.surveysSent||0);totalEncAns+=(r.surveysAnswered||0);
+    totalServ+=(r.servTotal||0);totalServComp+=(r.servComp||0);
     if(r.rr!=null){rrSum+=r.rr;rrN++;if(r.rr>=CFG.META_RR)agentsRR++;}
     if(r.csat!=null){csatSum+=r.csat;csatN++;if(r.csat>=CFG.META_CSAT)agentsCSAT++;}
     if(r.qaScore!=null){qaSum+=r.qaScore;qaN++;if(r.qaScore>=CFG.META_QA)agentsQA++;}
-    const b=calcBono(r);
-    totalBono+=b.bonus;
-    tierCount[b.tier]=(tierCount[b.tier]||0)+1;
+    const b=calcBono(r);totalBono+=b.bonus;tierCount[b.tier]=(tierCount[b.tier]||0)+1;
   }
-
   const totalAgents=rows.length;
   const totalLlamadas=totalLlamadasIn+totalLlamadasOut;
-  const avgRR=rrN?rrSum/rrN:null;
-  const avgCSAT=csatN?csatSum/csatN:null;
-  const avgQA=qaN?qaSum/qaN:null;
-
+  const avgRR=rrN?rrSum/rrN:null;const avgCSAT=csatN?csatSum/csatN:null;const avgQA=qaN?qaSum/qaN:null;
   const byCoord={};
   for(const r of rows){
     if(!byCoord[r.coord])byCoord[r.coord]={coord:r.coord,senior:r.senior,agents:[],bonusTotal:0,agentsBonus:0};
     byCoord[r.coord].agents.push(r);
-    const b=calcBono(r);
-    byCoord[r.coord].bonusTotal+=b.bonus;
-    if(b.bonus>0)byCoord[r.coord].agentsBonus++;
+    const b=calcBono(r);byCoord[r.coord].bonusTotal+=b.bonus;if(b.bonus>0)byCoord[r.coord].agentsBonus++;
   }
   const coordList=Object.values(byCoord).sort((a,b)=>b.bonusTotal-a.bonusTotal);
-
   const sorted=rows.map(r=>({...r,bono:calcBono(r)})).sort((a,b)=>b.bono.adjustedPoints-a.bono.adjustedPoints);
-  const top5=sorted.slice(0,5);
-  const bottom5=sorted.slice(-5).reverse();
-
+  const top5=sorted.slice(0,5);const bottom5=sorted.slice(-5).reverse();
   const progressBar=(label,value,target,achievers,total)=>{
-    const ok=value!=null&&value>=target;
-    const pct=value!=null?Math.min(100,Math.max(0,value)):0;
-    const color=ok?'#10b981':'#ef4444';
-    return '<div class="report-progress-row"><div class="report-progress-header"><span class="report-progress-label">'+label+'</span><span class="report-progress-value" style="color:'+color+'">'+fmt.pct(value)+' <span class="muted" style="font-size:11px">vs meta &ge;'+target+'%</span></span></div><div class="report-progress-bar"><div class="report-progress-fill" style="width:'+pct+'%;background:'+color+'"></div></div><div class="report-progress-count">'+achievers+' de '+total+' agentes en target ('+(total?Math.round(achievers/total*100):0)+'%)</div></div>';
+    const ok=value!=null&&value>=target;const pct=value!=null?Math.min(100,Math.max(0,value)):0;const color=ok?'#10b981':'#ef4444';
+    return'<div class="report-progress-row"><div class="report-progress-header"><span class="report-progress-label">'+label+'</span><span class="report-progress-value" style="color:'+color+'">'+fmt.pct(value)+' <span class="muted" style="font-size:11px">vs meta &ge;'+target+'%</span></span></div><div class="report-progress-bar"><div class="report-progress-fill" style="width:'+pct+'%;background:'+color+'"></div></div><div class="report-progress-count">'+achievers+' de '+total+' agentes en target ('+(total?Math.round(achievers/total*100):0)+'%)</div></div>';
   };
-
   let html='<div class="card no-print"><div class="filter-row" style="align-items:flex-end">';
   html+='<div class="field" style="flex:1.5"><label>Semana del informe</label><select onchange="STATE.informeWeek=this.value;renderActiveTab()">';
   html+=weeks.map(w=>'<option value="'+w.start+'"'+(w.start===selectedWeek.start?' selected':'')+'>'+w.label+'</option>').join('');
   html+='</select></div>';
   html+='<div class="field"><label>&nbsp;</label><button class="btn primary admin-only" onclick="exportInforme()">🖨️ Exportar a PDF</button> <span class="muted not-admin" style="font-size:11px">Activa modo admin para exportar</span></div>';
   html+='</div></div>';
-
   html+='<div id="reportContent" class="report-doc">';
   html+='<div class="report-header"><div><div class="report-title">Informe Operativo Semanal</div><div class="report-subtitle">Roomonitor &middot; '+selectedWeek.label+'</div></div><div class="report-brand">SCORECARD &middot; ROOMONITOR 2026</div></div>';
-
   html+='<div class="report-section"><h3>📞 Volumen del periodo</h3><div class="report-kpis">';
   html+='<div class="report-kpi"><div class="report-kpi-value">'+fmt.num(totalLlamadas)+'</div><div class="report-kpi-label">Llamadas atendidas</div><div class="report-kpi-sub">'+fmt.num(totalLlamadasIn)+' ent &middot; '+fmt.num(totalLlamadasOut)+' sal</div></div>';
   html+='<div class="report-kpi"><div class="report-kpi-value">'+fmt.num(totalEncSent)+'</div><div class="report-kpi-label">Encuestas enviadas</div><div class="report-kpi-sub">'+fmt.num(totalEncAns)+' respondidas ('+(totalEncSent?Math.round(totalEncAns/totalEncSent*100):0)+'%)</div></div>';
@@ -3563,19 +2551,15 @@ function viewInforme(){
   html+='<div class="report-kpi"><div class="report-kpi-value">'+totalAgents+'</div><div class="report-kpi-label">Prod Agents activos</div><div class="report-kpi-sub">'+coordList.length+' coordinadores</div></div>';
   html+='<div class="report-kpi report-kpi-accent"><div class="report-kpi-value">'+fmt.money(totalBono)+'</div><div class="report-kpi-label">Total bonos del periodo</div><div class="report-kpi-sub">'+(tierCount[3]+tierCount[2]+tierCount[1])+' de '+totalAgents+' agentes con bono</div></div>';
   html+='</div></div>';
-
   html+='<div class="report-section"><h3>🎯 Cumplimiento de metas</h3><div class="report-progress-grid">';
   html+=progressBar('Resolution Rate (RR)',avgRR,CFG.META_RR,agentsRR,rrN);
   html+=progressBar('Customer Satisfaction (CSAT)',avgCSAT,CFG.META_CSAT,agentsCSAT,csatN);
   html+=progressBar('Quality Assurance (QA)',avgQA,CFG.META_QA,agentsQA,qaN);
   html+='</div></div>';
-
   html+='<div class="report-section"><h3>👥 Desempeño por coordinador</h3>';
   html+='<table class="report-table"><thead><tr><th>Coordinador</th><th>Senior</th><th class="col-num">Agentes</th><th class="col-num">Llamadas</th><th class="col-num">RR</th><th class="col-num">CSAT</th><th class="col-num">QA</th><th class="col-num">Con bono</th><th class="col-num">Bono total</th></tr></thead><tbody>';
   for(const c of coordList){
-    const rrAg=c.agents.filter(a=>a.rr!=null);
-    const csAg=c.agents.filter(a=>a.csat!=null);
-    const qaAg=c.agents.filter(a=>a.qaScore!=null);
+    const rrAg=c.agents.filter(a=>a.rr!=null);const csAg=c.agents.filter(a=>a.csat!=null);const qaAg=c.agents.filter(a=>a.qaScore!=null);
     const rrV=rrAg.length?rrAg.reduce((s,a)=>s+a.rr,0)/rrAg.length:null;
     const csV=csAg.length?csAg.reduce((s,a)=>s+a.csat,0)/csAg.length:null;
     const qaV=qaAg.length?qaAg.reduce((s,a)=>s+a.qaScore,0)/qaAg.length:null;
@@ -3583,47 +2567,31 @@ function viewInforme(){
     html+='<tr><td><strong>'+c.coord+'</strong></td><td class="muted">'+(c.senior||'—')+'</td><td class="col-num">'+c.agents.length+'</td><td class="col-num">'+fmt.num(callsT)+'</td><td class="col-num">'+fmt.pct(rrV)+'</td><td class="col-num">'+fmt.pct(csV)+'</td><td class="col-num">'+fmt.pct(qaV)+'</td><td class="col-num">'+c.agentsBonus+'/'+c.agents.length+'</td><td class="col-num"><strong>'+fmt.money(c.bonusTotal)+'</strong></td></tr>';
   }
   html+='</tbody></table></div>';
-
   html+='<div class="report-section report-two-col">';
   html+='<div><h3>🏆 Top 5 agentes</h3><table class="report-table"><thead><tr><th>#</th><th>Agente</th><th>Coord</th><th class="col-num">Pts</th><th class="col-num">Bono</th></tr></thead><tbody>';
-  top5.forEach((r,i)=>{
-    html+='<tr><td>'+(i+1)+'</td><td><strong>'+r.agent+'</strong></td><td class="muted">'+r.coord+'</td><td class="col-num">'+fmt.num(r.bono.adjustedPoints)+'</td><td class="col-num"><strong>'+fmt.money(r.bono.bonus)+'</strong></td></tr>';
-  });
+  top5.forEach((r,i)=>{html+='<tr><td>'+(i+1)+'</td><td><strong>'+r.agent+'</strong></td><td class="muted">'+r.coord+'</td><td class="col-num">'+fmt.num(r.bono.adjustedPoints)+'</td><td class="col-num"><strong>'+fmt.money(r.bono.bonus)+'</strong></td></tr>';});
   html+='</tbody></table></div>';
   html+='<div><h3>⚠️ Requieren atención</h3><table class="report-table"><thead><tr><th>#</th><th>Agente</th><th>Coord</th><th class="col-num">Pts</th><th class="col-num">Bono</th></tr></thead><tbody>';
-  bottom5.forEach((r,i)=>{
-    html+='<tr><td>'+(i+1)+'</td><td><strong>'+r.agent+'</strong></td><td class="muted">'+r.coord+'</td><td class="col-num">'+fmt.num(r.bono.adjustedPoints)+'</td><td class="col-num">'+fmt.money(r.bono.bonus)+'</td></tr>';
-  });
+  bottom5.forEach((r,i)=>{html+='<tr><td>'+(i+1)+'</td><td><strong>'+r.agent+'</strong></td><td class="muted">'+r.coord+'</td><td class="col-num">'+fmt.num(r.bono.adjustedPoints)+'</td><td class="col-num">'+fmt.money(r.bono.bonus)+'</td></tr>';});
   html+='</tbody></table></div></div>';
-
   html+='<div class="report-section"><h3>💰 Distribución de bonificaciones</h3><div class="report-tier-bars">';
   const tierMeta={3:{label:'Tier 3 ($300)',color:'#10b981'},2:{label:'Tier 2 ($200)',color:'#3b82f6'},1:{label:'Tier 1 ($100)',color:'#f59e0b'},0:{label:'Tier 0 ($0)',color:'#94a3b8'}};
   for(const t of [3,2,1,0]){
-    const count=tierCount[t]||0;
-    const pct=totalAgents?(count/totalAgents)*100:0;
+    const count=tierCount[t]||0;const pct=totalAgents?(count/totalAgents)*100:0;
     html+='<div class="report-tier-row"><div class="report-tier-label">'+tierMeta[t].label+'</div><div class="report-tier-bar"><div class="report-tier-fill" style="width:'+pct+'%;background:'+tierMeta[t].color+'"></div></div><div class="report-tier-count">'+count+' agentes</div></div>';
   }
   html+='</div></div>';
-
   html+='<div class="report-footer"><div>Generado: '+new Date().toLocaleString('es-ES')+'</div><div>Roomonitor 2026 &middot; Scorecard Operativo</div></div>';
   html+='</div>';
   return html;
 }
 
 function exportInforme(){
-  if(!STATE.authenticated){
-    showBanner('error','Necesitas modo admin para exportar');
-    return;
-  }
+  if(!STATE.authenticated){showBanner('error','Necesitas modo admin para exportar');return;}
   document.body.classList.add('printing-report');
-  setTimeout(function(){
-    window.print();
-    setTimeout(function(){document.body.classList.remove('printing-report')},500);
-  },100);
+  setTimeout(function(){window.print();setTimeout(function(){document.body.classList.remove('printing-report')},500);},100);
 }
-
 window.exportInforme=exportInforme;
-
 
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3640,7 +2608,6 @@ function viewLlamadasLargas(){
     seen[k]=true;
     all.push(c);
   }
-  
   if(!all.length){
     return `<div class="card"><div class="empty">
       <div class="empty-title">Sin llamadas largas</div>
@@ -3648,63 +2615,41 @@ function viewLlamadasLargas(){
       <p class="muted" style="font-size:11px;margin-top:8px">Sube el archivo de llamadas desde "Cargar datos" para detectar llamadas largas del periodo.</p>
     </div></div>`;
   }
-  
   const filterAgent=$('llFilterAgent')?$('llFilterAgent').value:'';
   const filterCoord=$('llFilterCoord')?$('llFilterCoord').value:'';
   const filterDate=$('llFilterDate')?$('llFilterDate').value:'';
-  
   const agentCoord={};
   for(const ag of (STATE.distro||[]))agentCoord[ag.nameKey]=ag.coord;
-  
   let filtered=all.filter(c=>{
     if(filterAgent&&c.nameKey!==filterAgent)return false;
     if(filterCoord&&agentCoord[c.nameKey]!==filterCoord)return false;
     if(filterDate&&c.date!==filterDate)return false;
     return true;
   });
-  
   filtered.sort((a,b)=>{
     const cmp=(b.date||'').localeCompare(a.date||'');
     if(cmp!==0)return cmp;
     return (b.hora||'').localeCompare(a.hora||'');
   });
-  
   const agents=[...new Set(all.map(c=>c.nameKey))].map(k=>{
     const ag=(STATE.distro||[]).find(a=>a.nameKey===k);
     return{nameKey:k,name:ag?ag.agent:k};
   }).sort((a,b)=>a.name.localeCompare(b.name));
-  
   const coords=[...new Set(all.map(c=>agentCoord[c.nameKey]).filter(Boolean))].sort();
   const dates=[...new Set(all.map(c=>c.date))].sort().reverse();
-  
   const totalDur=filtered.reduce((s,c)=>s+(c.duration||0),0);
   const avgDur=filtered.length?Math.round(totalDur/filtered.length):0;
   const maxDur=filtered.length?Math.max(...filtered.map(c=>c.duration||0)):0;
-  
   return `
     <div class="card">
       <div class="section-title">📞 Llamadas largas (≥ 20 minutos)</div>
       <p class="section-sub">Llamadas detectadas con duración ≥ 20 minutos. Estas son las que afectan el P90 de los agentes.</p>
-      
       <div class="metric-grid" style="margin-top:14px">
-        <div class="metric-tile">
-          <div class="metric-tile-label">Total filtradas</div>
-          <div class="metric-tile-value">${filtered.length}</div>
-          <div class="metric-tile-meta">de ${all.length} totales</div>
-        </div>
-        <div class="metric-tile">
-          <div class="metric-tile-label">Duración promedio</div>
-          <div class="metric-tile-value">${fmt.secs(avgDur)}</div>
-          <div class="metric-tile-meta">en filtro actual</div>
-        </div>
-        <div class="metric-tile">
-          <div class="metric-tile-label">Duración máxima</div>
-          <div class="metric-tile-value">${fmt.secs(maxDur)}</div>
-          <div class="metric-tile-meta">la más larga</div>
-        </div>
+        <div class="metric-tile"><div class="metric-tile-label">Total filtradas</div><div class="metric-tile-value">${filtered.length}</div><div class="metric-tile-meta">de ${all.length} totales</div></div>
+        <div class="metric-tile"><div class="metric-tile-label">Duración promedio</div><div class="metric-tile-value">${fmt.secs(avgDur)}</div><div class="metric-tile-meta">en filtro actual</div></div>
+        <div class="metric-tile"><div class="metric-tile-label">Duración máxima</div><div class="metric-tile-value">${fmt.secs(maxDur)}</div><div class="metric-tile-meta">la más larga</div></div>
       </div>
     </div>
-    
     <div class="card">
       <div class="filter-row" style="margin-bottom:12px">
         <div class="field"><label>Agente</label><select id="llFilterAgent" onchange="renderActiveTab()">
@@ -3720,17 +2665,11 @@ function viewLlamadasLargas(){
           ${dates.map(d=>`<option value="${d}"${d===filterDate?' selected':''}>${fmt.date(d)}</option>`).join('')}
         </select></div>
       </div>
-      
       <div style="overflow-x:auto;max-height:65vh;overflow-y:auto">
       <table>
         <thead><tr>
-          <th>Agente</th>
-          <th>Coord</th>
-          <th>Fecha</th>
-          <th>Hora</th>
-          <th>Tipo</th>
-          <th class="col-num">Duración</th>
-          <th>Grabación</th>
+          <th>Agente</th><th>Coord</th><th>Fecha</th><th>Hora</th><th>Tipo</th>
+          <th class="col-num">Duración</th><th>Grabación</th>
         </tr></thead>
         <tbody>
           ${filtered.map(c=>{
@@ -3753,18 +2692,15 @@ function viewLlamadasLargas(){
         </tbody>
       </table>
       </div>
-      
       ${filtered.length===0?'<div class="muted" style="text-align:center;padding:20px">Sin resultados con los filtros actuales</div>':''}
     </div>
   `;
 }
 
-
 // ═══════════════ VISTA: CARGAR DATOS ═══════════════
 function viewCargar(){
   const today=STATE.uploadDate;
   const p=STATE.pendingUploads;
-  
   const uploadCard=(label,key,desc,acceptedTypes)=>{
     const f=p[key];
     return`<div class="upload-zone ${f?'has-file':''}" onclick="document.getElementById('file-${key}').click()">
@@ -3774,12 +2710,10 @@ function viewCargar(){
       <input type="file" id="file-${key}" accept="${acceptedTypes}" style="display:none" onchange="onFileSelected('${key}',this.files[0])">
     </div>`;
   };
-  
   return`
     <div class="banner info">
       <strong>Carga inteligente por fecha.</strong> El sistema lee la fecha de cada registro y los reparte automáticamente a su día. Puedes subir archivos con datos de UN día, una semana o todo el mes — todo se distribuye correctamente. La fecha de abajo solo se usa como respaldo si algún registro no tiene fecha válida.
     </div>
-    
     <div class="card">
       <div class="filter-row">
         <div class="field"><label>Fecha por defecto (opcional, fallback)</label><input type="date" id="uploadDate" value="${today}" onchange="STATE.uploadDate=this.value"></div>
@@ -3789,14 +2723,12 @@ function viewCargar(){
         </div>
       </div>
     </div>
-    
     <div class="grid-2">
       ${uploadCard('Encuestas','encuestas','InformeEncuestas.xls (col Fecha)','.xls,.xlsx')}
       ${uploadCard('Llamadas (Estadísticas)','llamadas','Estadísticas.xls (col Fecha)','.xls,.xlsx')}
       ${uploadCard('Auxiliares (Histórico Ausencias)','auxiliares','Histórico_Ausencias.csv (col Día)','.csv')}
       ${uploadCard('Servicios (Jobs)','servicios','Jobs.csv (col Service Date)','.csv')}
     </div>
-    
     <div class="card" id="uploadStatus"></div>
   `;
 }
@@ -3814,22 +2746,17 @@ async function processUploads(){
     return;
   }
   STATE.authenticated=true;
-  
   const fallbackDate=$('uploadDate').value||STATE.uploadDate;
   STATE.uploadDate=fallbackDate;
   const status=$('uploadStatus');
   status.innerHTML='<div class="banner info"><span class="spinner"></span> Procesando archivos…</div>';
-  
   const log=[];
-  // byDate[date][agentKey] = {sources combinadas}
   const byDate={};
-  
   const ensure=(date,key)=>{
     if(!byDate[date])byDate[date]={};
     if(!byDate[date][key])byDate[date][key]={fullName:key};
     return byDate[date][key];
   };
-  
   try{
     if(STATE.pendingUploads.encuestas){
       log.push('Procesando encuestas…');
@@ -3864,7 +2791,7 @@ async function processUploads(){
           a.callsIn=v.atendidasIn;a.callsOut=v.atendidasOut;
           a.ahtSecSum=v.ahtSum;a.ahtN=v.ahtN;
           a.released=v.released;a.totalEntrantes=v.totalEntrantes;
-          a.durations=v.durations||[];  // P90: array de duraciones individuales
+          a.durations=v.durations||[];
         }
       }
       log[log.length-1]=`✓ Llamadas: ${totalDays} días procesados`;
@@ -3901,30 +2828,12 @@ async function processUploads(){
       }
       log[log.length-1]=`✓ Servicios: ${totalDays} días procesados`;
     }
-    
-    // Guardar al backend en UN SOLO request (con todos los días)
-    // Esto evita 403/rate-limit de auth de Roomonitor
     if(CFG.BACKEND_URL){
       const dates=Object.keys(byDate).sort();
-      
-      // Construir TODOS los records de todos los días en un array plano
       const allRecords=[];
-      
-      // Estructura para acumular duraciones por coord-día (para calcular P90)
-      // coordDurations[date][coordName] = [duraciones...]
       const coordDurations={};
-      
-      // Mapa nameKey → coord (de la distro)
       const agentToCoord={};
-      for(const ag of (STATE.distro||[])){
-        agentToCoord[ag.nameKey]=ag.coord;
-      }
-      
-      // Procesar llamadas para extraer duraciones por coord-día
-      // Las duraciones están en el parser de llamadas (acumuladas como arrays)
-      // Como ya las pasamos a byDate, hay que volver a leerlas del parser
-      // Pero para no cambiar todo, lo hacemos aquí:
-      // Reprocesamos solo el archivo de llamadas si está disponible
+      for(const ag of (STATE.distro||[]))agentToCoord[ag.nameKey]=ag.coord;
       if(STATE.pendingUploads.llamadas){
         const llamByDate=await parseLlamadas(STATE.pendingUploads.llamadas,fallbackDate);
         for(const [date,agents] of Object.entries(llamByDate)){
@@ -3937,8 +2846,6 @@ async function processUploads(){
           }
         }
       }
-      
-      // Calcular P90 por coord-día y agregar registros tipo "coord"
       const coordRecords=[];
       for(const [date,coords] of Object.entries(coordDurations)){
         for(const [coordName,durations] of Object.entries(coords)){
@@ -3946,25 +2853,14 @@ async function processUploads(){
           const p90=percentile(durations,90);
           const under20=durations.filter(d=>d<1200).length;
           const pctUnder20=(under20/durations.length)*100;
-          coordRecords.push({
-            date,coordName,
-            p90Sec:p90,
-            totalCalls:durations.length,
-            callsUnder20Min:under20,
-            ahtP90Pct:pctUnder20  // % de llamadas bajo 20 min (esta es la métrica que usa el bono)
-          });
+          coordRecords.push({date,coordName,p90Sec:p90,totalCalls:durations.length,callsUnder20Min:under20,ahtP90Pct:pctUnder20});
         }
       }
-      
       for(const date of dates){
         const agents=byDate[date];
         for(const [k,v] of Object.entries(agents)){
-          // P90: calcular cuántas llamadas duraron < 20 min (1200 seg)
-          // El parser ya guardó las durations en byDate[date][k].durations
           let callsUnder20=0;
-          if(v.durations&&v.durations.length){
-            callsUnder20=v.durations.filter(d=>d<1200).length;
-          }
+          if(v.durations&&v.durations.length)callsUnder20=v.durations.filter(d=>d<1200).length;
           allRecords.push({
             date,nameKey:k,fullName:v.fullName||k,
             surveysSent:v.surveysSent||0,surveysAnswered:v.surveysAnswered||0,
@@ -3984,18 +2880,11 @@ async function processUploads(){
           });
         }
       }
-      
       log.push(`Guardando ${allRecords.length} registros (${dates.length} días) en UN solo envío…`);
       status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
-      
-      // Un solo POST con todo
-      // Enviar también las llamadas largas al backend para persistencia
       const longCallsToSend=STATE.longCalls||[];
       await pushBackend({type:'bulk',dates,records:allRecords,coordRecords,longCalls:longCallsToSend});
-      
       log[log.length-1]=`✓ Guardado: ${allRecords.length} registros en ${dates.length} día(s)`;
-      
-      // Recargar histórico
       log.push('Refrescando histórico…');
       status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
       await fetchBackendHistory();
@@ -4003,11 +2892,9 @@ async function processUploads(){
     }else{
       log.push('⚠ No hay backend configurado. Ve a Configuración para añadir la URL.');
     }
-    
     status.innerHTML=`<div class="banner success">${log.join('<br>')}</div>`;
     STATE.pendingUploads={encuestas:null,llamadas:null,auxiliares:null,servicios:null};
     renderActiveTab();
-    
   }catch(e){
     console.error(e);
     log.push('✗ Error: '+e.message);
@@ -4016,13 +2903,10 @@ async function processUploads(){
 }
 
 function buildHistoryRecords(date){
-  // Construye un record por agente para guardar en el backend
   const records=[];
   const agentKeys=new Set([
-    ...Object.keys(STATE.encuestas),
-    ...Object.keys(STATE.llamadas),
-    ...Object.keys(STATE.auxiliares),
-    ...Object.keys(STATE.servicios)
+    ...Object.keys(STATE.encuestas),...Object.keys(STATE.llamadas),
+    ...Object.keys(STATE.auxiliares),...Object.keys(STATE.servicios)
   ]);
   for(const k of agentKeys){
     const enc=STATE.encuestas[k]||{};
@@ -4030,10 +2914,7 @@ function buildHistoryRecords(date){
     const aux=STATE.auxiliares[k]||{};
     const serv=STATE.servicios[k]||{};
     const fullName=enc.fullName||llam.fullName||aux.fullName||serv.fullName||k;
-    
     const callsAt=(llam.atendidasIn||0)+(llam.atendidasOut||0);
-    const aht=llam.ahtN?llam.ahtSum/llam.ahtN:null;
-    
     records.push({
       date,nameKey:k,fullName,
       surveysSent:enc.sent||0,surveysAnswered:enc.answered||0,
@@ -4041,8 +2922,7 @@ function buildHistoryRecords(date){
       csatPctSum:enc.csatSum||0,csatN:enc.csatN||0,
       callsAt,callsIn:llam.atendidasIn||0,callsOut:llam.atendidasOut||0,
       ahtSecSum:llam.ahtSum||0,ahtN:llam.ahtN||0,
-      released:llam.released||0,
-      totalEntrantes:llam.totalEntrantes||0,
+      released:llam.released||0,totalEntrantes:llam.totalEntrantes||0,
       acwMinSum:aux.acwSum||0,acwN:aux.acwN||0,
       holdMinSum:aux.holdSum||0,holdN:aux.holdN||0,
       breakSum:aux.breakSum||0,banoSum:aux.banoSum||0,
@@ -4059,7 +2939,6 @@ function viewConfig(){
     <div class="banner info">
       <strong>Configuración de la herramienta.</strong> Cambia URLs de fuentes externas, metas, y el PIN para subir archivos. Los cambios solo aplican en este navegador (no se guardan globalmente).
     </div>
-    
     <div class="card">
       <div class="section-title">Fuentes de datos en tiempo real</div>
       <div class="field"><label>QA Apps Script URL</label><input type="url" id="cfgQA" value="${CFG.QA_URL}"></div>
@@ -4073,7 +2952,6 @@ function viewConfig(){
       <div style="margin-top:12px"><button class="btn primary" onclick="saveConfig()">Guardar configuración</button>
         <button class="btn" onclick="fetchAll()" style="margin-left:6px">Refrescar todo</button></div>
     </div>
-    
     <div class="card">
       <div class="section-title">Metas del scorecard</div>
       <div class="grid-3">
@@ -4090,7 +2968,6 @@ function viewConfig(){
       </div>
       <div style="margin-top:12px"><button class="btn primary" onclick="saveMetas()">Guardar metas</button></div>
     </div>
-    
     <div class="card">
       <div class="section-title">Estado del sistema</div>
       <table>
@@ -4103,7 +2980,6 @@ function viewConfig(){
         </tbody>
       </table>
     </div>
-    
     <div class="card">
       <div class="section-title">Agentes sin match</div>
       <p class="section-sub">Agentes que aparecen en datos pero no están en la distribución. Útil para detectar typos.</p>
@@ -4129,9 +3005,7 @@ function renderUnmatched(){
     <thead><tr><th>Fuente</th><th>Nombre detectado</th><th>Clave normalizada</th></tr></thead>
     <tbody>
     ${issues.slice(0,30).map(i=>`<tr>
-      <td>${i.source}</td>
-      <td class="col-name">${i.fullName}</td>
-      <td class="muted">${i.key}</td>
+      <td>${i.source}</td><td class="col-name">${i.fullName}</td><td class="muted">${i.key}</td>
     </tr>`).join('')}
     </tbody>
   </table>${issues.length>30?`<p class="muted" style="font-size:11px;margin-top:6px">…y ${issues.length-30} más</p>`:''}`;
@@ -4146,7 +3020,6 @@ function saveConfig(){
   CFG.AUSENTISMO_TAB=$('cfgAusentismoTab').value;
   CFG.BACKEND_URL=$('cfgBackend').value;
   CFG.UPLOAD_PIN=$('cfgPin').value;
-  // Persistir en localStorage para esta navegador (PIN no, por seguridad)
   try{
     const cfg={QA_URL:CFG.QA_URL,DISTRO_SHEET:CFG.DISTRO_SHEET,DISTRO_TAB:CFG.DISTRO_TAB,QUEJAS_SHEET:CFG.QUEJAS_SHEET,AUSENTISMO_SHEET:CFG.AUSENTISMO_SHEET,AUSENTISMO_TAB:CFG.AUSENTISMO_TAB,BACKEND_URL:CFG.BACKEND_URL};
     localStorage.setItem('rmCfg',JSON.stringify(cfg));
@@ -4180,10 +3053,7 @@ function saveMetas(){
 function checkAuth(){
   if(STATE.authenticated)return true;
   const pin=prompt('Ingresa el PIN para esta acción:');
-  if(pin===CFG.UPLOAD_PIN){
-    STATE.authenticated=true;
-    return true;
-  }
+  if(pin===CFG.UPLOAD_PIN){STATE.authenticated=true;return true;}
   showBanner('error','PIN incorrecto');
   return false;
 }
@@ -4199,23 +3069,14 @@ function showBanner(type,msg,timeout=4000){
 // ═══════════════════════════════════════════════════════════════════════════
 let _filterSearchTimer=null;
 function onFilterSearchInput(input){
-  // Cancelar el timer anterior
   if(_filterSearchTimer)clearTimeout(_filterSearchTimer);
-  
-  // Guardar la posición del cursor
   const cursorPos=input.selectionStart;
   const inputId=input.id;
-  
-  // Esperar 300ms después de la última tecla, luego re-renderizar
   _filterSearchTimer=setTimeout(()=>{
     renderActiveTab();
-    // Restaurar foco y cursor después del render
     setTimeout(()=>{
       const newInput=document.getElementById(inputId);
-      if(newInput){
-        newInput.focus();
-        try{newInput.setSelectionRange(cursorPos,cursorPos);}catch(e){}
-      }
+      if(newInput){newInput.focus();try{newInput.setSelectionRange(cursorPos,cursorPos);}catch(e){}}
     },10);
   },300);
 }
@@ -4225,12 +3086,10 @@ function onFilterSearchInput(input){
 // ═══════════════════════════════════════════════════════════════════════════
 function toggleAdmin(){
   if(STATE.authenticated){
-    // Cerrar sesión admin
     STATE.authenticated=false;
     document.body.classList.remove('admin');
     $('adminIcon').textContent='🔒';
     $('adminLabel').textContent='Admin';
-    // Si estaba en una tab admin, regresar a Scorecard
     const active=document.querySelector('.tab.active');
     if(active&&(active.dataset.tab==='cargar'||active.dataset.tab==='config')){
       document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
@@ -4241,9 +3100,8 @@ function toggleAdmin(){
     }
     showBanner('info','Sesión admin cerrada');
   }else{
-    // Iniciar sesión admin
     const pin=prompt('Ingresa el PIN de administrador:');
-    if(pin==null)return; // canceló
+    if(pin==null)return;
     if(pin===CFG.UPLOAD_PIN){
       STATE.authenticated=true;
       document.body.classList.add('admin');
@@ -4262,22 +3120,15 @@ function toggleAdmin(){
 function toggleQAMonthPicker(){
   const sel=$('qaMonthSelect');
   if(!sel)return;
-  if(sel.style.display==='none'){
-    populateQAMonthSelect();
-    sel.style.display='inline-block';
-  }else{
-    sel.style.display='none';
-  }
+  if(sel.style.display==='none'){populateQAMonthSelect();sel.style.display='inline-block';}
+  else{sel.style.display='none';}
 }
 
 function populateQAMonthSelect(){
   const sel=$('qaMonthSelect');
   if(!sel)return;
   const months=STATE.qaAvailableMonths||[];
-  if(!months.length){
-    sel.innerHTML='<option>Sin datos</option>';
-    return;
-  }
+  if(!months.length){sel.innerHTML='<option>Sin datos</option>';return;}
   const fmtMonth=(ym)=>{
     const [y,m]=ym.split('-');
     const names=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -4288,7 +3139,7 @@ function populateQAMonthSelect(){
 
 function changeQAMonth(ym){
   STATE.qaMonth=ym;
-  fetchQA(); // re-fetch con el nuevo mes
+  fetchQA();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -4311,28 +3162,18 @@ function setupTabs(){
 }
 
 function loadLocalConfig(){
-  try{
-    const cfg=localStorage.getItem('rmCfg');
-    if(cfg)Object.assign(CFG,JSON.parse(cfg));
-  }catch(e){}
-  try{
-    const metas=localStorage.getItem('rmMetas');
-    if(metas)Object.assign(CFG,JSON.parse(metas));
-  }catch(e){}
+  try{const cfg=localStorage.getItem('rmCfg');if(cfg)Object.assign(CFG,JSON.parse(cfg));}catch(e){}
+  try{const metas=localStorage.getItem('rmMetas');if(metas)Object.assign(CFG,JSON.parse(metas));}catch(e){}
 }
 
 async function init(){
   loadLocalConfig();
   setupTabs();
   renderActiveTab();
-  
-  // Initial fetches
   await fetchAll();
-  
-  // Refresh interval
   setInterval(fetchQA,CFG.REFRESH_MS);
-  setInterval(fetchQuejas,CFG.REFRESH_MS*5); // quejas cada 5 min
-  setInterval(fetchDistro,CFG.REFRESH_MS*10); // distro cada 10 min
+  setInterval(fetchQuejas,CFG.REFRESH_MS*5);
+  setInterval(fetchDistro,CFG.REFRESH_MS*10);
   setInterval(fetchBackendHistory,CFG.REFRESH_MS*5);
 }
 
@@ -4354,6 +3195,7 @@ window.toggleAdmin=toggleAdmin;
 window.saveCoordManual=saveCoordManual;
 window.toggleQAMonthPicker=toggleQAMonthPicker;
 window.changeQAMonth=changeQAMonth;
+window.exportInforme=exportInforme;
 
 </script>
 </body>
