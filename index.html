@@ -695,8 +695,13 @@ async function fetchQA(){
 
     if(!result.ok)throw new Error(result.error||'Error QA');
 
-    // Recolectar meses disponibles desde Marca temporal / Fecha Eval
+    // Usar scoresMensuales precalculados por el GAS (scores correctos por agente/mes)
+    const sm=result.scoresMensuales||{};
+
+    // Recolectar meses disponibles
     const monthSet=new Set();
+    Object.values(sm).forEach(v=>monthSet.add(v.mes));
+    // También incluir meses de las rows por si scoresMensuales está vacío
     for(const row of result.rows.filter(r=>r._fuente==='calllens')){
       const raw=row['Marca temporal']||row['Fecha Eval']||'';
       if(!raw)continue;
@@ -710,69 +715,15 @@ async function fetchQA(){
       STATE.qaMonth=STATE.qaAvailableMonths[0];
     }
 
-    // Filtrar por mes activo
-    const [yr,mo]=STATE.qaMonth.split('-').map(Number);
-    const monthStart=new Date(yr,mo-1,1);
-    const monthEnd=new Date(yr,mo,0,23,59,59);
-
-    // Agrupar por agente — Score_Total ya viene calculado por CallLens
-    const byAgent={};
-    for(const row of result.rows){
-      // CallLens usa 'Agente'; histórico usa "Agent's name" / "Agent name"
-      // Limpiar prefijo "C1 IP: 672 " o "IP: 672 " que viene del campo Agente de CallLens
-      let name=row['Agente']||row["Agent's name"]||row["Agent name"]||'';
+    // Cargar scores del mes activo desde scoresMensuales
+    STATE.qa={};
+    const smEntries=Object.values(sm).filter(v=>v.mes===STATE.qaMonth);
+    for(const v of smEntries){
+      let name=v.agente||'';
       name=name.replace(/^(?:\S+\s+)?IP:\s*\d+\s*/i,'').trim();
       if(!name)continue;
-      const raw=row['Marca temporal']||row['Fecha Eval']||'';
-      if(!raw)continue;
-      const d=new Date(raw);
-      if(isNaN(d.getTime())||d<monthStart||d>monthEnd)continue;
-      // Leer Score_Total (número 0-100 calculado por el GAS)
-      let score=null;
-      const st=row['Score_Total'];
-      if(st!==undefined&&st!==''&&st!==null){
-        score=Number(st);
-        if(isNaN(score))score=null;
-      }
-      // Para el histórico: calcular score desde criterios Yes/No si Score_Total no existe
-      if(score===null){
-        const yn=k=>{const v=(row[k]||'').toString().toLowerCase().trim();return v==='yes'?1:v==='no'?0:null;};
-        const af=yn("Did the agent commit any errors that could potentially impact the guest experience or the business reputation?");
-        if(af===1){score=0;}else{
-          const criteria=[
-            {v:yn("Did the agent provide the correct opening statement based on client's scripts?"),p:3},
-            {v:yn("Did the agent provide the correct closing line and offered further assistance?"),p:3},
-            {v:yn("Did the agent provide a follow up number (Salesforce ticket) to the guest?"),p:4},
-            {v:yn("Did the agent ask for all the mandatory information to verify guest's reservation?"),p:10},
-            {v:yn("Did the agent act based on client's protocols?"),p:15},
-            {v:yn("Did the agent verify all necessary tools to provide accurate and complete information to the guest?"),p:10},
-            {v:yn("Agent's notes reflect guest's comments accurately"),p:10},
-            {v:yn("Agent documented all mandatory information in the report:\n- Reservation Number\n- Phone number\n- Apartment\n- Reason of the call\n- Check In / Check Out Dates (If applicable)"),p:15},
-            {v:yn("Agent used appropriate hold time and asked guest's permission to put them on hold?"),p:5},
-            {v:yn("Did the agent use probing questions to build rapport with the guest? "),p:10},
-            {v:yn("Did the agent use a friendly and welcoming tone of voice, sounded professional and was willing to help the guest?"),p:10},
-            {v:yn("Did the agent offer the survey to the guest at the end of the call?"),p:5},
-          ];
-          let earned=0,applicable=0;
-          for(const c of criteria){if(c.v!==null){applicable+=c.p;if(c.v===1)earned+=c.p;}}
-          score=applicable>0?Math.round(earned/applicable*100*100)/100:null;
-        }
-      }
-      if(score===null)continue;
-      // Resolver nameKey contra la distro actual (maneja cambios de roster)
       const key=resolveAgentKey(name);
-      if(!byAgent[key]){byAgent[key]={fullName:name,scores:[],evals:0};}
-      byAgent[key].scores.push(score);
-      byAgent[key].evals++;
-    }
-
-    STATE.qa={};
-    for(const [k,v] of Object.entries(byAgent)){
-      STATE.qa[k]={
-        fullName:v.fullName,
-        score:v.scores.length?v.scores.reduce((a,b)=>a+b,0)/v.scores.length:null,
-        evals:v.evals
-      };
+      STATE.qa[key]={fullName:name,score:v.score,evals:v.evals};
     }
 
     setSync('QA','live',`QA · ${Object.keys(STATE.qa).length}`);
