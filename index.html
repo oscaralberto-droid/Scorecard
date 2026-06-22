@@ -697,7 +697,7 @@ async function fetchQA(){
 
     // Recolectar meses disponibles desde Marca temporal / Fecha Eval
     const monthSet=new Set();
-    for(const row of result.rows){
+    for(const row of result.rows.filter(r=>r._fuente==='calllens')){
       const raw=row['Marca temporal']||row['Fecha Eval']||'';
       if(!raw)continue;
       const d=new Date(raw);
