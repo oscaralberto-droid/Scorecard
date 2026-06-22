@@ -518,9 +518,31 @@ function resolveAgentKey(fileName){
   else if(candidates.length>=2){
     if(candidates[0].score>=candidates[1].score*1.2){bestMatch=candidates[0].ag;}
   }
-  const result=bestMatch?bestMatch.nameKey:firstLast(fileName);
-  _matchCache[fileName]=result;
-  return result;
+ if(bestMatch){
+    _matchCache[fileName]=bestMatch.nameKey;
+    return bestMatch.nameKey;
+  }
+  const fallbackCandidates=[];
+  for(const ag of (STATE.distro||[])){
+    const distroWords=nameWords(ag.agent);
+    let discriminantCommon=0;
+    for(const w of fileWords){
+      if(distroWords.has(w)&&isDiscriminant(w))discriminantCommon++;
+    }
+    if(discriminantCommon>=1)fallbackCandidates.push({ag,discriminantCommon});
+  }
+  fallbackCandidates.sort((a,b)=>b.discriminantCommon-a.discriminantCommon);
+  if(fallbackCandidates.length===1){
+    _matchCache[fileName]=fallbackCandidates[0].ag.nameKey;
+    return fallbackCandidates[0].ag.nameKey;
+  }else if(fallbackCandidates.length>=2&&
+           fallbackCandidates[0].discriminantCommon>fallbackCandidates[1].discriminantCommon){
+    _matchCache[fileName]=fallbackCandidates[0].ag.nameKey;
+    return fallbackCandidates[0].ag.nameKey;
+  }
+  const k=firstLast(fileName);
+  _matchCache[fileName]=k;
+  return k;
 }
 
 const extractAgent=str=>{
