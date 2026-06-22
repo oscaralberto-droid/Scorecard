@@ -689,7 +689,7 @@ async function fetchQA(){
         reject(new Error('QA timeout'));
       },20000);
       // QA_URL ya incluye ?dashboard=1, añadimos &api=rows&callback=...
-      script.src=CFG.QA_URL+'&api=rows&callback='+callbackName+'&t='+Date.now();
+      script.src=CFG.QA_URL+'?api=rows&callback='+callbackName+'&t='+Date.now();
       document.body.appendChild(script);
     });
 
