@@ -719,7 +719,9 @@ async function fetchQA(){
     const byAgent={};
     for(const row of result.rows){
       // CallLens usa 'Agente'; histórico usa "Agent's name" / "Agent name"
-      const name=row['Agente']||row["Agent's name"]||row["Agent name"]||'';
+      // Limpiar prefijo "C1 IP: 672 " o "IP: 672 " que viene del campo Agente de CallLens
+      let name=row['Agente']||row["Agent's name"]||row["Agent name"]||'';
+      name=name.replace(/^(?:\S+\s+)?IP:\s*\d+\s*/i,'').trim();
       if(!name)continue;
       const raw=row['Marca temporal']||row['Fecha Eval']||'';
       if(!raw)continue;
