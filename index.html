@@ -1455,6 +1455,7 @@ async function parseQAFile(file){
   const iAgente=header.findIndex(h=>h.includes('agente')||h.includes('agent'));
   const iScore=header.findIndex(h=>h.includes('qa score')||h.includes('score'));
   const iEvals=header.findIndex(h=>h.includes('eval'));
+  const iDate=header.findIndex(h=>h.includes('date')||h.includes('fecha'));
   if(iAgente<0||iScore<0)return null;
   const result={};
   for(let i=1;i<rows.length;i++){
@@ -1467,7 +1468,12 @@ async function parseQAFile(file){
     const evals=parseInt(r[iEvals]||0)||0;
     const key=resolveAgentKey(agente);
     if(!key)continue;
-    result[key]={fullName:agente,score:score,evals:evals};
+    let mes=null;
+    if(iDate>=0&&r[iDate]){
+      const d=new Date(r[iDate]);
+      if(!isNaN(d))mes=d.toISOString().slice(0,7);
+    }
+    result[key]={fullName:agente,score:score,evals:evals,mes:mes};
   }
   return result;
 }
@@ -2927,6 +2933,7 @@ async function processUploads(){
       const qaData=await parseQAFile(STATE.pendingUploads.qa_file);
       if(qaData&&Object.keys(qaData).length>0){
         STATE.qa=qaData;
+        STATE.qaFileMonth=Object.values(qaData).find(v=>v.mes)?.mes||null;
         STATE.lastSync.qa=Date.now();
         setSync('QA','live',`QA · ${Object.keys(qaData).length}`);
         log[log.length-1]=`✓ QA: ${Object.keys(qaData).length} agentes cargados`;
