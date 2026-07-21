@@ -2934,6 +2934,13 @@ async function processUploads(){
       if(qaData&&Object.keys(qaData).length>0){
         STATE.qa=qaData;
         STATE.qaFileMonth=Object.values(qaData).find(v=>v.mes)?.mes||null;
+        if(CFG.BACKEND_URL){
+          try{
+            await pushBackend({type:'qa',data:qaData,mes:STATE.qaFileMonth});
+          }catch(e){
+            log[log.length-1]+=' (sin sync backend)';
+          }
+        }
         STATE.lastSync.qa=Date.now();
         setSync('QA','live',`QA · ${Object.keys(qaData).length}`);
         log[log.length-1]=`✓ QA: ${Object.keys(qaData).length} agentes cargados`;
