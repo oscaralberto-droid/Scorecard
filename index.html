@@ -412,7 +412,7 @@ const STATE = {
   loading:{qa:false,quejas:false,distro:false,backend:false},
   lastSync:{qa:null,quejas:null,distro:null,backend:null},
   authenticated:false,
-  pendingUploads:{encuestas:null,llamadas:null,auxiliares:null,servicios:null},
+  pendingUploads:{encuestas:null,llamadas:null,auxiliares:null,servicios:null,qa_file:null},,
   uploadDate:new Date().toISOString().slice(0,10),
   qaMonth:new Date().toISOString().slice(0,7),
   qaAvailableMonths:[],
@@ -1441,6 +1441,35 @@ async function parseServicios(file,defaultDate){
     else if(st.includes('cancel'))acc[date][key].canceled++;
   }
   return acc;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// // PARSER QA FILE
+// ═══════════════════════════════════════════════════════════════════════════
+async function parseQAFile(file){
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true});
+  const header=(rows[0]||[]).map(h=>(h||'').toString().toLowerCase().trim());
+  const iAgente=header.findIndex(h=>h.includes('agente')||h.includes('agent'));
+  const iScore=header.findIndex(h=>h.includes('qa score')||h.includes('score'));
+  const iEvals=header.findIndex(h=>h.includes('eval'));
+  if(iAgente<0||iScore<0)return null;
+  const result={};
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];if(!r||!r.length)continue;
+    const agente=(r[iAgente]||'').toString().trim();
+    if(!agente||agente==='-'||agente==='—')continue;
+    const rawScore=(r[iScore]||'').toString().replace('%','').trim();
+    const score=parseFloat(rawScore);
+    if(isNaN(score))continue;
+    const evals=parseInt(r[iEvals]||0)||0;
+    const key=resolveAgentKey(agente);
+    if(!key)continue;
+    result[key]={fullName:agente,score:score,evals:evals};
+  }
+  return result;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -2727,6 +2756,7 @@ function viewCargar(){
       ${uploadCard('Llamadas (Estadísticas)','llamadas','Estadísticas.xls (col Fecha)','.xls,.xlsx')}
       ${uploadCard('Auxiliares (Histórico Ausencias)','auxiliares','Histórico_Ausencias.csv (col Día)','.csv')}
       ${uploadCard('Servicios (Jobs)','servicios','Jobs.csv (col Service Date)','.csv')}
+      ${uploadCard('QA Scores','qa_file','QA_scores.xlsx (col Agente + QA Score)','.xls,.xlsx')}
     </div>
     <div class="card" id="uploadStatus"></div>
   `;
@@ -2892,7 +2922,7 @@ async function processUploads(){
       log.push('⚠ No hay backend configurado. Ve a Configuración para añadir la URL.');
     }
     status.innerHTML=`<div class="banner success">${log.join('<br>')}</div>`;
-    STATE.pendingUploads={encuestas:null,llamadas:null,auxiliares:null,servicios:null};
+    STATE.pendingUploads={encuestas:null,llamadas:null,auxiliares:null,servicios:null,qa_file:null};
     renderActiveTab();
   }catch(e){
     console.error(e);
