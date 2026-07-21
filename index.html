@@ -2940,6 +2940,13 @@ async function processUploads(){
           }catch(e){
             log[log.length-1]+=' (sin sync backend)';
           }
+        };
+        if(CFG.BACKEND_URL){
+          try{
+            await pushBackend({type:'qa',data:qaData,mes:STATE.qaFileMonth});
+          }catch(e){
+            log[log.length-1]+=' (sin sync backend)';
+          }
         }
         STATE.lastSync.qa=Date.now();
         setSync('QA','live',`QA · ${Object.keys(qaData).length}`);
