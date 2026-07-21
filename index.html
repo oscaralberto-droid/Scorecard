@@ -2921,6 +2921,19 @@ async function processUploads(){
     }else{
       log.push('⚠ No hay backend configurado. Ve a Configuración para añadir la URL.');
     }
+    if(STATE.pendingUploads.qa_file){
+      log.push('Procesando QA scores…');
+      status.innerHTML=`<div class="banner info"><span class="spinner"></span> ${log.join('<br>')}</div>`;
+      const qaData=await parseQAFile(STATE.pendingUploads.qa_file);
+      if(qaData&&Object.keys(qaData).length>0){
+        STATE.qa=qaData;
+        STATE.lastSync.qa=Date.now();
+        setSync('QA','live',`QA · ${Object.keys(qaData).length}`);
+        log[log.length-1]=`✓ QA: ${Object.keys(qaData).length} agentes cargados`;
+      }else{
+        log[log.length-1]='⚠ QA: no se pudo leer el archivo o está vacío';
+      }
+    }
     status.innerHTML=`<div class="banner success">${log.join('<br>')}</div>`;
     STATE.pendingUploads={encuestas:null,llamadas:null,auxiliares:null,servicios:null,qa_file:null};
     renderActiveTab();
