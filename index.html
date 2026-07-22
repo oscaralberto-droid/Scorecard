@@ -1070,7 +1070,14 @@ async function fetchBackendHistory(){
         }
         if(j&&j.ok&&Array.isArray(j.coordDaily)){STATE.coordDaily=j.coordDaily;}
         if(j&&j.ok&&Array.isArray(j.longCalls)){STATE.longCallsBackend=j.longCalls;}
-        if(j&&j.ok&&Array.isArray(j.coordHistory)){STATE.coordHistory=j.coordHistory;}
+         if(j&&j.ok&&Array.isArray(j.coordHistory)){STATE.coordHistory=j.coordHistory;}
+        if(j&&j.ok&&Array.isArray(j.qaScores)&&j.qaScores.length>0){
+          STATE.qa={};STATE.qaFileMonth=null;
+          for(const r of j.qaScores){
+            STATE.qa[r.nameKey]={fullName:r.fullName,score:+r.score,evals:+r.evals,mes:r.mes};
+            if(!STATE.qaFileMonth&&r.mes)STATE.qaFileMonth=r.mes;
+          }
+        }
         if(j&&j.ok&&Array.isArray(j.qaScores)&&j.qaScores.length>0){
           STATE.qa={};STATE.qaFileMonth=null;
           for(const r of j.qaScores){
