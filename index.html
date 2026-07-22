@@ -1484,7 +1484,13 @@ async function parseQAFile(file){
     if(!key)continue;
     let mes=null;
     if(iDate>=0&&r[iDate]){
-      const d=new Date(r[iDate]);
+      let d;
+    if(typeof r[iDate]==='number'){
+      // Excel serial date
+      d=new Date(Math.round((r[iDate]-25569)*86400*1000));
+    }else{
+      d=new Date(r[iDate]);
+    };
       if(!isNaN(d))mes=d.toISOString().slice(0,7);
     }
     result[key]={fullName:agente,score:score,evals:evals,mes:mes};
