@@ -1507,7 +1507,11 @@ function buildScorecard(){
   for(const ag of STATE.distro){
     const k=ag.nameKey;
     const _qaRaw=STATE.qa[k];
-   const qa=(_qaRaw&&(!_qaRaw.mes||!STATE.qaMonth||_qaRaw.mes===STATE.qaMonth))?_qaRaw:null;
+   const _qaRaw=STATE.qa[k];
+   const _qaActiveMonth=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
+   const _MESES_QA=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+   const _qaRawMesName=(_qaRaw&&_qaRaw.mes)?_MESES_QA[parseInt(_qaRaw.mes.slice(5,7),10)-1]:null;
+   const qa=(_qaRaw&&(!_qaRawMesName||!_qaActiveMonth||_qaRawMesName===_qaActiveMonth))?_qaRaw:null;
     const _activeMonthQ=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
     const quejasAg=STATE.quejas.filter(q=>{
       if(q.nameKey!==k)return false;
