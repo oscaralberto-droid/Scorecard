@@ -3254,7 +3254,6 @@ async function init(){
   setupTabs();
   renderActiveTab();
   await fetchAll();
-  setInterval(fetchQA,CFG.REFRESH_MS);
   setInterval(fetchQuejas,CFG.REFRESH_MS*5);
   setInterval(fetchDistro,CFG.REFRESH_MS*10);
   setInterval(fetchBackendHistory,CFG.REFRESH_MS*5);
