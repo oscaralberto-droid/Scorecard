@@ -1507,7 +1507,6 @@ function buildScorecard(){
   for(const ag of STATE.distro){
     const k=ag.nameKey;
     const _qaRaw=STATE.qa[k];
-   const _qaRaw=STATE.qa[k];
    const _qaActiveMonth=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
    const _MESES_QA=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
    const _qaRawMesName=(_qaRaw&&_qaRaw.mes)?_MESES_QA[parseInt(_qaRaw.mes.slice(5,7),10)-1]:null;
