@@ -1506,7 +1506,8 @@ function buildScorecard(){
   const split=STATE._byAgentCoord;
   for(const ag of STATE.distro){
     const k=ag.nameKey;
-    const qa=STATE.qa[k];
+    const _qaRaw=STATE.qa[k];
+    const qa=(_qaRaw&&(!_qaRaw.mes||!STATE.qaMonth||_qaRaw.mes===STATE.qaMonth))?_qaRaw:null;
     const _activeMonthQ=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
     const quejasAg=STATE.quejas.filter(q=>{
       if(q.nameKey!==k)return false;
