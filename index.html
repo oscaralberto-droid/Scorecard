@@ -1507,7 +1507,8 @@ function buildScorecard(){
   for(const ag of STATE.distro){
     const k=ag.nameKey;
     const _qaRaw=STATE.qa[k];
-    const qa=(_qaRaw&&(!_qaRaw.mes||!STATE.qaMonth||_qaRaw.mes===STATE.qaMonth))?_qaRaw:null;
+    const _activeYM=(typeof getActiveMonthYM==='function')?getActiveMonthYM():(STATE.mode==='month'?STATE.selectedMonth:STATE.qaMonth);
+    const qa=(_qaRaw&&(!_qaRaw.mes||!_activeYM||_qaRaw.mes===_activeYM))?_qaRaw:null;
     const _activeMonthQ=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
     const quejasAg=STATE.quejas.filter(q=>{
       if(q.nameKey!==k)return false;
