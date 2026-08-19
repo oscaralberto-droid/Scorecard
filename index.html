@@ -1611,7 +1611,9 @@ function calcBono(row){
   const lostPoints=redemption-(procedural*CFG.PEN.procedural)-(serious*CFG.PEN.serious)-(absences*CFG.PEN.absences);
   const adjustedPoints=earnedPoints+lostPoints;
   let tier=0,bonus=0;
-  for(const t of CFG.TIER){if(adjustedPoints>=t.min){tier=t.n;bonus=t.bonus;break;}}
+    for(const t of CFG.TIER){if(adjustedPoints>=t.min){tier=t.n;bonus=t.bonus;break;}}
+  const _absentGateFailed=(absVal!=null&&absVal>CFG.BONO.absent.target);
+  if(_absentGateFailed){tier=0;bonus=0;}
   return{checks,earnedPoints,procedural,serious,absences,redemption,lostPoints,adjustedPoints,tier,bonus,
     yellowOriginal:yellow,redOriginal:red,baseSalary:CFG.BASE_SALARY,adjustedSalary:CFG.BASE_SALARY+bonus};
 }
