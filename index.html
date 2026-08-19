@@ -2361,7 +2361,12 @@ function viewTop(){
 function viewBono(){
   const rows=buildScorecard();
   if(!rows.length)return'<div class="card" style="padding:12px 16px">'+dateFilterBar()+'</div><div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
-  const data=rows.map(r=>({...r,bono:calcBono(r)}));
+    const _byAgent={};
+  for(const r of rows){
+    const ex=_byAgent[r.nameKey];
+    if(!ex||(r.callsAt||0)>(ex.callsAt||0))_byAgent[r.nameKey]=r;
+  }
+  const data=Object.values(_byAgent).map(r=>({...r,bono:calcBono(r)}));
   const totalBono=data.reduce((s,r)=>s+r.bono.bonus,0);
   const tierCounts={0:0,1:0,2:0,3:0};
   data.forEach(r=>tierCounts[r.bono.tier]++);
