@@ -1557,7 +1557,8 @@ function buildScorecard(){
       const holdMin=v.holdN?v.holdMinSum/v.holdN:null;
       const breakMin=v.breakDays?v.breakSum/v.breakDays:null;
       const banoMin=v.banoDays?v.banoSum/v.banoDays:null;
-      const coordForRow=v.coord||ag.coord;
+           const _coordExists=(STATE.distro||[]).some(a=>a.coord===v.coord);
+      const coordForRow=(_coordExists?v.coord:null)||ag.coord;
       let seniorForRow=ag.senior;
       const distroOtroCoord=(STATE.distro||[]).find(a=>a.coord===coordForRow);
       if(distroOtroCoord)seniorForRow=distroOtroCoord.senior;
