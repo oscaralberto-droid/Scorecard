@@ -2053,6 +2053,8 @@ function calcCoordBono(coordName,coordAgents){
   const _coordQuejasUnicas=new Set();
   for(const q of quejasCoordDirectas)_coordQuejasUnicas.add(q.quejaId);
   const _quejasDirectasAuto=_coordQuejasUnicas.size;
+    let _directasAmarillas=0,_directasRojas=0;
+  {const _s=new Set();for(const q of quejasCoordDirectas){if(_s.has(q.quejaId))continue;_s.add(q.quejaId);const tl=(q.tarjeta||'').toLowerCase();if(tl.includes('amarill'))_directasAmarillas++;else if(tl.includes('roj'))_directasRojas++;}}
   const _seenIds=new Set();
   const penBreakdown={redencion:0,procedural:0,serious:0,absence:0,attitude:0,other:0};
   let penPointsAuto=0;
