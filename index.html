@@ -2088,7 +2088,7 @@ function calcCoordBono(coordName,coordAgents){
   preliminaryPoints+=buenDesempeno;
   let tier=0,bonus=0;
   for(const t of CFG.COORD_TIER){if(preliminaryPoints>=t.min){tier=t.n;bonus=t.bonus;break;}}
-  return{metrics:m,checks,earnedPoints,cardPenalty,zeroOut,amarillas,rojas,totalCards,
+  return{metrics:m,checks,earnedPoints,cardPenalty,zeroOut,amarillas:amarillas+_directasAmarillas,rojas:rojas+_directasRojas,totalCards:totalCards+_directasAmarillas+_directasRojas,amarillasEquipo:amarillas,rojasEquipo:rojas,
     quejasDirectasManual:quejasDirectas,quejasDirectasAuto:_quejasDirectasAuto,
     quejasDirectasTotal:_totalQuejasDirectas,penBreakdown,penPointsAuto,
     _quejasRegistros,_quejasUnicasCount,quejasDirectas,greenCards,buenDesempeno,
