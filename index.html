@@ -484,7 +484,6 @@ function buildWordFrequency(){
     }
   }
 }
-
 function resolveAgentKey(fileName){
   if(!fileName)return'';
   if(_matchCache[fileName])return _matchCache[fileName];
@@ -493,6 +492,59 @@ function resolveAgentKey(fileName){
     const k=firstLast(fileName);
     _matchCache[fileName]=k;
     return k;
+  }
+  if(!_wordFrequency)buildWordFrequency();
+  const isDiscriminant=w=>(_wordFrequency[w]||0)<=2;
+  const candidates=[];
+  for(const ag of (STATE.distro||[])){
+    const distroWords=nameWords(ag.agent);
+    let common=0,discriminantCommon=0,allFileWordsInDistro=true;
+    for(const w of fileWords){
+      if(distroWords.has(w)){common++;if(isDiscriminant(w))discriminantCommon++;}
+      else{allFileWordsInDistro=false;}
+    }
+    if(common===0)continue;
+    if(common<2)continue;
+    let score=0;
+    if(allFileWordsInDistro&&fileWords.size>=2){score=1000+common;}
+    else if(discriminantCommon>=1&&common>=2){score=100+common+discriminantCommon*10;}
+    else if(common>=2){continue;}
+    candidates.push({ag,score,common,discriminantCommon});
+  }
+  candidates.sort((a,b)=>b.score-a.score);
+  let bestMatch=null;
+  if(candidates.length===1){bestMatch=candidates[0].ag;}
+  else if(candidates.length>=2){
+    if(candidates[0].score>=candidates[1].score*1.2){bestMatch=candidates[0].ag;}
+  }
+  if(bestMatch){
+    _matchCache[fileName]=bestMatch.nameKey;
+    return bestMatch.nameKey;
+  }
+  // Fallback: matchear por palabras discriminantes compartidas
+  const fallbackCandidates=[];
+  for(const ag of (STATE.distro||[])){
+    const distroWords=nameWords(ag.agent);
+    let discriminantCommon=0;
+    for(const w of fileWords){
+      if(distroWords.has(w)&&isDiscriminant(w))discriminantCommon++;
+    }
+    if(discriminantCommon>=1)fallbackCandidates.push({ag,discriminantCommon});
+  }
+  fallbackCandidates.sort((a,b)=>b.discriminantCommon-a.discriminantCommon);
+  if(fallbackCandidates.length===1){
+    _matchCache[fileName]=fallbackCandidates[0].ag.nameKey;
+    return fallbackCandidates[0].ag.nameKey;
+  }else if(fallbackCandidates.length>=2&&
+           fallbackCandidates[0].discriminantCommon>fallbackCandidates[1].discriminantCommon){
+    _matchCache[fileName]=fallbackCandidates[0].ag.nameKey;
+    return fallbackCandidates[0].ag.nameKey;
+  }
+  // Sin match: key único que NO existe en distro, para descartar
+  const k='__no_match__'+firstLast(fileName);
+  _matchCache[fileName]=k;
+  return k;
+}
   }
   if(!_wordFrequency)buildWordFrequency();
   const isDiscriminant=w=>(_wordFrequency[w]||0)<=2;
