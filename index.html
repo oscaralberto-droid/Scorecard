@@ -547,6 +547,11 @@ function resolveAgentKey(fileName){
   _matchCache[fileName]=k;
   return k;
 }
+  const extractExt=str=>{
+  if(!str)return null;
+  const m=str.toString().match(/IP:\s*(\d+)/);
+  return m?m[1].trim():null;
+};
 const extractAgent=str=>{
   if(!str)return null;
   const s=str.toString();
@@ -806,6 +811,9 @@ async function fetchDistro(){
       agents.push({agent,coord,senior,type,extension:ext,cluster:nivel||'—',nameKey:firstLast(agent)});
     }
     STATE.distro=agents;
+        STATE.distro=agents;
+    STATE.extIndex={};
+    for(const a of agents){if(a.extension)STATE.extIndex[a.extension.toString().trim()]=a.nameKey;}
     setSync('Distro','live',`Distro · ${agents.length}`);
     STATE.lastSync.distro=Date.now();
     setLastUpdate();
@@ -1369,10 +1377,11 @@ async function parseLlamadas(file,defaultDate){
     const colgo=(r[iColgo]||'').toString();
     const dur=parseInt(r[iDur])||0;
     let agName=null;
-    if(tipo==='Entrante')agName=extractAgent(r[iUltDest]);
-    else if(tipo==='Saliente')agName=extractAgent(r[iLlamante]);
+        let ext=null;
+    if(tipo==='Entrante'){agName=extractAgent(r[iUltDest]);ext=extractExt(r[iUltDest]);}
+    else if(tipo==='Saliente'){agName=extractAgent(r[iLlamante]);ext=extractExt(r[iLlamante]);}
     if(!agName)continue;
-    const key=resolveAgentKey(agName);
+    let key=(ext&&STATE.extIndex&&STATE.extIndex[ext])?STATE.extIndex[ext]:resolveAgentKey(agName);
     if(!acc[date])acc[date]={};
     if(!acc[date][key])acc[date][key]={fullName:agName,atendidasIn:0,atendidasOut:0,ahtSum:0,ahtN:0,released:0,totalEntrantes:0};
     if(tipo==='Entrante')acc[date][key].totalEntrantes++;
