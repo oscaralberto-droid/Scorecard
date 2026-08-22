@@ -522,6 +522,8 @@ function resolveAgentKey(fileName){
     _matchCache[fileName]=bestMatch.nameKey;
     return bestMatch.nameKey;
   }
+    // Fallback estricto: solo matchear si comparte >=2 palabras discriminantes
+  // (evita asignar llamadas de agentes de alarma a prod agents con nombres parecidos)
   const fallbackCandidates=[];
   for(const ag of (STATE.distro||[])){
     const distroWords=nameWords(ag.agent);
@@ -529,7 +531,7 @@ function resolveAgentKey(fileName){
     for(const w of fileWords){
       if(distroWords.has(w)&&isDiscriminant(w))discriminantCommon++;
     }
-    if(discriminantCommon>=1)fallbackCandidates.push({ag,discriminantCommon});
+    if(discriminantCommon>=2)fallbackCandidates.push({ag,discriminantCommon});
   }
   fallbackCandidates.sort((a,b)=>b.discriminantCommon-a.discriminantCommon);
   if(fallbackCandidates.length===1){
@@ -540,11 +542,11 @@ function resolveAgentKey(fileName){
     _matchCache[fileName]=fallbackCandidates[0].ag.nameKey;
     return fallbackCandidates[0].ag.nameKey;
   }
-  const k=firstLast(fileName);
+  // Sin match fuerte: devolver key único que NO existe en distro, para descartar la llamada
+  const k='__no_match__'+firstLast(fileName);
   _matchCache[fileName]=k;
   return k;
 }
-
 const extractAgent=str=>{
   if(!str)return null;
   const s=str.toString();
