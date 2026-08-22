@@ -531,7 +531,17 @@ function resolveAgentKey(fileName){
     for(const w of fileWords){
       if(distroWords.has(w)&&isDiscriminant(w))discriminantCommon++;
     }
-      if(discriminantCommon>=2)fallbackCandidates.push({ag,discriminantCommon});
+    if(discriminantCommon>=1)fallbackCandidates.push({ag,discriminantCommon});
+  }
+  fallbackCandidates.sort((a,b)=>b.discriminantCommon-a.discriminantCommon);
+  if(fallbackCandidates.length===1){
+    _matchCache[fileName]=fallbackCandidates[0].ag.nameKey;
+    return fallbackCandidates[0].ag.nameKey;
+  }else if(fallbackCandidates.length>=2&&
+           fallbackCandidates[0].discriminantCommon>fallbackCandidates[1].discriminantCommon){
+    _matchCache[fileName]=fallbackCandidates[0].ag.nameKey;
+    return fallbackCandidates[0].ag.nameKey;
+  }
   }
   fallbackCandidates.sort((a,b)=>b.discriminantCommon-a.discriminantCommon);
   if(fallbackCandidates.length===1){
