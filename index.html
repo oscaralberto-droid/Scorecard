@@ -521,22 +521,24 @@ function resolveAgentKey(fileName){
     _matchCache[fileName]=bestMatch.nameKey;
     return bestMatch.nameKey;
   }
-  // Fallback: matchear por palabras discriminantes compartidas
+  // Fallback: matchear solo si comparten el APELLIDO (no solo el primer nombre)
+  // El apellido es la 2ª palabra del nameKey (firstLast = nombre + primer apellido)
+  const _fileKey=firstLast(fileName);
+  const _fileParts=_fileKey.split(' ');
+  const _fileApellido=_fileParts.length>=2?_fileParts[1]:null;
   const fallbackCandidates=[];
-  for(const ag of (STATE.distro||[])){
-    const distroWords=nameWords(ag.agent);
-    let discriminantCommon=0;
-    for(const w of fileWords){
-      if(distroWords.has(w)&&isDiscriminant(w))discriminantCommon++;
+  if(_fileApellido&&isDiscriminant(_fileApellido)){
+    for(const ag of (STATE.distro||[])){
+      const agParts=(ag.nameKey||'').split(' ');
+      const agApellido=agParts.length>=2?agParts[1]:null;
+      const agNombre=agParts[0];
+      // Requiere mismo apellido Y mismo primer nombre
+      if(agApellido===_fileApellido&&agNombre===_fileParts[0]){
+        fallbackCandidates.push({ag,discriminantCommon:2});
+      }
     }
-    if(discriminantCommon>=1)fallbackCandidates.push({ag,discriminantCommon});
   }
-  fallbackCandidates.sort((a,b)=>b.discriminantCommon-a.discriminantCommon);
   if(fallbackCandidates.length===1){
-    _matchCache[fileName]=fallbackCandidates[0].ag.nameKey;
-    return fallbackCandidates[0].ag.nameKey;
-  }else if(fallbackCandidates.length>=2&&
-           fallbackCandidates[0].discriminantCommon>fallbackCandidates[1].discriminantCommon){
     _matchCache[fileName]=fallbackCandidates[0].ag.nameKey;
     return fallbackCandidates[0].ag.nameKey;
   }
