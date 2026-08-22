@@ -1309,8 +1309,9 @@ async function parseEncuestas(file,defaultDate){
       const ll=(r[iLlamante]||'').toString();
       if(/[a-zA-Z]/.test(ll)&&!/^\+?\d[\d\s]*$/.test(ll)){agName=extractAgent(ll)||ll.trim();if(agName)surveyType='out';}
     }
-    if(!agName)continue;
-    const key=resolveAgentKey(agName);
+      if(!agName)continue;
+    const _ext=extractExt(dest)||(iLlamante>=0?extractExt(r[iLlamante]):null);
+    const key=(_ext&&STATE.extIndex&&STATE.extIndex[_ext])?STATE.extIndex[_ext]:resolveAgentKey(agName);
     if(!acc[date])acc[date]={};
     if(!acc[date][key])acc[date][key]={fullName:agName,sent:0,sentIn:0,sentOut:0,answered:0,ansIn:0,ansOut:0,rrSum:0,rrN:0,csatSum:0,csatN:0};
     acc[date][key].sent++;
@@ -1422,9 +1423,10 @@ async function parseAuxiliares(file,defaultDate){
   const acc={};
   for(let i=1;i<csv.length;i++){
     const r=csv[i];if(!r||!r.length)continue;
-    const agName=extractAgent(r[iAg]);
+        const agName=extractAgent(r[iAg]);
     if(!agName)continue;
-    const key=resolveAgentKey(agName);
+    const _ext=extractExt(r[iAg]);
+    const key=(_ext&&STATE.extIndex&&STATE.extIndex[_ext])?STATE.extIndex[_ext]:resolveAgentKey(agName);
     const causa=(r[iCausa]||'').trim();
     const date=parseDate(r[iDia])||defaultDate;
     if(!date)continue;
