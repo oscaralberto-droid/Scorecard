@@ -1310,7 +1310,10 @@ async function parseEncuestas(file,defaultDate){
       if(/[a-zA-Z]/.test(ll)&&!/^\+?\d[\d\s]*$/.test(ll)){agName=extractAgent(ll)||ll.trim();if(agName)surveyType='out';}
     }
       if(!agName)continue;
-    const _ext=extractExt(dest)||(iLlamante>=0?extractExt(r[iLlamante]):null);
+      const _ext=extractExt(dest)||(iLlamante>=0?extractExt(r[iLlamante]):null);
+    let key;
+    if(_ext){if(STATE.extIndex&&STATE.extIndex[_ext]){key=STATE.extIndex[_ext];}else{continue;}}
+    else{key=resolveAgentKey(agName);}
     const key=(_ext&&STATE.extIndex&&STATE.extIndex[_ext])?STATE.extIndex[_ext]:resolveAgentKey(agName);
     if(!acc[date])acc[date]={};
     if(!acc[date][key])acc[date][key]={fullName:agName,sent:0,sentIn:0,sentOut:0,answered:0,ansIn:0,ansOut:0,rrSum:0,rrN:0,csatSum:0,csatN:0};
@@ -1382,7 +1385,14 @@ async function parseLlamadas(file,defaultDate){
     if(tipo==='Entrante'){agName=extractAgent(r[iUltDest]);ext=extractExt(r[iUltDest]);}
     else if(tipo==='Saliente'){agName=extractAgent(r[iLlamante]);ext=extractExt(r[iLlamante]);}
     if(!agName)continue;
-    let key=(ext&&STATE.extIndex&&STATE.extIndex[ext])?STATE.extIndex[ext]:resolveAgentKey(agName);
+        let key;
+    if(ext){
+      // Si la llamada tiene extensión, SOLO matchea si está en el roster; si no, se descarta
+      if(STATE.extIndex&&STATE.extIndex[ext]){key=STATE.extIndex[ext];}
+      else{continue;}
+    }else{
+      key=resolveAgentKey(agName);
+    }
     if(!acc[date])acc[date]={};
     if(!acc[date][key])acc[date][key]={fullName:agName,atendidasIn:0,atendidasOut:0,ahtSum:0,ahtN:0,released:0,totalEntrantes:0};
     if(tipo==='Entrante')acc[date][key].totalEntrantes++;
@@ -1425,7 +1435,10 @@ async function parseAuxiliares(file,defaultDate){
     const r=csv[i];if(!r||!r.length)continue;
         const agName=extractAgent(r[iAg]);
     if(!agName)continue;
-    const _ext=extractExt(r[iAg]);
+        const _ext=extractExt(r[iAg]);
+    let key;
+    if(_ext){if(STATE.extIndex&&STATE.extIndex[_ext]){key=STATE.extIndex[_ext];}else{continue;}}
+    else{key=resolveAgentKey(agName);}
     const key=(_ext&&STATE.extIndex&&STATE.extIndex[_ext])?STATE.extIndex[_ext]:resolveAgentKey(agName);
     const causa=(r[iCausa]||'').trim();
     const date=parseDate(r[iDia])||defaultDate;
