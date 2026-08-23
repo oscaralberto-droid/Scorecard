@@ -1314,7 +1314,6 @@ async function parseEncuestas(file,defaultDate){
     let key;
     if(_ext){if(STATE.extIndex&&STATE.extIndex[_ext]){key=STATE.extIndex[_ext];}else{continue;}}
     else{key=resolveAgentKey(agName);}
-    const key=(_ext&&STATE.extIndex&&STATE.extIndex[_ext])?STATE.extIndex[_ext]:resolveAgentKey(agName);
     if(!acc[date])acc[date]={};
     if(!acc[date][key])acc[date][key]={fullName:agName,sent:0,sentIn:0,sentOut:0,answered:0,ansIn:0,ansOut:0,rrSum:0,rrN:0,csatSum:0,csatN:0};
     acc[date][key].sent++;
@@ -1439,7 +1438,6 @@ async function parseAuxiliares(file,defaultDate){
     let key;
     if(_ext){if(STATE.extIndex&&STATE.extIndex[_ext]){key=STATE.extIndex[_ext];}else{continue;}}
     else{key=resolveAgentKey(agName);}
-    const key=(_ext&&STATE.extIndex&&STATE.extIndex[_ext])?STATE.extIndex[_ext]:resolveAgentKey(agName);
     const causa=(r[iCausa]||'').trim();
     const date=parseDate(r[iDia])||defaultDate;
     if(!date)continue;
