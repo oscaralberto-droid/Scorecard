@@ -1081,6 +1081,9 @@ async function fetchBackendHistory(){
         if(j&&j.ok&&Array.isArray(j.coordDaily)){STATE.coordDaily=j.coordDaily;}
         if(j&&j.ok&&Array.isArray(j.longCalls)){STATE.longCallsBackend=j.longCalls;}
          if(j&&j.ok&&Array.isArray(j.coordHistory)){STATE.coordHistory=j.coordHistory;}
+                if(j&&j.ok&&j.metasConfig&&Object.keys(j.metasConfig).length>0){
+          Object.assign(CFG,j.metasConfig);
+        }
         if(j&&j.ok&&Array.isArray(j.qaScores)&&j.qaScores.length>0){
           STATE.qa={};STATE.qaFileMonth=null;
           for(const r of j.qaScores){
@@ -3189,7 +3192,14 @@ function saveMetas(){
     const metas={META_RR:CFG.META_RR,META_CSAT:CFG.META_CSAT,META_QA:CFG.META_QA,META_SDR:CFG.META_SDR,META_SRR:CFG.META_SRR,META_AHT_SEC:CFG.META_AHT_SEC,META_ACW_MIN:CFG.META_ACW_MIN,META_HOLD_MIN:CFG.META_HOLD_MIN,META_BREAK_MIN:CFG.META_BREAK_MIN,META_BANO_MIN:CFG.META_BANO_MIN,BONO:CFG.BONO};
     localStorage.setItem('rmMetas',JSON.stringify(metas));
   }catch(e){}
+   const _metasPayload={META_RR:CFG.META_RR,META_CSAT:CFG.META_CSAT,META_QA:CFG.META_QA,META_SDR:CFG.META_SDR,META_SRR:CFG.META_SRR,META_AHT_SEC:CFG.META_AHT_SEC,META_ACW_MIN:CFG.META_ACW_MIN,META_HOLD_MIN:CFG.META_HOLD_MIN,META_BREAK_MIN:CFG.META_BREAK_MIN,META_BANO_MIN:CFG.META_BANO_MIN,BONO:CFG.BONO};
+  if(CFG.BACKEND_URL){
+    pushBackend({type:'metas',data:_metasPayload})
+      .then(()=>showBanner('success','Metas guardadas para todos'))
+      .catch(()=>showBanner('warn','Guardado local, pero falló el envío al backend'));
+  }else{
     showBanner('success','Metas guardadas en este navegador');
+  }
   renderActiveTab();
 }
 function saveCoordMetas(){
@@ -3202,8 +3212,14 @@ function saveCoordMetas(){
     if(CFG.COORD_BONO.colgadas)CFG.COORD_BONO.colgadas.target=+$('cmetaColg').value;
     if(CFG.COORD_BONO.outbound)CFG.COORD_BONO.outbound.target=+$('cmetaOut').value;
   }
-  try{localStorage.setItem('rmCoordMetas',JSON.stringify(CFG.COORD_BONO));}catch(e){}
-  showBanner('success','Metas de coordinadores guardadas');
+   try{localStorage.setItem('rmCoordMetas',JSON.stringify(CFG.COORD_BONO));}catch(e){}
+  if(CFG.BACKEND_URL){
+    pushBackend({type:'metas',data:{COORD_BONO:CFG.COORD_BONO}})
+      .then(()=>showBanner('success','Metas de coordinadores guardadas para todos'))
+      .catch(()=>showBanner('warn','Guardado local, pero falló el envío al backend'));
+  }else{
+    showBanner('success','Metas de coordinadores guardadas');
+  }
   renderActiveTab();
 }
 // ═══════════════════════════════════════════════════════════════════════════
