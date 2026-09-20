@@ -2048,10 +2048,14 @@ function calcCoordBono(coordName,coordAgents){
   const quejasDirectas=+(manual.quejasDirectas||0);
   const greenCards=+(manual.greenCards||0);
   const buenDesempeno=+(manual.buenDesempeno||0);
-  const agentKeys=new Set(coordAgents.map(a=>a.nameKey));
+    const agentKeys=new Set(coordAgents.map(a=>a.nameKey));
   const _activeMonthC=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
+  const _coordKeyEquipo=(coordName||'').toString().trim().toLowerCase();
+  // Tarjetas del equipo = todas las filas CON agente cuya columna "Coordinador" sea este coord
+  // (incluye supervisores de calle que no están en la scorecard)
   const quejasDelEquipo=(STATE.quejas||[]).filter(q=>{
-    if(!agentKeys.has(q.nameKey))return false;
+    if(q.isCoordOnly)return false; // las directas (sin agente) van por su propia vía
+    if((q.coord||'').toString().trim().toLowerCase()!==_coordKeyEquipo)return false;
     if(!q.mesAplica)return true;
     if(!_activeMonthC)return true;
     return q.mesAplica===_activeMonthC;
