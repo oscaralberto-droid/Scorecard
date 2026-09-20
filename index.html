@@ -336,7 +336,7 @@ const CFG = {
   META_HOLD_MIN:2,
   META_BREAK_MIN:30,
   META_BANO_MIN:10,
-  META_QA:85,
+  META_QA:85,   CONFIG_PASSWORD:'Roomonitor2026*10',
   BONO:{
     quality:{target:75,points:1100,dir:'gte',label:'Quality %'},
     released:{target:6,points:500,dir:'lte',label:'Released Calls %'},
@@ -3308,18 +3308,6 @@ async function fetchAll(){
   await Promise.all([fetchDistro(),fetchQuejas(),fetchAusentismo(),fetchBackendHistory()]);
 }
 
-function setupTabs(){
-  document.querySelectorAll('.tab').forEach(t=>{
-    t.addEventListener('click',()=>{
-      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-      t.classList.add('active');
-      document.querySelectorAll('[id^=view-]').forEach(v=>v.classList.add('hidden'));
-      $('view-'+t.dataset.tab).classList.remove('hidden');
-      renderActiveTab();
-    });
-  });
-}
-
 function loadLocalConfig(){
   try{const cfg=localStorage.getItem('rmCfg');if(cfg)Object.assign(CFG,JSON.parse(cfg));}catch(e){}
   try{const metas=localStorage.getItem('rmMetas');if(metas)Object.assign(CFG,JSON.parse(metas));}catch(e){}
@@ -3334,7 +3322,26 @@ function loadLocalConfig(){
   setInterval(fetchDistro,CFG.REFRESH_MS*10);
   setInterval(fetchBackendHistory,CFG.REFRESH_MS*5);
 }
-
+let _configUnlocked=false;
+function setupTabs(){
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      if(t.dataset.tab==='config'&&!_configUnlocked){
+        const pass=prompt('Contraseña para acceder a Configuración:');
+        if(pass!==CFG.CONFIG_PASSWORD){
+          if(pass!==null)alert('Contraseña incorrecta');
+          return;
+        }
+        _configUnlocked=true;
+      }
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      document.querySelectorAll('[id^=view-]').forEach(v=>v.classList.add('hidden'));
+      $('view-'+t.dataset.tab).classList.remove('hidden');
+      renderActiveTab();
+    });
+  });
+}
 window.addEventListener('DOMContentLoaded',init);
 
 // Funciones expuestas globalmente para onclick handlers
