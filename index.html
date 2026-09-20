@@ -3087,7 +3087,20 @@ function viewConfig(){
         <div class="field"><label>Meta Break (min/día)</label><input type="number" id="metaBREAK" value="${CFG.META_BREAK_MIN}"></div>
         <div class="field"><label>Meta Baño (min/día)</label><input type="number" id="metaBANO" value="${CFG.META_BANO_MIN}"></div>
       </div>
-      <div style="margin-top:12px"><button class="btn primary" onclick="saveMetas()">Guardar metas</button></div>
+        <div style="margin-top:12px"><button class="btn primary" onclick="saveMetas()">Guardar metas</button></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Metas de bonificación · Coordinadores</div>
+      <div class="grid-3">
+        <div class="field"><label>Meta QA equipo (%)</label><input type="number" id="cmetaQA" value="${CFG.COORD_BONO.qa.target}"></div>
+        <div class="field"><label>Meta CSAT (%)</label><input type="number" id="cmetaCSAT" value="${CFG.COORD_BONO.csat.target}"></div>
+        <div class="field"><label>Meta SRR (%)</label><input type="number" id="cmetaSRR" value="${CFG.COORD_BONO.srr.target}"></div>
+        <div class="field"><label>Meta AHT P90 (%)</label><input type="number" id="cmetaP90" value="${CFG.COORD_BONO.aht_p90.target}"></div>
+        <div class="field"><label>Meta Ausentismo (%)</label><input type="number" id="cmetaAus" value="${CFG.COORD_BONO.ausentismo.target}"></div>
+        <div class="field"><label>Meta Colgadas (%)</label><input type="number" id="cmetaColg" value="${CFG.COORD_BONO.colgadas.target}"></div>
+        <div class="field"><label>Meta Outbound (%)</label><input type="number" id="cmetaOut" value="${CFG.COORD_BONO.outbound.target}"></div>
+      </div>
+      <div style="margin-top:12px"><button class="btn primary" onclick="saveCoordMetas()">Guardar metas coordinadores</button></div>
     </div>
     <div class="card">
       <div class="section-title">Estado del sistema</div>
@@ -3159,15 +3172,36 @@ function saveMetas(){
   CFG.META_ACW_MIN=+$('metaACW').value;
   CFG.META_HOLD_MIN=+$('metaHOLD').value;
   CFG.META_BREAK_MIN=+$('metaBREAK').value;
-  CFG.META_BANO_MIN=+$('metaBANO').value;
+    CFG.META_BANO_MIN=+$('metaBANO').value;
+  // Sincronizar targets del bono de AGENTES con las metas del scorecard
+  if(CFG.BONO){
+    if(CFG.BONO.quality)CFG.BONO.quality.target=CFG.META_QA;
+    if(CFG.BONO.csat)CFG.BONO.csat.target=CFG.META_CSAT;
+    if(CFG.BONO.rr_bono)CFG.BONO.rr_bono.target=CFG.META_RR;
+    if(CFG.BONO.sdr_bono)CFG.BONO.sdr_bono.target=CFG.META_SDR;
+    if(CFG.BONO.srr_bono)CFG.BONO.srr_bono.target=CFG.META_SRR;
+  }
   try{
-    const metas={META_RR:CFG.META_RR,META_CSAT:CFG.META_CSAT,META_QA:CFG.META_QA,META_SDR:CFG.META_SDR,META_SRR:CFG.META_SRR,META_AHT_SEC:CFG.META_AHT_SEC,META_ACW_MIN:CFG.META_ACW_MIN,META_HOLD_MIN:CFG.META_HOLD_MIN,META_BREAK_MIN:CFG.META_BREAK_MIN,META_BANO_MIN:CFG.META_BANO_MIN};
+    const metas={META_RR:CFG.META_RR,META_CSAT:CFG.META_CSAT,META_QA:CFG.META_QA,META_SDR:CFG.META_SDR,META_SRR:CFG.META_SRR,META_AHT_SEC:CFG.META_AHT_SEC,META_ACW_MIN:CFG.META_ACW_MIN,META_HOLD_MIN:CFG.META_HOLD_MIN,META_BREAK_MIN:CFG.META_BREAK_MIN,META_BANO_MIN:CFG.META_BANO_MIN,BONO:CFG.BONO};
     localStorage.setItem('rmMetas',JSON.stringify(metas));
   }catch(e){}
-  showBanner('success','Metas guardadas en este navegador');
+    showBanner('success','Metas guardadas en este navegador');
   renderActiveTab();
 }
-
+function saveCoordMetas(){
+  if(CFG.COORD_BONO){
+    if(CFG.COORD_BONO.qa)CFG.COORD_BONO.qa.target=+$('cmetaQA').value;
+    if(CFG.COORD_BONO.csat)CFG.COORD_BONO.csat.target=+$('cmetaCSAT').value;
+    if(CFG.COORD_BONO.srr)CFG.COORD_BONO.srr.target=+$('cmetaSRR').value;
+    if(CFG.COORD_BONO.aht_p90)CFG.COORD_BONO.aht_p90.target=+$('cmetaP90').value;
+    if(CFG.COORD_BONO.ausentismo)CFG.COORD_BONO.ausentismo.target=+$('cmetaAus').value;
+    if(CFG.COORD_BONO.colgadas)CFG.COORD_BONO.colgadas.target=+$('cmetaColg').value;
+    if(CFG.COORD_BONO.outbound)CFG.COORD_BONO.outbound.target=+$('cmetaOut').value;
+  }
+  try{localStorage.setItem('rmCoordMetas',JSON.stringify(CFG.COORD_BONO));}catch(e){}
+  showBanner('success','Metas de coordinadores guardadas');
+  renderActiveTab();
+}
 // ═══════════════════════════════════════════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3285,9 +3319,9 @@ function setupTabs(){
 function loadLocalConfig(){
   try{const cfg=localStorage.getItem('rmCfg');if(cfg)Object.assign(CFG,JSON.parse(cfg));}catch(e){}
   try{const metas=localStorage.getItem('rmMetas');if(metas)Object.assign(CFG,JSON.parse(metas));}catch(e){}
+  try{const cm=localStorage.getItem('rmCoordMetas');if(cm)CFG.COORD_BONO=Object.assign(CFG.COORD_BONO||{},JSON.parse(cm));}catch(e){}
 }
-
-async function init(){
+  async function init(){
   loadLocalConfig();
   setupTabs();
   renderActiveTab();
@@ -3307,6 +3341,7 @@ window.processUploads=processUploads;
 window.onFileSelected=onFileSelected;
 window.saveConfig=saveConfig;
 window.saveMetas=saveMetas;
+window.saveCoordMetas=saveCoordMetas;
 window.fetchAll=fetchAll;
 window.changeDateMode=changeDateMode;
 window.onFilterSearchInput=onFilterSearchInput;
