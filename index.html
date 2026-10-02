@@ -3228,7 +3228,25 @@ function viewConfig(){
         <div class="field"><label>Meta Colgadas (%)</label><input type="number" id="cmetaColg" value="${CFG.COORD_BONO.colgadas.target}"></div>
         <div class="field"><label>Meta Outbound (%)</label><input type="number" id="cmetaOut" value="${CFG.COORD_BONO.outbound.target}"></div>
       </div>
-      <div style="margin-top:12px"><button class="btn primary" onclick="saveCoordMetas()">Guardar metas coordinadores</button></div>
+          <div style="margin-top:12px"><button class="btn primary" onclick="saveCoordMetas()">Guardar metas coordinadores</button></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Metas de bonificación · Escalations</div>
+      <div class="muted" style="margin-bottom:10px">Solo umbrales (%). Los puntos de cada tramo son fijos.</div>
+      <div class="grid-3">
+        <div class="field"><label>QA — umbral alto (%)</label><input type="number" id="emetaQAalto" value="${CFG.ESCALATION_BONO.qa.escala[0].min}"></div>
+        <div class="field"><label>QA — umbral medio (%)</label><input type="number" id="emetaQAmedio" value="${CFG.ESCALATION_BONO.qa.escala[1].min}"></div>
+        <div class="field"><label>Quejas — límite verde (≤)</label><input type="number" id="emetaQuejasVerde" value="${CFG.ESCALATION_BONO.quejas.escala[0].max}"></div>
+        <div class="field"><label>Quejas — límite medio (≤)</label><input type="number" id="emetaQuejasMedio" value="${CFG.ESCALATION_BONO.quejas.escala[1].max}"></div>
+        <div class="field"><label>Cobertura — umbral alto (%)</label><input type="number" id="emetaCovAlto" value="${CFG.ESCALATION_BONO.cobertura.escala[0].min}"></div>
+        <div class="field"><label>Cobertura — umbral medio (%)</label><input type="number" id="emetaCovMedio" value="${CFG.ESCALATION_BONO.cobertura.escala[1].min}"></div>
+        <div class="field"><label>CSAT — umbral (%)</label><input type="number" id="emetaCSAT" value="${CFG.ESCALATION_BONO.csat.escala[0].min}"></div>
+        <div class="field"><label>RR — umbral (%)</label><input type="number" id="emetaRR" value="${CFG.ESCALATION_BONO.rr.escala[0].min}"></div>
+      </div>
+      <div style="margin-top:12px"><button class="btn primary" onclick="saveEscalationMetas()">Guardar metas escalations</button></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Estado del sistema</div>
     </div>
     <div class="card">
       <div class="section-title">Estado del sistema</div>
