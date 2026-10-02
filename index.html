@@ -2208,7 +2208,7 @@ function calcEscalationBono(esc){
 }
   function viewEscalations(){
   const escs=STATE.escalations||[];
-  if(!escs.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin escalations en el roster</div></div></div>';
+    if(!escs.length)return'<div class="card" style="padding:12px 16px">'+dateFilterBar()+'</div><div class="card"><div class="empty"><div class="empty-title">Sin escalations en el roster</div></div></div>';
   const fmtPct=v=>v==null?'—':v.toFixed(1)+'%';
   let rows='';
   for(const esc of escs){
@@ -2227,7 +2227,8 @@ function calcEscalationBono(esc){
       <td class="col-num"><strong style="color:${bonoColor};font-size:16px">$${b.bono}</strong></td>
     </tr>`;
   }
-  return `<div class="card">
+    return `<div class="card" style="padding:12px 16px">${dateFilterBar()}</div>
+  <div class="card">
     <div class="section-title">Bonificaciones de Escalations</div>
     <div class="muted" style="margin-bottom:10px">Bono por cluster · métricas del equipo del coordinador asignado</div>
     <table>
