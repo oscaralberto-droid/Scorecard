@@ -285,7 +285,8 @@ body.admin .admin-only{display:inline-block!important}
   <div class="tabs" id="tabs">
     <button class="tab active" data-tab="scorecard">Scorecard</button>
     <button class="tab" data-tab="agente">Por agente</button>
-    <button class="tab" data-tab="coordinador">Coordinador</button>
+        <button class="tab" data-tab="coordinador">Coordinador</button>
+    <button class="tab" data-tab="escalations">Escalations</button>
     <button class="tab" data-tab="senior">Senior</button>
     <button class="tab" data-tab="top">Top performers</button>
     <button class="tab" data-tab="bono">Bonificaciones</button>
@@ -299,7 +300,8 @@ body.admin .admin-only{display:inline-block!important}
   <div class="content">
     <div id="view-scorecard"></div>
     <div id="view-agente" class="hidden"></div>
-    <div id="view-coordinador" class="hidden"></div>
+        <div id="view-coordinador" class="hidden"></div>
+    <div id="view-escalations" class="hidden"></div>
     <div id="view-senior" class="hidden"></div>
     <div id="view-top" class="hidden"></div>
     <div id="view-bono" class="hidden"></div>
@@ -1680,7 +1682,8 @@ function renderActiveTab(){
   if(!c)return;
   if(which==='scorecard')c.innerHTML=viewScorecard();
   else if(which==='agente')c.innerHTML=viewAgente();
-  else if(which==='coordinador')c.innerHTML=viewCoordinador();
+    else if(which==='coordinador')c.innerHTML=viewCoordinador();
+  else if(which==='escalations')c.innerHTML=viewEscalations();
   else if(which==='senior')c.innerHTML=viewSenior();
   else if(which==='top')c.innerHTML=viewTop();
   else if(which==='bono')c.innerHTML=viewBono();
@@ -2145,7 +2148,104 @@ function calcCoordBono(coordName,coordAgents){
     _quejasRegistros,_quejasUnicasCount,quejasDirectas,greenCards,buenDesempeno,
     finalPoints:preliminaryPoints,tier,bonus,ausentismo};
 }
-
+function clusterKey(cluster){
+  const c=(cluster||'').toString().toLowerCase();
+  if(c.includes('1'))return'C1';
+  if(c.includes('2'))return'C2';
+  if(c.includes('3'))return'C3';
+  return'C1';
+}
+function calcEscalationBono(esc){
+  const E=CFG.ESCALATION_BONO;
+  const coordName=esc.coord;
+  const allRows=buildScorecard();
+  const coordAgents=allRows.filter(r=>r.coord===coordName);
+  const m=calcCoordMetrics(coordAgents,coordName);
+  const _activeMonthC=(typeof getActiveMonthName==='function')?getActiveMonthName():null;
+  const _coordKeyEquipo=(coordName||'').toString().trim().toLowerCase();
+  const quejasDelEquipo=(STATE.quejas||[]).filter(q=>{
+    if((q.coord||'').toString().trim().toLowerCase()!==_coordKeyEquipo)return false;
+    if(!q.mesAplica)return true;
+    if(!_activeMonthC)return true;
+    return q.mesAplica===_activeMonthC;
+  });
+  const quejasUnicas=new Set();
+  for(const q of quejasDelEquipo)quejasUnicas.add(q.quejaId);
+  const totalQuejas=quejasUnicas.size;
+  let covSum=0,covN=0;
+  for(const a of coordAgents){if(a.sdr!=null){covSum+=a.sdr;covN++;}}
+  const coberturaPct=covN?covSum/covN:null;
+  const ck=clusterKey(esc.cluster);
+  const metaAht=E.aht_p90.metaCluster[ck]||20;
+  function ptsEscalaMin(val,escala){
+    if(val==null)return 0;
+    for(const tr of escala){if(val>=tr.min)return tr.pts;}
+    return 0;
+  }
+  const qaPts=ptsEscalaMin(m.qa,E.qa.escala);
+  let quejasPts=0,quejasAnula=false;
+  for(const tr of E.quejas.escala){if(totalQuejas<=tr.max){quejasPts=tr.pts;if(tr.anula)quejasAnula=true;break;}}
+  const p90Min=m.p90Sec!=null?m.p90Sec/60:null;
+  let ahtPts=0;
+  if(p90Min!=null){
+    if(p90Min<=metaAht)ahtPts=E.aht_p90.escala[0].pts;
+    else if(p90Min<=metaAht*1.10)ahtPts=E.aht_p90.escala[1].pts;
+    else ahtPts=0;
+  }
+  const covPts=ptsEscalaMin(coberturaPct,E.cobertura.escala);
+  const csatPts=ptsEscalaMin(m.csat,E.csat.escala);
+  const rrPts=ptsEscalaMin(m.rr,E.rr.escala);
+  let totalPts=qaPts+quejasPts+ahtPts+covPts+csatPts+rrPts;
+  if(quejasAnula)totalPts=0;
+  let bono=0;
+  for(const t of E.tiers){if(totalPts>=t.min){bono=t.bono;break;}}
+  return{
+    escalation:esc.agent,coord:coordName,cluster:esc.cluster,
+    metrics:{qa:m.qa,quejas:totalQuejas,p90Min,cobertura:coberturaPct,csat:m.csat,rr:m.rr},
+    puntos:{qa:qaPts,quejas:quejasPts,aht:ahtPts,cobertura:covPts,csat:csatPts,rr:rrPts},
+    metaAht,quejasAnula,totalPts,bono
+  };
+}
+  function viewEscalations(){
+  const escs=STATE.escalations||[];
+  if(!escs.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin escalations en el roster</div></div></div>';
+  const fmtPct=v=>v==null?'—':v.toFixed(1)+'%';
+  let rows='';
+  for(const esc of escs){
+    const b=calcEscalationBono(esc);
+    const bonoColor=b.bono>=300?'#0f7a56':b.bono>=150?'#2563eb':b.bono>=75?'#b45309':'#8892a4';
+    const anulaTag=b.quejasAnula?'<span class="b bad" style="margin-left:6px">ANULADO</span>':'';
+    rows+=`<tr>
+      <td><strong>${esc.agent}</strong><br><span class="muted mono" style="font-size:11px">${esc.coord} · ${esc.cluster}</span></td>
+      <td class="col-num">${fmtPct(b.metrics.qa)}<br><span class="muted" style="font-size:11px">${b.puntos.qa}/1400</span></td>
+      <td class="col-num">${b.metrics.quejas}${anulaTag}<br><span class="muted" style="font-size:11px">${b.puntos.quejas}/1200</span></td>
+      <td class="col-num">${b.metrics.p90Min!=null?b.metrics.p90Min.toFixed(1)+'m':'—'}<br><span class="muted" style="font-size:11px">${b.puntos.aht}/500 · meta ≤${b.metaAht}m</span></td>
+      <td class="col-num">${fmtPct(b.metrics.cobertura)}<br><span class="muted" style="font-size:11px">${b.puntos.cobertura}/400</span></td>
+      <td class="col-num">${fmtPct(b.metrics.csat)}<br><span class="muted" style="font-size:11px">${b.puntos.csat}/250</span></td>
+      <td class="col-num">${fmtPct(b.metrics.rr)}<br><span class="muted" style="font-size:11px">${b.puntos.rr}/250</span></td>
+      <td class="col-num"><strong>${b.totalPts}</strong><br><span class="muted" style="font-size:11px">/4000</span></td>
+      <td class="col-num"><strong style="color:${bonoColor};font-size:16px">$${b.bono}</strong></td>
+    </tr>`;
+  }
+  return `<div class="card">
+    <div class="section-title">Bonificaciones de Escalations</div>
+    <div class="muted" style="margin-bottom:10px">Bono por cluster · métricas del equipo del coordinador asignado</div>
+    <table>
+      <thead><tr>
+        <th>Escalation</th>
+        <th class="col-num">QA</th>
+        <th class="col-num">Quejas</th>
+        <th class="col-num">AHT P90</th>
+        <th class="col-num">Cobertura</th>
+        <th class="col-num">CSAT</th>
+        <th class="col-num">RR</th>
+        <th class="col-num">Puntos</th>
+        <th class="col-num">Bono</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
 function viewCoordinador(){
   const rows=buildScorecard();
   if(!rows.length)return'<div class="card"><div class="empty"><div class="empty-title">Sin datos</div></div></div>';
