@@ -365,6 +365,21 @@ const CFG = {
     srr:{target:75,points:200,dir:'gte',label:'Survey Return Rate %'},
     csat:{target:85,points:300,dir:'gte',label:'CSAT %'}
   },
+    ESCALATION_BONO:{
+    maxPuntos:4000,
+    qa:{peso:1400, escala:[{min:85,pts:1400},{min:80,pts:500},{min:0,pts:0}]},
+    quejas:{peso:1200, escala:[{max:7,pts:1200},{max:10,pts:600},{max:9999,pts:0,anula:true}]},
+    aht_p90:{peso:500, metaCluster:{C1:20,C2:20,C3:15}, escala:[{factor:1.0,pts:500},{factor:1.10,pts:100},{factor:9,pts:0}]},
+    cobertura:{peso:400, escala:[{min:90,pts:400},{min:80,pts:200},{min:0,pts:0}]},
+    csat:{peso:250, meta:85, escala:[{min:85,pts:250},{min:0,pts:0}]},
+    rr:{peso:250, meta:70, escala:[{min:70,pts:250},{min:0,pts:0}]},
+    tiers:[
+      {min:3700,bono:300},
+      {min:3101,bono:150},
+      {min:2201,bono:75},
+      {min:0,bono:0}
+    ]
+  },
   COORD_PEN_CARDS:[
     {min:6,max:8,deduction:600},
     {min:9,max:11,deduction:1300},
@@ -771,7 +786,8 @@ async function fetchDistro(){
   STATE.loading.distro=true;
   try{
     const csv=await fetchSheetCSV(CFG.DISTRO_SHEET,CFG.DISTRO_TAB);
-    let agents=[];
+        let agents=[];
+    let escalations=[];
     let headerRow=-1;
     for(let i=0;i<Math.min(csv.length,5);i++){
       const r=csv[i];if(!r)continue;
@@ -806,12 +822,17 @@ async function fetchDistro(){
       const type=(r[cType]||'').trim();
       const ext=(r[cExt]||'').trim();
       const nivel=(r[cNivel]||'').trim();
-      if(!agent||!coord||!type)continue;
-      if(type.toLowerCase()!=='prod agent')continue;
+            if(!agent||!coord||!type)continue;
+      const _typeL=type.toLowerCase();
+      if(_typeL==='escalations'||_typeL==='escalation'){
+        escalations.push({agent,coord,senior,type,extension:ext,cluster:nivel||'—',nameKey:firstLast(agent)});
+        continue;
+      }
+      if(_typeL!=='prod agent')continue;
       agents.push({agent,coord,senior,type,extension:ext,cluster:nivel||'—',nameKey:firstLast(agent)});
     }
     STATE.distro=agents;
-        STATE.distro=agents;
+    STATE.escalations=escalations;
     STATE.extIndex={};
     for(const a of agents){if(a.extension)STATE.extIndex[a.extension.toString().trim()]=a.nameKey;}
     setSync('Distro','live',`Distro · ${agents.length}`);
@@ -825,7 +846,6 @@ async function fetchDistro(){
   }
   STATE.loading.distro=false;
 }
-
 async function syncCoordHistoryWithBackend(){
   if(!CFG.BACKEND_URL)return;
   if(!STATE.distro||!STATE.distro.length)return;
