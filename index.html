@@ -1977,7 +1977,27 @@ async function savePenalties(nameKey){
   }
   renderActiveTab();
 }
-
+function saveEscalationMetas(){
+  const E=CFG.ESCALATION_BONO;
+  if(!E)return;
+  E.qa.escala[0].min=+$('emetaQAalto').value;
+  E.qa.escala[1].min=+$('emetaQAmedio').value;
+  E.quejas.escala[0].max=+$('emetaQuejasVerde').value;
+  E.quejas.escala[1].max=+$('emetaQuejasMedio').value;
+  E.cobertura.escala[0].min=+$('emetaCovAlto').value;
+  E.cobertura.escala[1].min=+$('emetaCovMedio').value;
+  E.csat.escala[0].min=+$('emetaCSAT').value;
+  E.rr.escala[0].min=+$('emetaRR').value;
+  try{localStorage.setItem('rmEscMetas',JSON.stringify(E));}catch(e){}
+  if(CFG.BACKEND_URL){
+    pushBackend({type:'metas',data:{ESCALATION_BONO:E}})
+      .then(()=>showBanner('success','Metas de escalations guardadas para todos'))
+      .catch(()=>showBanner('warn','Guardado local, pero falló el envío al backend'));
+  }else{
+    showBanner('success','Metas de escalations guardadas');
+  }
+  renderActiveTab();
+}
 function renderAgentCharts(){
   if(!STATE.selectedAgent)return;
   const k=STATE.selectedAgent;
@@ -3472,6 +3492,7 @@ function loadLocalConfig(){
   try{const metas=localStorage.getItem('rmMetas');if(metas)Object.assign(CFG,JSON.parse(metas));}catch(e){}
   try{const cm=localStorage.getItem('rmCoordMetas');if(cm)CFG.COORD_BONO=Object.assign(CFG.COORD_BONO||{},JSON.parse(cm));}catch(e){}
 }
+    try{const em=localStorage.getItem('rmEscMetas');if(em)CFG.ESCALATION_BONO=Object.assign(CFG.ESCALATION_BONO||{},JSON.parse(em));}catch(e){}
   async function init(){
   loadLocalConfig();
   setupTabs();
@@ -3512,6 +3533,7 @@ window.onFileSelected=onFileSelected;
 window.saveConfig=saveConfig;
 window.saveMetas=saveMetas;
 window.saveCoordMetas=saveCoordMetas;
+  window.saveEscalationMetas=saveEscalationMetas;
 window.fetchAll=fetchAll;
 window.changeDateMode=changeDateMode;
 window.onFilterSearchInput=onFilterSearchInput;
