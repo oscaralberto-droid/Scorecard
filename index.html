@@ -1620,6 +1620,7 @@ function buildScorecard(){
         quejasTotal:isFirstBucket?quejasAg.length:0,
         servTotal:v.servTotal||0,servComp:v.servComp||0,servCanc:v.servCanc||0,
         surveysSent:enc.sent||0,surveysSentIn:enc.sentIn||0,surveysSentOut:enc.sentOut||0,
+                csatSum:enc.csatSum||0,csatN:enc.csatN||0,rrSum:enc.rrSum||0,rrN:enc.rrN||0,
         surveysAnsIn:enc.ansIn||0,surveysAnsOut:enc.ansOut||0,surveysAnswered:enc.answered||0,
         isCoordSplit:hasSplit,coordDias:v.n||0});
     }
@@ -2024,9 +2025,9 @@ function calcCoordMetrics(coordAgents,coordName){
     totalLlamadasAt+=a.callsAt||0;
     if(a.callsIn)totalEntrantes+=a.callsIn;
     if(a.callsOut)totalSalientes+=a.callsOut;
-    if(a.rr!=null){rrSum+=a.rr;rrN++;}
+    if(a.rrN){rrSum+=(a.rrSum||0);rrN+=a.rrN;}
     if(a.srr!=null){srrSum+=a.srr;srrN++;}
-    if(a.csat!=null){csatSum+=a.csat;csatN++;}
+    if(a.csatN){csatSum+=(a.csatSum||0);csatN+=a.csatN;}
     if(a.qaScore!=null){qaSum+=a.qaScore;qaN++;}
     if(a.releasedPct!=null){releasedPctSum+=a.releasedPct;releasedPctN++;}
     if(a.outboundPct!=null){outboundPctSum+=a.outboundPct;outboundPctN++;}
