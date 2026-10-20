@@ -3461,9 +3461,12 @@ function changeQAMonth(ym){
 // INIT & EVENT LISTENERS
 // ═══════════════════════════════════════════════════════════════════════════
 async function fetchAll(){
-  await Promise.all([fetchDistro(),fetchQuejas(),fetchAusentismo(),fetchBackendHistory()]);
+  // La distro primero: quejas y ausentismo dependen de ella para el matching de nombres
+  await fetchDistro();
+  for(const k of Object.keys(_matchCache))delete _matchCache[k];
+  _wordFrequency=null;
+  await Promise.all([fetchQuejas(),fetchAusentismo(),fetchBackendHistory()]);
 }
-
 function loadLocalConfig(){
   try{const cfg=localStorage.getItem('rmCfg');if(cfg)Object.assign(CFG,JSON.parse(cfg));}catch(e){}
   try{const metas=localStorage.getItem('rmMetas');if(metas)Object.assign(CFG,JSON.parse(metas));}catch(e){}
