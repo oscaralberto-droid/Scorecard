@@ -869,7 +869,7 @@ async function syncCoordHistoryWithBackend(){
         setTimeout(()=>fetchBackendHistory(),500);
       }
     }else if(result&&result.assumed){
-      setTimeout(()=>fetchBackendHistory(),1500);
+            // quitado: releía todo el histórico cada 10 min;
     }
   }catch(e){
     console.warn('CoordHistory sync error (no critico):',e.message);
@@ -1078,7 +1078,8 @@ function getActiveMonthName(){
 // BACKEND
 // ═══════════════════════════════════════════════════════════════════════════
 async function fetchBackendHistory(){
-  if(!CFG.BACKEND_URL){setSync('Backend','err','Sin backend');return;}
+    if(!CFG.BACKEND_URL){setSync('Backend','err','Sin backend');return;}
+  if(STATE.loading.backend)return;   // ya hay una lectura en curso
   setSync('Backend','sync','Backend…');
   STATE.loading.backend=true;
   return new Promise((resolve)=>{
@@ -1145,15 +1146,20 @@ async function fetchBackendHistory(){
       cleanup();
       resolve();
     };
+        setTimeout(()=>{
+      if(resolved)return;
+      setSync('Backend','sync','Backend lento…');   // sigue esperando
+    },20000);
     setTimeout(()=>{
       if(resolved)return;
       resolved=true;
-      console.error('Backend timeout');
+      console.error('Backend timeout (90 s)');
       setSync('Backend','err','Backend timeout');
       STATE.loading.backend=false;
-      cleanup();
+      try{document.body.removeChild(script);}catch(e){}
+      window[callbackName]=function(){};   // si llega aún más tarde, no da error
       resolve();
-    },20000);
+    },90000);
     script.src=CFG.BACKEND_URL+'?action=read&callback='+callbackName+'&t='+Date.now();
     document.body.appendChild(script);
   });
@@ -3519,7 +3525,7 @@ function loadLocalConfig(){
   await fetchAll();
   setInterval(fetchQuejas,CFG.REFRESH_MS*5);
   setInterval(fetchDistro,CFG.REFRESH_MS*10);
-  setInterval(fetchBackendHistory,CFG.REFRESH_MS*5);
+  setInterval(fetchBackendHistory,CFG.REFRESH_MS*15);
 }
 let _configUnlocked=false;
 function setupTabs(){
